@@ -3,6 +3,7 @@ from .syscalls import SyscallHandler
 from .scheduler import Scheduler
 from .users import UserManager
 from fyodoros.supervisor.supervisor import Supervisor
+from fyodoros.kernel.plugin_loader import PluginLoader
 
 class Kernel:
     """
@@ -22,9 +23,16 @@ class Kernel:
         # Supervisor
         self.supervisor = Supervisor(self.scheduler, self.sys)
 
+        # Plugins
+        self.plugin_loader = PluginLoader(self)
+        self.plugin_loader.load_active_plugins()
+
     def start(self):
         from fyodoros.shell.shell import Shell
         shell = Shell(self.sys, self.supervisor)
+
+        # Inject plugin commands
+        shell.register_plugin_commands(self.plugin_loader.get_all_shell_commands())
 
         # Note: This start implementation is blocking and basic, mainly for testing.
         # The robust implementation is in __main__.py

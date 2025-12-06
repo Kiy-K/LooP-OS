@@ -8,8 +8,11 @@ from rich.panel import Panel
 from rich.prompt import Prompt, Confirm
 from rich import print as rprint
 from fyodoros.kernel.users import UserManager
+from fyodoros.plugins.registry import PluginRegistry
 
 app = typer.Typer()
+plugin_app = typer.Typer()
+app.add_typer(plugin_app, name="plugin")
 console = Console()
 
 BANNER = """
@@ -149,13 +152,41 @@ def tui():
             console.print("Goodbye!")
             break
 
+@plugin_app.command("list")
+def list_plugins():
+    """List active plugins."""
+    reg = PluginRegistry()
+    plugins = reg.list_plugins()
+    if plugins:
+        console.print(f"[green]Active Plugins:[/green] {', '.join(plugins)}")
+    else:
+        console.print("[yellow]No active plugins.[/yellow]")
+
+@plugin_app.command("activate")
+def activate_plugin(name: str):
+    """Activate a plugin by module name."""
+    reg = PluginRegistry()
+    if reg.activate(name):
+        console.print(f"[green]Plugin '{name}' activated.[/green]")
+    else:
+        console.print(f"[yellow]Plugin '{name}' already active.[/yellow]")
+
+@plugin_app.command("deactivate")
+def deactivate_plugin(name: str):
+    """Deactivate a plugin."""
+    reg = PluginRegistry()
+    if reg.deactivate(name):
+        console.print(f"[green]Plugin '{name}' deactivated.[/green]")
+    else:
+        console.print(f"[yellow]Plugin '{name}' was not active.[/yellow]")
+
 @app.command()
 def info():
     """
     Show info about the installation.
     """
     console.print(BANNER, style="bold cyan")
-    console.print("Version: 0.2.0")
+    console.print("Version: 0.3.0")
     console.print("Location: " + os.getcwd())
 
     if os.path.exists(".env"):

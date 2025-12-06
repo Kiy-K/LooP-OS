@@ -26,6 +26,13 @@ class Shell:
         self.running = True
         self.current_user = None
         self.agent = None
+        self.plugin_commands = {}
+
+    def register_plugin_commands(self, commands):
+        """
+        Register commands provided by plugins.
+        """
+        self.plugin_commands.update(commands)
 
     # ========== INPUT HANDLING ==========
     def _readline(self, prompt):
@@ -201,6 +208,13 @@ class Shell:
                     "  create <file>     - create a file (default .txt)\n"
                     "  navigate <app>    - run a user app (browser, etc)\n"
                 )
+
+            elif op in self.plugin_commands:
+                # Execute plugin command
+                try:
+                    return self.plugin_commands[op](*args)
+                except Exception as e:
+                    return f"Plugin command failed: {e}"
 
             else:
                 return f"Unknown command: {op}"
