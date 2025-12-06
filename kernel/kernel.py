@@ -17,7 +17,16 @@ class Kernel:
 
     def start(self):
         from shell.shell import Shell
-        shell = Shell(self)
+        shell = Shell(self.sys, self.sys.scheduler) # Shell expects (syscall, supervisor/scheduler)
+        # Note: Shell init signature is (syscall, supervisor=None).
+        # We can pass supervisor if we had one.
+        # But wait, Shell stores 'self.sys' and calls methods on it.
+        # It expects SyscallHandler.
+
+        # Let's check Shell.__init__ signature again.
+        # shell/shell.py: def __init__(self, syscall, supervisor=None):
+
+        # So passing self.sys is correct.
         shell.run()
         self.tty.write("Kernel started. Shell is running.\n")
         self.tty.write("Welcome to the simulated OS kernel!\n")
