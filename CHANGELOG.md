@@ -1,44 +1,31 @@
 # Changelog
 
-## [0.3.0] - 2025-12-07
-
+## [0.3.5] - Unreleased
 ### Added
-- **Plugin System**: Modular architecture to extend FyodorOS capabilities.
-    - `fyodor plugin list`: List installed plugins.
-    - `fyodor plugin activate/deactivate`: Toggle plugins.
-    - Config stored in `~/.fyodor/plugins/`.
-- **Kernel Integration**: `Kernel` class now orchestrates `PluginLoader`, automatically bootstrapping active plugins on startup.
-- **Developer API**: New `fyodoros.plugins.Plugin` abstract base class for creating extensions.
-- **Documentation**: Added `PLUGIN_DEVELOPMENT.md` guide for contributors.
-
-## [0.2.0] - 2025-12-06
-
-### Added
-- **Launcher TUI**: `fyodor tui` provides an interactive menu for managing the OS.
-- **Multi-Provider LLM Support**: Support for OpenAI, Gemini, and Anthropic backends.
-- **User Persistence**: User accounts are now saved to `users.json` and persist across reboots.
-- **New CLI Commands**:
-    - `fyodor user <name> [pass]`: Create new users directly from the host CLI.
-    - `fyodor setup`: Robust interactive configuration for API keys.
-- **New Shell Commands**:
-    - `create <filename>`: Quickly create files (defaults to `.txt`).
-    - `navigate <app>`: Launch apps like browser or calculator manually.
+- **Plugin System Enhancements**:
+  - Added support for plugin configuration via `fyodor plugin settings`.
+  - Added persistent configuration storage in `~/.fyodor/plugins/config.json`.
+- **New Plugins**:
+  - `github`: Integration with GitHub for listing repos, creating issues, and viewing PRs.
+  - `slack_notifier`: Send notifications to Slack webhooks.
+  - `usage_dashboard`: Background system usage monitoring with TUI (`fyodor dashboard`).
+  - `team_collaboration`: Role-Based Access Control (RBAC) extending the user management system.
+- **User Management**:
+  - Added role support to users (admin/user).
+  - Added permission checking hooks.
 
 ### Changed
-- Refactored project structure to `src/fyodoros` package.
-- Updated `LLMProvider` to read `LLM_PROVIDER` from `.env`.
-- Improved `.env` file handling in `cli.py` to support quoted values and comments.
+- `UserManager` now stores roles and passwords in a dictionary structure instead of just password hashes.
+- CLI updated to include `dashboard` command.
 
-## [0.1.1] - 2025-12-06
+### Plugin System
+- Added **C++ Registry Core** (`registry_core` extension) for high-performance plugin management.
+- Added **Plugin Manager** CLI (`fyodor plugin install/build/create`).
+- Added Multi-language Support:
+  - **Python**: Standard support.
+  - **C++**: Auto-compilation via `cmake`.
+  - **Node.js**: Auto-dependency installation via `npm`/`bun`.
 
-### Added
-- **Login Hotfix**: Added auto-login fallback to `root` user if interactive login fails.
-- **CLI Commands**:
-    - `fyodor start`: Auto-login as `guest`.
-    - `fyodor login`: Standard interactive login.
-    - `fyodor login --user <name>`: Pre-fill username (e.g., `root`).
-
-### Changed
-- Refactored `src/fyodoros/shell/shell.py` to support programmatic login arguments.
-- Updated `src/fyodoros/__main__.py` to parse command-line arguments and pass them to the shell.
-- Updated `src/fyodoros/cli.py` to support `start` (guest) and `login` (interactive) modes.
+### Security
+- **C++ Sandbox Core**: New isolation layer enforcing virtual filesystem boundaries.
+- **Process Isolation**: Agent commands run in restricted environments with sanitized paths and environment variables.

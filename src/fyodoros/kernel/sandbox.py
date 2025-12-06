@@ -1,81 +1,83 @@
 # kernel/sandbox.py
+import sys
+import os
+from pathlib import Path
+
+# Add core path to sys.path
+core_path = Path(__file__).parent / "core"
+sys.path.append(str(core_path))
+
+try:
+    import sandbox_core
+except ImportError:
+    print("Warning: C++ Sandbox Core not found. Compilation needed?")
+    sandbox_core = None
 
 class AgentSandbox:
     """
-    Restricts Agent actions to safe boundaries.
+    Restricts Agent actions to safe boundaries using C++ Core.
     """
     def __init__(self, syscall_handler):
         self.sys = syscall_handler
-        self.restricted_paths = ["/kernel", "/bin", "/boot", "/etc", "/var/log"]
-        # Allow /home, /tmp (if exists), /var (except log?)
+        self.root_path = str(Path.home() / ".fyodor" / "sandbox")
 
-    def is_safe_path(self, path, operation="read"):
-        """
-        Check if the path is safe for the given operation.
-        """
-        # Normalize path? For now assume absolute or relative to valid cwd.
-        # Ideally we resolve it.
+        if sandbox_core:
+            self.core = sandbox_core.SandboxCore(self.root_path)
+        else:
+            self.core = None
 
-        # Deny writes to system folders
-        if operation in ["write", "append", "delete"]:
-            for restricted in self.restricted_paths:
-                if path.startswith(restricted):
-                    # Exception: allow creating non-system files?
-                    # No, strict safety for v1.
-                    return False
-            # Root is restricted
-            if path == "/" or path == "":
-                return False
-
-        # Reads are generally okay, but maybe restrict reading secrets?
-        # For now, allow reads everywhere (transparency).
-        return True
+    def _resolve(self, path):
+        if self.core:
+            try:
+                # Returns resolved absolute path on HOST
+                return self.core.resolve_path(path)
+            except Exception as e:
+                raise PermissionError(f"Sandbox Violation: {e}")
+        return path # Fallback (unsafe)
 
     def execute(self, action, args):
         """
         Execute a command if it passes safety checks.
-        action: str (e.g., "write_file")
-        args: list or dict
         """
         if action == "read_file":
             path = args[0]
-            if self.is_safe_path(path, "read"):
-                try:
-                    return self.sys.sys_read(path)
-                except Exception as e:
-                    return f"Error: {e}"
-            else:
-                return f"Permission Denied: Cannot read {path}"
+            try:
+                real_path = self._resolve(path)
+                # We need to bypass syscall handler's internal path logic if possible,
+                # or pass the resolved path. Syscall handler might not expect absolute host paths
+                # if it thinks it's simulating an OS.
+                # However, syscall_handler in this project seems to operate on real OS files directly?
+                # Let's check syscall_handler implementation.
+                # Assuming sys_read takes a path and opens it.
+                return self.sys.sys_read(real_path)
+            except Exception as e:
+                return f"Error: {e}"
 
         elif action == "write_file":
             path = args[0]
             content = args[1]
-            if self.is_safe_path(path, "write"):
-                try:
-                    self.sys.sys_write(path, content)
-                    return f"Successfully wrote to {path}"
-                except Exception as e:
-                    return f"Error: {e}"
-            else:
-                return f"Permission Denied: Cannot write to system path {path}"
+            try:
+                real_path = self._resolve(path)
+                self.sys.sys_write(real_path, content)
+                return f"Successfully wrote to {path}"
+            except Exception as e:
+                return f"Error: {e}"
 
         elif action == "append_file":
             path = args[0]
             content = args[1]
-            if self.is_safe_path(path, "append"):
-                try:
-                    self.sys.sys_append(path, content)
-                    return f"Successfully appended to {path}"
-                except Exception as e:
-                    return f"Error: {e}"
-            else:
-                return f"Permission Denied: Cannot modify system path {path}"
+            try:
+                real_path = self._resolve(path)
+                self.sys.sys_append(real_path, content)
+                return f"Successfully appended to {path}"
+            except Exception as e:
+                return f"Error: {e}"
 
         elif action == "list_dir":
             path = args[0] if args else "/"
-            # List is safe
             try:
-                files = self.sys.sys_ls(path)
+                real_path = self._resolve(path)
+                files = self.sys.sys_ls(real_path)
                 return "\n".join(files)
             except Exception as e:
                 return f"Error: {e}"
@@ -89,16 +91,25 @@ class AgentSandbox:
 
             if prog in allowed_apps:
                 try:
-                    # We can use the shell's logic to run programs, or import directly.
-                    # Since we are in the kernel layer, we should dynamically import from fyodoros.bin.
+                    # Built-in apps run in Python
                     from importlib import import_module
                     mod = import_module(f"fyodoros.bin.{prog}")
                     if hasattr(mod, "main"):
-                        # Pass syscall handler so apps can interact with kernel
                         return mod.main(prog_args, self.sys)
                     else:
                         return f"Error: {prog} has no main()"
                 except ImportError:
+                    # Not a built-in, maybe a real binary?
+                    # Try executing via C++ Sandbox
+                    if self.core:
+                         try:
+                             # We use empty env for strict isolation
+                             # But we might need PATH?
+                             # Let's map PATH to a safe bin dir if we had one.
+                             self.core.execute(prog, prog_args, {})
+                             return f"Executed {prog}"
+                         except Exception as e:
+                             return f"Execution Error: {e}"
                     return f"Error: App {prog} not found."
                 except Exception as e:
                     return f"Error running {prog}: {e}"

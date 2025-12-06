@@ -6,3 +6,5 @@ ddgs
 playwright==1.41.2
 rich
 typer
+requests
+psutil

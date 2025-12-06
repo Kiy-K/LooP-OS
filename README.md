@@ -36,11 +36,45 @@ FyodorOS includes a specialized browser for agents.
 - **Interaction**: Agents can `click` and `type` using element IDs directly.
 - **Efficiency**: Strips unnecessary noise (CSS/Scripts) to save context window.
 
-### 🛡️ Safety Sandbox
-Every action taken by the Agent is intercepted by the `AgentSandbox`.
-- **System Protection**: Prevents writes to `/kernel`, `/bin`, and `/etc`.
+### 🛡️ Safety Sandbox (Enhanced in v0.3.5)
+Every action taken by the Agent is intercepted by the C++ reinforced `AgentSandbox`.
+- **Virtual Filesystem**: The agent is jailed in `~/.fyodor/sandbox`. All paths are virtualized.
+- **Path Traversal Protection**: C++ layer prevents escaping the sandbox (e.g., `../../etc/passwd`).
+- **Process Isolation**: Commands run with cleared environments and restricted paths.
 - **App Whitelisting**: Only authorized "Agent Apps" can be executed.
-- **Transparency**: All actions are logged and verifiable.
+
+## 🔌 Plugins (New in v0.3.0)
+FyodorOS now supports a powerful plugin system.
+- **Github Integration**: `github` - List repos, create issues, view PRs.
+- **Slack Notifier**: `slack_notifier` - Send notifications to Slack.
+- **Usage Dashboard**: `usage_dashboard` - Background system monitoring. View with `fyodor dashboard`.
+- **Team Collaboration**: `team_collaboration` - RBAC system extending `UserManager`.
+
+### Managing Plugins
+```bash
+fyodor plugin list
+fyodor plugin activate github
+fyodor plugin settings github token YOUR_TOKEN
+fyodor plugin deactivate github
+```
+
+### Developing Plugins (Polyglot Support)
+FyodorOS supports Python, C++, and Node.js plugins.
+
+**Create a new plugin:**
+```bash
+fyodor plugin create my_plugin --lang cpp
+```
+
+**Build a plugin:**
+```bash
+fyodor plugin build my_plugin
+```
+
+**Install from Git:**
+```bash
+fyodor plugin install https://github.com/user/repo
+```
 
 ## 📦 Installation & Usage
 
