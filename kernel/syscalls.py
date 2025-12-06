@@ -23,6 +23,18 @@ class SyscallHandler:
             return True
         return False
 
+    def sys_user_list(self):
+        return self.user_manager.list_users()
+
+    def sys_user_add(self, user, password):
+        # Only root can add users?
+        if self._get_current_uid() != "root": return False
+        return self.user_manager.add_user(user, password)
+
+    def sys_user_delete(self, user):
+        if self._get_current_uid() != "root": return False
+        return self.user_manager.delete_user(user)
+
     def _get_current_uid(self):
         if self.scheduler and self.scheduler.current_process:
             return self.scheduler.current_process.uid

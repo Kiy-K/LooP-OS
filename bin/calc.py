@@ -1,35 +1,26 @@
 # bin/calc.py
+import json
 
-def main(args, syscall):
+def main(args, sys):
     """
-    Simple Calculator App.
-    Usage: calc <op> <a> <b>
+    Simple Calculator App for Agent.
+    Usage: run calc <expression>
+    Returns: JSON {"result": value, "error": msg}
     """
-    if len(args) != 3:
-        return "Usage: calc <op> <a> <b>\nOps: + - * /"
+    if not args:
+        return json.dumps({"error": "Usage: calc <expression>"})
 
-    op = args[0]
+    expression = " ".join(args)
+
+    # Safe evaluation of math expressions
+    allowed_names = {
+        "abs": abs, "round": round, "min": min, "max": max,
+        "pow": pow, "sum": sum
+    }
+
     try:
-        a = float(args[1])
-        b = float(args[2])
-    except ValueError:
-        return "Error: arguments must be numbers"
-
-    if op == "+":
-        res = a + b
-    elif op == "-":
-        res = a - b
-    elif op == "*":
-        res = a * b
-    elif op == "/":
-        if b == 0: return "Error: Division by zero"
-        res = a / b
-    else:
-        return f"Unknown operator: {op}"
-
-    result_str = f"{a} {op} {b} = {res}"
-
-    # Optionally log to a file
-    # syscall.sys_append("/var/log/calc.log", result_str)
-
-    return result_str
+        # Evaluate the expression
+        result = eval(expression, {"__builtins__": {}}, allowed_names)
+        return json.dumps({"result": result})
+    except Exception as e:
+        return json.dumps({"error": str(e)})

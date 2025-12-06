@@ -81,13 +81,28 @@ class AgentSandbox:
                 return f"Error: {e}"
 
         elif action == "run_process":
-            # Running processes might be dangerous if they are system binaries?
-            # User said "cant interact with system files".
-            # Running 'ls' is fine. Running 'rm' might not be.
-            # We will rely on the sandbox wrapping the specific file ops.
-            # But 'run_process' calls binary code.
-            # For now, deny running arbitrary binaries via agent?
-            # Or allow limited set.
-            return "Action 'run_process' not enabled for Agent in this version."
+            # Whitelisted apps for Agent
+            allowed_apps = ["browser", "calc", "explorer", "system", "user"]
+
+            prog = args[0]
+            prog_args = args[1:] if len(args) > 1 else []
+
+            if prog in allowed_apps:
+                try:
+                    # We can use the shell's logic to run programs, or import directly.
+                    # Since we are in the kernel layer, we should dynamically import from bin.
+                    from importlib import import_module
+                    mod = import_module(f"bin.{prog}")
+                    if hasattr(mod, "main"):
+                        # Pass syscall handler so apps can interact with kernel
+                        return mod.main(prog_args, self.sys)
+                    else:
+                        return f"Error: {prog} has no main()"
+                except ImportError:
+                    return f"Error: App {prog} not found."
+                except Exception as e:
+                    return f"Error running {prog}: {e}"
+            else:
+                return f"Permission Denied: Agent cannot run '{prog}'. Allowed: {allowed_apps}"
 
         return f"Unknown or disallowed action: {action}"

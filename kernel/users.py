@@ -19,4 +19,15 @@ class UserManager:
 
     def list_users(self):
         return list(self.users.keys())
-# --- IGNORE ---
+
+    def add_user(self, user, pw):
+        if user in self.users:
+            return False
+        self.users[user] = self._hash(pw)
+        return True
+
+    def delete_user(self, user):
+        if user in self.users and user != "root": # Protect root
+            del self.users[user]
+            return True
+        return False
