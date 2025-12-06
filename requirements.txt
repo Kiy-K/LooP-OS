@@ -1,4 +1,6 @@
 openai
+google-generativeai
+anthropic
 gradio
 ddgs
 playwright==1.41.2
