@@ -6,6 +6,7 @@ from fyodoros.kernel.users import UserManager
 from fyodoros.shell.shell import Shell
 from fyodoros.supervisor.supervisor import Supervisor
 from fyodoros.kernel.process import Process
+from fyodoros.kernel.plugin_loader import PluginLoader
 
 def boot_splash():
     print("""
@@ -31,6 +32,10 @@ def main():
         boot_splash()
 
         # Initialize Core Components
+        # We can use Kernel class which now orchestrates this, but maintaining manual control for __main__ loop is fine
+        # provided we hook everything up.
+
+        # Using manual init for transparency in this "Simulated Microkernel" entry point
         scheduler = Scheduler()
         user_manager = UserManager()
         syscall = SyscallHandler(scheduler, user_manager)
@@ -38,6 +43,34 @@ def main():
         # Initialize Supervisor & Shell
         supervisor = Supervisor(scheduler, syscall)
         shell = Shell(syscall, supervisor)
+
+        # Load Plugins
+        # Create a mock Kernel-like object or pass the syscall handler context?
+        # PluginLoader expects 'kernel' object to pass to plugin.setup(kernel).
+        # We should pass an object that exposes what plugins need.
+        # Ideally, we pass the 'syscall' handler or a facade.
+        # Existing Kernel class passes 'self'.
+
+        # Let's instantiate the Kernel class just to serve as the context,
+        # OR better: make a simple context object.
+        # But actually, the Kernel class in `kernel.py` already does all this init!
+        # Why duplicate?
+        # The issue is `Kernel.start()` runs the shell loop blocking.
+        # Here we want the Reboot loop.
+
+        # Best approach: Use Kernel class but don't call start().
+        kernel = Kernel() # This inits Scheduler, Syscall, PluginLoader
+
+        # We need to access components from kernel instance
+        scheduler = kernel.scheduler
+        syscall = kernel.sys
+        supervisor = kernel.supervisor
+
+        # Shell needs to be created
+        shell = Shell(syscall, supervisor)
+
+        # Register plugin commands
+        shell.register_plugin_commands(kernel.plugin_loader.get_all_shell_commands())
 
         # Login Loop
         # Pass args to login

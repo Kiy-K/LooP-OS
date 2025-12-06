@@ -1,5 +1,15 @@
 # Changelog
 
+## [0.3.0] - 2025-03-03
+
+### Added
+- **Plugin System**: Modular architecture to extend FyodorOS capabilities.
+    - `fyodor plugin list`: List installed plugins.
+    - `fyodor plugin activate/deactivate`: Toggle plugins.
+    - Config stored in `~/.fyodor/plugins/`.
+- **Kernel Updates**: `Kernel` class now orchestrates `PluginLoader`.
+- **Developer API**: New `fyodoros.plugins.Plugin` base class for creating extensions.
+
 ## [0.2.0] - 2025-03-02
 
 ### Added

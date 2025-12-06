@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "fyodoros"
-version = "0.1.0"
+version = "0.3.0"
 authors = [
   { name="FyodorOS Team", email="maintainer@fyodoros.ai" },
 ]
@@ -19,6 +19,8 @@ classifiers = [
 ]
 dependencies = [
     "openai",
+    "google-generativeai",
+    "anthropic",
     "gradio",
     "ddgs",
     "playwright==1.41.2",
