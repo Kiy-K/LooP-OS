@@ -51,7 +51,20 @@ def main(args, sys):
             return json.dumps({"error": str(e)})
 
     elif cmd == "move":
-        # Read write delete (not impl)
-        return json.dumps({"error": "Move requires delete syscall"})
+        if len(args) < 3: return json.dumps({"error": "Usage: move <src> <dst>"})
+        src, dst = args[1], args[2]
+        try:
+            # 1. Read
+            data = sys.sys_read(src)
+            # 2. Write
+            sys.sys_write(dst, data)
+            # 3. Delete original (requires sys_delete)
+            if hasattr(sys, "sys_delete"):
+                sys.sys_delete(src)
+                return json.dumps({"status": "moved", "src": src, "dst": dst})
+            else:
+                return json.dumps({"status": "copied (delete failed: no syscall)", "src": src, "dst": dst})
+        except Exception as e:
+            return json.dumps({"error": str(e)})
 
     return json.dumps({"error": f"Unknown command: {cmd}"})

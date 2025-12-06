@@ -53,11 +53,24 @@ Every action taken by the Agent is intercepted by the `AgentSandbox`.
     playwright install chromium
     ```
 
-3.  **Run the OS**
+3.  **Using the Fyodor CLI**
+    We provide a rich CLI launcher to manage the OS easily.
+
+    **Quick Start:**
+    *   **Windows**: Double-click `run.bat`
+    *   **Linux/Mac**: Run `./run.sh`
+
+    **Manual Usage:**
     ```bash
-    python3 fyodoros.py
+    # 1. Setup (Configure API Keys)
+    python fyodor_cli.py setup
+
+    # 2. Launch the OS
+    python fyodor_cli.py start
+
+    # 3. View Info
+    python fyodor_cli.py info
     ```
-    *Note: Set `OPENAI_API_KEY` environment variable for real LLM integration. Otherwise, the system uses a Mock LLM.*
 
 4.  **Interact**
     Inside the FyodorOS Shell:
@@ -67,17 +80,49 @@ Every action taken by the Agent is intercepted by the `AgentSandbox`.
 
     # Task the Agent
     guest@fyodoros:/> agent "Create a file named hello.txt in my home folder"
-
-    # Launch Agent Apps manually
-    guest@fyodoros:/> run browser navigate https://example.com
     ```
+
+## 💡 Use Cases
+
+### 1. Web Research & Summary
+**Scenario:** You want the agent to look up information and save it.
+**Command:**
+```bash
+agent "Go to https://example.com, read the main heading, and save it to /home/guest/summary.txt"
+```
+**Agent Process:**
+1.  Calls `run_process("browser", ["navigate", "https://example.com"])`.
+2.  Parses the returned DOM tree to find the `<h1>` tag.
+3.  Calls `write_file("/home/guest/summary.txt", ...)` to save the data.
+
+### 2. System Management
+**Scenario:** You want to add a new user securely.
+**Command:**
+```bash
+agent "Create a new user named 'developer' with password 'secure123'"
+```
+**Agent Process:**
+1.  Checks if user exists using `run_process("user", ["list"])`.
+2.  Calls `run_process("user", ["add", "developer", "secure123"])`.
+3.  Verifies the addition.
+
+### 3. File Organization
+**Scenario:** Organize a messy directory.
+**Command:**
+```bash
+agent "Move all .txt files from /home/guest to /home/guest/documents"
+```
+**Agent Process:**
+1.  Calls `list_dir("/home/guest")`.
+2.  Identifies `.txt` files.
+3.  Calls `run_process("explorer", ["move", ...])` for each file.
 
 ## 🏗️ Architecture
 
 *   **`kernel/`**: Core logic including Scheduler, SyscallHandler, and the new **Agent Layer** (`agent.py`, `dom.py`, `sandbox.py`).
 *   **`bin/`**: User-space applications. These are "Agent-Aware" binaries that output JSON.
 *   **`shell/`**: The interactive CLI wrapper.
-*   **`supervisor/`**: Manages background services.
+*   **`fyodor_cli.py`**: The launcher and configuration tool.
 
 ## 🤝 Contributing
 

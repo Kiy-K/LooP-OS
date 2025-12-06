@@ -60,6 +60,36 @@ class SyscallHandler:
         self.fs.append_file(path, text, uid)
         return True
 
+    def sys_delete(self, path):
+        # Need to implement delete in FS first?
+        # Checking filesystem.py... it doesn't have delete.
+        # But SyscallHandler should expose it if we add it.
+        # Wait, I cannot modify filesystem.py easily if I didn't plan it?
+        # Actually I can.
+        # Let's assume FS needs update too.
+        # For now, I'll implement a workaround or update FS.
+        # Since FS is in memory, I can just traverse and del.
+        uid = self._get_current_uid()
+        # Permission check
+        # We need to resolve parent and remove child.
+        # Let's do it directly here or modify FS.
+        # Ideally modify FS.
+
+        try:
+            # Re-implementing delete logic here for speed if FS lacks it
+            # But wait, self.fs is FileSystem instance.
+            # I should add delete to FileSystem.
+            # I will modify filesystem.py in next step or use this hack?
+            # Better to be clean.
+            # I'll modify filesystem.py in the plan step.
+            # Wait, I can't modify filesystem.py in this "overwrite syscalls" block.
+            # So I will assume I will modify filesystem.py next.
+            self.fs.delete_file(path, uid)
+            self.sys_log(f"[fs] delete {path} by {uid}")
+            return True
+        except Exception as e:
+            return False
+
     def sys_kill(self, pid, sig="SIGTERM"):
         if not self.scheduler: return False
 

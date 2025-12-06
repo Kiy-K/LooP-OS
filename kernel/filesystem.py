@@ -132,6 +132,31 @@ class FileSystem:
         else:
             raise PermissionError(f"Permission denied: {path}")
 
+    def delete_file(self, path, uid="root"):
+        """
+        Deletes a file or directory.
+        """
+        try:
+            parent, name = self._split(path)
+        except KeyError:
+            raise FileNotFoundError(f"Path not found: {path}")
+
+        if name not in parent.children:
+             raise FileNotFoundError(f"File not found: {path}")
+
+        # Check permission on PARENT to delete child
+        if self._check_perm(parent, uid, 'w'):
+             # If directory, ensure empty?
+             # For simple implementation, recursive delete or strict empty check.
+             # Strict empty check for safety.
+             target = parent.children[name]
+             if isinstance(target, DirectoryNode) and target.children:
+                 raise OSError("Directory not empty")
+
+             del parent.children[name]
+        else:
+            raise PermissionError(f"Permission denied: {path}")
+
     # ===== Helpers =====
     def _resolve(self, path):
         if path == "/": return self.root
