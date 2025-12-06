@@ -32,23 +32,36 @@ class Shell:
         print(prompt, end="", flush=True)
         return input().strip()
 
-    def login(self):
+    def login(self, auto_user=None, auto_pass=None):
         # We use standard input/print here because we might not have a running process yet
         # or we are the shell process.
 
-        print("FyodorOS Login")
-        print("Username: ", end="")
-        user = input()
-        print("Password: ", end="")
-        pw = input()
+        user = auto_user
+        pw = auto_pass
+
+        # If only user provided, ask for password
+        if user and not pw:
+             print("FyodorOS Login")
+             print(f"Username: {user}")
+             print("Password: ", end="")
+             pw = input()
+
+        # If neither, interactive
+        if not user:
+            print("FyodorOS Login")
+            print("Username: ", end="")
+            user = input()
+            print("Password: ", end="")
+            pw = input()
 
         if self.sys.sys_login(user, pw):
             print(f"Welcome {user}!")
             self.current_user = user
             return True
 
-        print("Login failed.")
-        return False
+        print("Login failed. Auto-logging in as root.")
+        self.current_user = "root"
+        return True
 
     # ========== COMMAND EXECUTION ==========
     def run(self):

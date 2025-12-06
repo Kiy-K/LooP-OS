@@ -19,7 +19,14 @@ def boot_splash():
     """)
 
 
+import argparse
+
 def main():
+    parser = argparse.ArgumentParser(description="FyodorOS Kernel")
+    parser.add_argument("--user", help="Auto-login username (or pre-fill)")
+    parser.add_argument("--password", help="Auto-login password")
+    args = parser.parse_args()
+
     while True: # Reboot loop
         boot_splash()
 
@@ -33,7 +40,8 @@ def main():
         shell = Shell(syscall, supervisor)
 
         # Login Loop
-        while not shell.login():
+        # Pass args to login
+        while not shell.login(auto_user=args.user, auto_pass=args.password):
             pass
 
         # Create Shell Process

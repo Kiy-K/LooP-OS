@@ -2,8 +2,12 @@ from .tty import TTY
 from .syscalls import SyscallHandler
 from .scheduler import Scheduler
 from .users import UserManager
+from fyodoros.supervisor.supervisor import Supervisor
 
 class Kernel:
+    """
+    Alternative entry point wrapper, though `fyodoros/__main__.py` is preferred.
+    """
     def __init__(self):
         # low-level output/input
         self.tty = TTY()
@@ -15,20 +19,13 @@ class Kernel:
         # system call interface (has access to this kernel)
         self.sys = SyscallHandler(self.scheduler, self.user_manager)
 
+        # Supervisor
+        self.supervisor = Supervisor(self.scheduler, self.sys)
+
     def start(self):
         from fyodoros.shell.shell import Shell
-        shell = Shell(self.sys, self.sys.scheduler) # Shell expects (syscall, supervisor/scheduler)
-        # Note: Shell init signature is (syscall, supervisor=None).
-        # We can pass supervisor if we had one.
-        # But wait, Shell stores 'self.sys' and calls methods on it.
-        # It expects SyscallHandler.
+        shell = Shell(self.sys, self.supervisor)
 
-        # Let's check Shell.__init__ signature again.
-        # shell/shell.py: def __init__(self, syscall, supervisor=None):
-
-        # So passing self.sys is correct.
-        shell.run()
-        self.tty.write("Kernel started. Shell is running.\n")
-        self.tty.write("Welcome to the simulated OS kernel!\n")
-        self.tty.write("Type 'help' for a list of commands.\n")
+        # Note: This start implementation is blocking and basic, mainly for testing.
+        # The robust implementation is in __main__.py
         shell.run()
