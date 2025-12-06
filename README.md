@@ -1,4 +1,6 @@
 # FyodorOS
+[![PyPI version](https://badge.fury.io/py/fyodoros.svg)](https://badge.fury.io/py/fyodoros)
+[![Downloads](https://pepy.tech/badge/fyodoros)](https://pepy.tech/project/fyodoros)
 
 ```
 ███████╗██╗   ██╗ ██████╗ ██████╗  ██████╗ ██████╗
