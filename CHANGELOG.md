@@ -25,3 +25,7 @@
   - **Python**: Standard support.
   - **C++**: Auto-compilation via `cmake`.
   - **Node.js**: Auto-dependency installation via `npm`/`bun`.
+
+### Security
+- **C++ Sandbox Core**: New isolation layer enforcing virtual filesystem boundaries.
+- **Process Isolation**: Agent commands run in restricted environments with sanitized paths and environment variables.

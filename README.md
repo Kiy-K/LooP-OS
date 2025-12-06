@@ -36,11 +36,12 @@ FyodorOS includes a specialized browser for agents.
 - **Interaction**: Agents can `click` and `type` using element IDs directly.
 - **Efficiency**: Strips unnecessary noise (CSS/Scripts) to save context window.
 
-### 🛡️ Safety Sandbox
-Every action taken by the Agent is intercepted by the `AgentSandbox`.
-- **System Protection**: Prevents writes to `/kernel`, `/bin`, and `/etc`.
+### 🛡️ Safety Sandbox (Enhanced in v0.3.5)
+Every action taken by the Agent is intercepted by the C++ reinforced `AgentSandbox`.
+- **Virtual Filesystem**: The agent is jailed in `~/.fyodor/sandbox`. All paths are virtualized.
+- **Path Traversal Protection**: C++ layer prevents escaping the sandbox (e.g., `../../etc/passwd`).
+- **Process Isolation**: Commands run with cleared environments and restricted paths.
 - **App Whitelisting**: Only authorized "Agent Apps" can be executed.
-- **Transparency**: All actions are logged and verifiable.
 
 ## 🔌 Plugins (New in v0.3.0)
 FyodorOS now supports a powerful plugin system.
