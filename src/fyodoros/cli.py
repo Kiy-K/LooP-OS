@@ -20,11 +20,7 @@ BANNER = """
           The Experimental AI Microkernel
 """
 
-@app.command()
-def start():
-    """
-    Launch FyodorOS.
-    """
+def _run_kernel(args=None):
     console.print(BANNER, style="bold cyan")
     console.print("[green]Starting FyodorOS Kernel...[/green]")
 
@@ -40,12 +36,33 @@ def start():
                     env[key] = val
 
     # Run the OS script via module
+    cmd = [sys.executable, "-m", "fyodoros"]
+    if args:
+        cmd.extend(args)
+
     try:
-        ret = subprocess.call([sys.executable, "-m", "fyodoros"], env=env)
+        ret = subprocess.call(cmd, env=env)
         if ret != 0:
             console.print(f"[red]Kernel exited with code {ret}[/red]")
     except KeyboardInterrupt:
         console.print("\n[yellow]Shutdown.[/yellow]")
+
+@app.command()
+def start():
+    """
+    Launch FyodorOS (Auto-login as Guest).
+    """
+    _run_kernel(["--user", "guest", "--password", "guest"])
+
+@app.command()
+def login(user: str = typer.Option(None, help="Username to pre-fill")):
+    """
+    Launch FyodorOS with interactive login.
+    """
+    args = []
+    if user:
+        args.extend(["--user", user])
+    _run_kernel(args)
 
 @app.command()
 def setup():

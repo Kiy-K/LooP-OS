@@ -70,8 +70,14 @@ Every action taken by the Agent is intercepted by the `AgentSandbox`.
     # 1. Setup (Configure API Keys)
     fyodor setup
 
-    # 2. Start
+    # 2. Start (Auto-login as Guest)
     fyodor start
+
+    # 3. Interactive Login
+    fyodor login
+
+    # 4. Login as specific user (e.g. root)
+    fyodor login --user root
     ```
 
     **Option B: Using Convenience Scripts**
