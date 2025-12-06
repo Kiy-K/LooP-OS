@@ -6,6 +6,7 @@ import subprocess
 from rich.console import Console
 from rich.panel import Panel
 from rich.prompt import Prompt
+from fyodoros.kernel.users import UserManager
 
 app = typer.Typer()
 console = Console()
@@ -63,6 +64,21 @@ def login(user: str = typer.Option(None, help="Username to pre-fill")):
     if user:
         args.extend(["--user", user])
     _run_kernel(args)
+
+@app.command()
+def user(username: str, password: str = typer.Argument(None)):
+    """
+    Create a new user.
+    Usage: fyodor user <username> [password]
+    """
+    if not password:
+        password = Prompt.ask(f"Enter password for '{username}'", password=True)
+
+    um = UserManager()
+    if um.add_user(username, password):
+        console.print(f"[green]User '{username}' created successfully![/green]")
+    else:
+        console.print(f"[red]Failed to create user '{username}' (already exists?).[/red]")
 
 @app.command()
 def setup():
