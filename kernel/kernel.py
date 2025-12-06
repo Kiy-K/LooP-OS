@@ -1,13 +1,19 @@
 from .tty import TTY
-from .syscall_handler import SyscallHandler
+from .syscalls import SyscallHandler
+from .scheduler import Scheduler
+from .users import UserManager
 
 class Kernel:
     def __init__(self):
         # low-level output/input
         self.tty = TTY()
 
+        # Core Components
+        self.scheduler = Scheduler()
+        self.user_manager = UserManager()
+
         # system call interface (has access to this kernel)
-        self.sys = SyscallHandler(self)
+        self.sys = SyscallHandler(self.scheduler, self.user_manager)
 
     def start(self):
         from shell.shell import Shell

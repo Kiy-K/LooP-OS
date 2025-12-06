@@ -3,6 +3,7 @@
 import time
 from kernel.process import Process
 from importlib import import_module
+from kernel.agent import ReActAgent
 
 class Shell:
     """
@@ -15,6 +16,7 @@ class Shell:
       - ps
       - help
       - reboot
+      - agent <task>
     """
 
     def __init__(self, syscall, supervisor=None):
@@ -23,6 +25,7 @@ class Shell:
         self.cwd = "/"
         self.running = True
         self.current_user = None
+        self.agent = None
 
     # ========== INPUT HANDLING ==========
     def _readline(self, prompt):
@@ -134,6 +137,19 @@ class Shell:
                 state = self.sys.sys_get_state()
                 return str(state)
 
+            elif op == "agent":
+                if len(args) < 1:
+                    return "Usage: agent <task description>"
+                task = " ".join(args)
+
+                # Lazy Init Agent
+                if not self.agent:
+                    print("[Shell] Initializing Agent Layer...")
+                    self.agent = ReActAgent(self.sys)
+
+                print(f"[Shell] Dispatching task to Agent: '{task}'")
+                return self.agent.run(task)
+
             elif op == "help":
                 return (
                     "Commands:\n"
@@ -149,6 +165,7 @@ class Shell:
                     "  journal           - show system logs\n"
                     "  run-service <svc> - start background service\n"
                     "  dom               - show system state (Agent)\n"
+                    "  agent <task>      - give a task to the AI Agent\n"
                 )
 
             else:
