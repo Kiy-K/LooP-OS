@@ -7,8 +7,9 @@
     - `fyodor plugin list`: List installed plugins.
     - `fyodor plugin activate/deactivate`: Toggle plugins.
     - Config stored in `~/.fyodor/plugins/`.
-- **Kernel Updates**: `Kernel` class now orchestrates `PluginLoader`.
-- **Developer API**: New `fyodoros.plugins.Plugin` base class for creating extensions.
+- **Kernel Integration**: `Kernel` class now orchestrates `PluginLoader`, automatically bootstrapping active plugins on startup.
+- **Developer API**: New `fyodoros.plugins.Plugin` abstract base class for creating extensions.
+- **Documentation**: Added `PLUGIN_DEVELOPMENT.md` guide for contributors.
 
 ## [0.2.0] - 2025-03-02
 
