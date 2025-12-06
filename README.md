@@ -46,7 +46,7 @@ Every action taken by the Agent is intercepted by the `AgentSandbox`.
 
 1.  **Clone the Repository**
     ```bash
-    git clone https://github.com/your-org/fyodoros.git
+    git clone [https://github.com/your-org/fyodoros.git](https://github.com/Kiy-K/FyodorOS.git)
     cd fyodoros
     ```
 
