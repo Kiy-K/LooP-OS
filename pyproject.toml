@@ -5,9 +5,9 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "fyodoros"
-version = "0.1.1"
+version = "0.2"
 authors = [
-  { name="FyodorOS Team", email="maintainer@fyodoros.ai" },
+  { name="FyodorOS Team", email="khoitruong071510@gmail.com" },
 ]
 description = "The Experimental AI Microkernel OS"
 readme = "README.md"
