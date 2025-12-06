@@ -1,6 +1,6 @@
 # Changelog
 
-## [0.3.0] - Unreleased
+## [0.3.5] - Unreleased
 ### Added
 - **Plugin System Enhancements**:
   - Added support for plugin configuration via `fyodor plugin settings`.
