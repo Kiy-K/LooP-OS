@@ -78,6 +78,12 @@ Every action taken by the Agent is intercepted by the `AgentSandbox`.
 
     # 4. Login as specific user (e.g. root)
     fyodor login --user root
+
+    # 5. Create a new user
+    fyodor user developer secret123
+
+    # 6. Open Launcher Menu (TUI)
+    fyodor tui
     ```
 
     **Option B: Using Convenience Scripts**
@@ -92,6 +98,12 @@ Every action taken by the Agent is intercepted by the `AgentSandbox`.
 
     # Task the Agent
     guest@fyodoros:/> agent "Create a file named hello.txt in my home folder"
+
+    # Manual Creation
+    guest@fyodoros:/> create notes.txt "Meeting at 5pm"
+
+    # Launch App Manually
+    guest@fyodoros:/> navigate browser
     ```
 
 ## 💡 Use Cases
