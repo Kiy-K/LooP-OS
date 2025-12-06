@@ -22,4 +22,12 @@ class SystemCallInterface:
 
     def log(self, msg):
         return self.sys.sys_log(msg)
-# --- IGNORE ---
+
+    def get_state(self):
+        return self.sys.sys_get_state()
+
+    def shutdown(self):
+        return self.sys.sys_shutdown()
+
+    def reboot(self):
+        return self.sys.sys_reboot()

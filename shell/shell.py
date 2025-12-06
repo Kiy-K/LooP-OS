@@ -1,10 +1,8 @@
 # shell/shell.py
 
 import time
-import kernel
 from kernel.process import Process
 from importlib import import_module
-
 
 class Shell:
     """
@@ -20,12 +18,11 @@ class Shell:
     """
 
     def __init__(self, syscall, supervisor=None):
-        self.kernel = kernel
-        self.sys = kernel.sys # syscall interface
         self.sys = syscall
         self.supervisor = supervisor
         self.cwd = "/"
         self.running = True
+        self.current_user = None
 
     # ========== INPUT HANDLING ==========
     def _readline(self, prompt):
@@ -33,28 +30,28 @@ class Shell:
         return input().strip()
 
     def login(self):
-        tty = self.sys.tty
+        # We use standard input/print here because we might not have a running process yet
+        # or we are the shell process.
 
-        tty.write("FyodorOS Login\n")
-        tty.write("Username: ")
-        user = input("> ")
-        tty.write("Password: ")
-        pw = input("> ")
+        print("FyodorOS Login")
+        print("Username: ", end="")
+        user = input()
+        print("Password: ", end="")
+        pw = input()
 
-        if self.users.authenticate(user, pw):
-            tty.write(f"Welcome {user}!\n")
+        if self.sys.sys_login(user, pw):
+            print(f"Welcome {user}!")
             self.current_user = user
             return True
 
-        tty.write("Login failed.\n")
+        print("Login failed.")
         return False
 
     # ========== COMMAND EXECUTION ==========
     def run(self):
-        tty = self.kernel.tty
         """Generator for scheduling."""
         while self.running:
-            cmd = self._readline("> ")
+            cmd = self._readline(f"{self.current_user}@fyodoros:{self.cwd}> ")
             output = self.execute(cmd)
             if output:
                 print(output)
@@ -70,7 +67,8 @@ class Shell:
 
         try:
             if op == "ls":
-                return "\n".join(self.sys.sys_ls(self.cwd))
+                path = args[0] if args else self.cwd
+                return "\n".join(self.sys.sys_ls(path))
 
             elif op == "cat":
                 if len(args) < 1: return "Usage: cat <file>"
@@ -82,15 +80,22 @@ class Shell:
                 self.sys.sys_write(path, text)
                 return f"Written to {path}"
 
+            elif op == "append":
+                if len(args) < 2: return "Usage: append <file> <text>"
+                path, text = args[0], " ".join(args[1:])
+                self.sys.sys_append(path, text)
+                return f"Appended to {path}"
+
             elif op == "run":
                 if len(args) < 1: return "Usage: run <program> [args]"
                 return self._run_program(args)
 
             elif op == "ps":
-                procs = self.supervisor.list_processes()
-                out = []
+                # Use syscall instead of supervisor direct access if possible
+                procs = self.sys.sys_proc_list()
+                out = ["PID    NAME    STATE    UID"]
                 for p in procs:
-                    out.append(f"{p.pid[:6]}  {p.name}  {p.state.name}")
+                    out.append(f"{p['pid']:<6} {p['name']:<7} {p['state']:<8} {p['uid']}")
                 return "\n".join(out)
 
             elif op == "run-service":
@@ -107,18 +112,27 @@ class Shell:
             elif op == "kill":
                 if len(args) < 1:
                     return "Usage: kill <pid>"
-                return self.supervisor.kill_process(int(args[0]))
+                ok = self.sys.sys_kill(int(args[0]))
+                return "Killed" if ok else "Failed (perm?)"
 
             elif op == "send":
                 if len(args) < 2:
                     return "Usage: send <pid> <message>"
-                return self.supervisor.send_message(int(args[0]), " ".join(args[1:]))
+                ok = self.sys.sys_send(int(args[0]), " ".join(args[1:]))
+                return "Sent" if ok else "Failed"
 
             elif op == "recv":
                 return self.sys.sys_recv()
 
-            elif op == "proc":
-                return self.sys.sys_proc_list()
+            elif op == "shutdown":
+                return self.sys.sys_shutdown()
+
+            elif op == "reboot":
+                return self.sys.sys_reboot()
+
+            elif op == "dom":
+                state = self.sys.sys_get_state()
+                return str(state)
 
             elif op == "help":
                 return (
@@ -126,17 +140,16 @@ class Shell:
                     "  ls                - list directory\n"
                     "  cat <file>        - read file\n"
                     "  write <f> <text>  - write file\n"
+                    "  append <f> <text> - append file\n"
                     "  run <prog> args   - run program in /bin\n"
                     "  ps                - list processes\n"
                     "  reboot            - restart OS\n"
+                    "  shutdown          - shutdown OS\n"
                     "  help              - show this\n"
                     "  journal           - show system logs\n"
                     "  run-service <svc> - start background service\n"
+                    "  dom               - show system state (Agent)\n"
                 )
-
-            elif op == "reboot":
-                self.running = False
-                return "[shell] Reboot requested."
 
             else:
                 return f"Unknown command: {op}"
@@ -151,11 +164,20 @@ class Shell:
 
         try:
             mod = import_module(f"bin.{program}")
-        except:
+        except ImportError:
             return f"Program not found: {program}"
+        except Exception as e:
+            return f"Error loading program: {e}"
 
         if not hasattr(mod, "main"):
             return f"Program {program} has no main()"
 
-        return mod.main(prog_args, self.sys)
-# --- IGNORE ---
+        # Execute program
+        # Ideally we should spawn a process for it.
+        # But 'run' command here seems to execute it in-place (blocking shell).
+        # To make it a process, we should use 'run-service' style or modify 'run' to spawn.
+        # For now, keep as is.
+        try:
+            return mod.main(prog_args, self.sys)
+        except Exception as e:
+             return f"Program crashed: {e}"

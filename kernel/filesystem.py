@@ -37,55 +37,125 @@ class FileSystem:
         self.root = DirectoryNode("/")
 
         # boot FS structure
-        self.mkdir("/usr")
-        self.mkdir("/etc")
-        self.mkdir("/bin")
-        self.mkdir("/var")
-        self.mkdir("/var/log")
-        self.mkdir("/var/log/journal")
+        self.mkdir("/usr", "root")
+        self.mkdir("/etc", "root")
+        self.mkdir("/bin", "root")
+        self.mkdir("/var", "root")
+        self.mkdir("/var/log", "root")
+        self.mkdir("/var/log/journal", "root")
+        self.mkdir("/home")
+        self.mkdir("/home/guest", uid="root", owner="guest")
+        self.mkdir("/home/root", uid="root", owner="root")
 
-    def list_dir(self, path="/"):
+    def _check_perm(self, node, uid, op):
+        """
+        Check if uid has permission to perform op ('r' or 'w') on node.
+        """
+        if uid == "root":
+            return True
+
+        # Simple ownership check for now
+        if node.permissions.owner == uid:
+            if op in node.permissions.mode:
+                return True
+            # Also handle 'rw' containing 'r' and 'w'
+            if 'rw' in node.permissions.mode:
+                return True
+
+        # TODO: Group/World permissions
+        return False
+
+    def list_dir(self, path="/", uid="root"):
         node = self._resolve(path)
         if isinstance(node, DirectoryNode):
-            return list(node.children.keys())
+            if self._check_perm(node, uid, 'r'):
+                return list(node.children.keys())
+            raise PermissionError(f"Permission denied: {path}")
         raise ValueError("Not a directory")
 
-    def read_file(self, path):
+    def read_file(self, path, uid="root"):
         node = self._resolve(path)
         if isinstance(node, FileNode):
-            return node.data
+            if self._check_perm(node, uid, 'r'):
+                return node.data
+            raise PermissionError(f"Permission denied: {path}")
         raise ValueError("Not a file")
 
-    def write_file(self, path, data):
-        parent, name = self._split(path)
-        parent.children[name] = FileNode(name, data)
+    def write_file(self, path, data, uid="root"):
+        # Check if file exists to check permissions, or parent to check create permissions
+        try:
+            node = self._resolve(path)
+            # File exists, check write perm
+            if isinstance(node, FileNode):
+                if self._check_perm(node, uid, 'w'):
+                    node.data = data
+                    return
+                raise PermissionError(f"Permission denied: {path}")
+            else:
+                 raise ValueError("Path is a directory")
+        except KeyError:
+            # File doesn't exist, check parent write perm to create
+            parent, name = self._split(path)
+            if self._check_perm(parent, uid, 'w'):
+                parent.children[name] = FileNode(name, data, owner=uid)
+            else:
+                raise PermissionError(f"Permission denied: {path}")
 
-    def append_file(self, path, text):
-        parent, name = self._split(path)
-        if name not in parent.children:
-            parent.children[name] = FileNode(name, "")
-        parent.children[name].data += text + "\n"
+    def append_file(self, path, text, uid="root"):
+        try:
+            node = self._resolve(path)
+            if isinstance(node, FileNode):
+                if self._check_perm(node, uid, 'w'):
+                    node.data += text + "\n"
+                    return
+                raise PermissionError(f"Permission denied: {path}")
+        except KeyError:
+            # Create new
+            parent, name = self._split(path)
+            if self._check_perm(parent, uid, 'w'):
+                parent.children[name] = FileNode(name, text + "\n", owner=uid)
+            else:
+                raise PermissionError(f"Permission denied: {path}")
 
-    def mkdir(self, path):
+    def mkdir(self, path, uid="root", owner=None):
+        try:
+            self._resolve(path)
+            # Already exists
+            return
+        except KeyError:
+            pass
+
         parent, name = self._split(path)
-        parent.children[name] = DirectoryNode(name)
+        if self._check_perm(parent, uid, 'w'):
+            new_owner = owner if owner else uid
+            parent.children[name] = DirectoryNode(name, owner=new_owner)
+        else:
+            raise PermissionError(f"Permission denied: {path}")
 
     # ===== Helpers =====
     def _resolve(self, path):
+        if path == "/": return self.root
         parts = [p for p in path.split("/") if p]
         node = self.root
         for p in parts:
-            node = node.children[p]
+            if isinstance(node, DirectoryNode) and p in node.children:
+                node = node.children[p]
+            else:
+                raise KeyError(f"Path not found: {path}")
         return node
 
     def _split(self, path):
         parts = [p for p in path.split("/") if p]
+        if not parts:
+            return self.root, "" # Should not happen for valid paths with name
         parent_parts = parts[:-1]
         name = parts[-1]
 
         node = self.root
         for p in parent_parts:
-            node = node.children[p]
+             if isinstance(node, DirectoryNode) and p in node.children:
+                node = node.children[p]
+             else:
+                raise KeyError(f"Parent path not found: {path}")
 
         return node, name
-# --- IGNORE ---
