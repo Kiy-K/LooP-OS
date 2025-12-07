@@ -10,11 +10,14 @@ from rich.panel import Panel
 from rich.prompt import Prompt, Confirm
 from rich import print as rprint
 from fyodoros.kernel.users import UserManager
+from fyodoros.kernel.network import NetworkManager
 from fyodoros.plugins.registry import PluginRegistry
 
 app = typer.Typer()
 plugin_app = typer.Typer()
+network_app = typer.Typer()
 app.add_typer(plugin_app, name="plugin")
+app.add_typer(network_app, name="network")
 console = Console()
 
 BANNER = """
@@ -306,6 +309,29 @@ def plugin_settings(name: str, key: str = typer.Argument(None), value: str = typ
     else:
         val = reg.get_setting(name, key)
         console.print(f"{name}.{key} = {val}")
+
+@network_app.command("status")
+def network_status():
+    """Check network status."""
+    nm = NetworkManager()
+    status = "Active" if nm.is_enabled() else "Inactive"
+    color = "green" if nm.is_enabled() else "red"
+    console.print(f"Network Status: [{color}]{status}[/{color}]")
+
+@network_app.command("on")
+def network_on():
+    """Enable network."""
+    # Note: RBAC is handled inside Manager/Syscall, but CLI is "admin"
+    nm = NetworkManager()
+    nm.set_enabled(True)
+    console.print("[green]Network Enabled[/green]")
+
+@network_app.command("off")
+def network_off():
+    """Disable network."""
+    nm = NetworkManager()
+    nm.set_enabled(False)
+    console.print("[red]Network Disabled[/red]")
 
 @app.command()
 def dashboard(view: str = typer.Argument("tui", help="View mode: tui or logs")):

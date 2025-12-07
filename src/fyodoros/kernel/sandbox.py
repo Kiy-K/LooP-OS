@@ -116,4 +116,18 @@ class AgentSandbox:
             else:
                 return f"Permission Denied: Agent cannot run '{prog}'. Allowed: {allowed_apps}"
 
+        elif action == "run_nasm":
+            # args[0] = source code
+            # args[1] = optional output name (default: "nasm_prog")
+            source = args[0]
+            name = args[1] if len(args) > 1 else "nasm_prog"
+
+            if self.core:
+                try:
+                    result = self.core.compile_and_run_nasm(source, name)
+                    return result # Dict with stdout, stderr, return_code
+                except Exception as e:
+                    return {"error": str(e)}
+            return {"error": "Sandbox Core not available"}
+
         return f"Unknown or disallowed action: {action}"

@@ -21,6 +21,10 @@ def main(args, syscalls):
     # We use global variables to persist state across syscalls because import_module caches the module.
     global _browser, _page, _playwright
 
+    # Network Check (if syscalls support it)
+    if hasattr(syscalls, 'sys_net_check_access') and not syscalls.sys_net_check_access():
+        return json.dumps({"error": "Network Access Denied"})
+
     try:
         if '_playwright' not in globals():
             _playwright = sync_playwright().start()

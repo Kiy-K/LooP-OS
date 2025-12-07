@@ -2,6 +2,8 @@ from .tty import TTY
 from .syscalls import SyscallHandler
 from .scheduler import Scheduler
 from .users import UserManager
+from .network import NetworkManager, NetworkGuard
+from .sandbox import AgentSandbox
 from fyodoros.supervisor.supervisor import Supervisor
 from fyodoros.kernel.plugin_loader import PluginLoader
 
@@ -16,9 +18,18 @@ class Kernel:
         # Core Components
         self.scheduler = Scheduler()
         self.user_manager = UserManager()
+        self.network_manager = NetworkManager(self.user_manager)
+
+        # Security Guards
+        self.network_guard = NetworkGuard(self.network_manager)
+        self.network_guard.enable()
 
         # system call interface (has access to this kernel)
-        self.sys = SyscallHandler(self.scheduler, self.user_manager)
+        self.sys = SyscallHandler(self.scheduler, self.user_manager, self.network_manager)
+
+        # Sandbox (requires syscall handler)
+        self.sandbox = AgentSandbox(self.sys)
+        self.sys.set_sandbox(self.sandbox)
 
         # Supervisor
         self.supervisor = Supervisor(self.scheduler, self.sys)

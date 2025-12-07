@@ -3,15 +3,21 @@
 import time
 from fyodoros.kernel.filesystem import FileSystem
 from fyodoros.kernel.users import UserManager
+from fyodoros.kernel.network import NetworkManager
 
 class SyscallHandler:
-    def __init__(self, scheduler=None, user_manager=None):
+    def __init__(self, scheduler=None, user_manager=None, network_manager=None):
         self.fs = FileSystem()
         self.scheduler = scheduler
         self.user_manager = user_manager or UserManager()
+        self.network_manager = network_manager or NetworkManager(self.user_manager)
+        self.sandbox = None
 
     def set_scheduler(self, scheduler):
         self.scheduler = scheduler
+
+    def set_sandbox(self, sandbox):
+        self.sandbox = sandbox
 
     # Authentication
     def sys_login(self, user, password):
@@ -107,6 +113,47 @@ class SyscallHandler:
                 "uid": p.uid
             })
         return out
+
+    # Network Control
+    def sys_net_status(self):
+        return "active" if self.network_manager.is_enabled() else "inactive"
+
+    def sys_net_set_status(self, status):
+        """
+        Enable/Disable network.
+        Requires root or 'manage_network' permission.
+        """
+        user = self._get_current_uid()
+        if user != "root" and not self.user_manager.has_permission(user, "manage_network"):
+            return False
+
+        enable = str(status).lower() in ("true", "1", "on", "yes", "enable")
+        self.network_manager.set_enabled(enable)
+        self.sys_log(f"Network set to {enable} by {user}")
+        return True
+
+    def sys_net_check_access(self):
+        """
+        Check if current user can access network.
+        Returns True/False.
+        """
+        user = self._get_current_uid()
+        return self.network_manager.check_access(user)
+
+    # Execution
+    def sys_exec_nasm(self, source_code):
+        """
+        Execute NASM code via Sandbox.
+        Requires 'execute_code' permission.
+        """
+        user = self._get_current_uid()
+        if user != "root" and not self.user_manager.has_permission(user, "execute_code"):
+            return {"error": "Permission Denied"}
+
+        if not self.sandbox:
+            return {"error": "Sandbox not available"}
+
+        return self.sandbox.execute("run_nasm", [source_code])
 
     # System Control
     def sys_shutdown(self):

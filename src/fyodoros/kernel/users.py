@@ -94,6 +94,24 @@ class UserManager:
         if user == "root":
             return True
 
+        roles = self.get_roles(user)
+        if "admin" in roles:
+            return True
+
+        # Default restrictions
+        if action == "manage_network":
+            return False
+
+        if action == "use_network":
+             # "regular user have specific permission to use network"
+             # Implies we should allow if they have the role.
+             # Current roles are "admin" or "user".
+             return "user" in roles
+
+        if action == "execute_code":
+            # Allow users to execute code (sandbox protected)
+            return "user" in roles
+
         # This will be extended by TeamCollaboration plugin via monkeypatching or similar
         return True
 
