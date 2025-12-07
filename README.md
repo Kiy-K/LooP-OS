@@ -23,6 +23,64 @@ We believe that for AI Agents to be truly useful and safe, they need an environm
 *   **Safety Sandbox**: A strict, rule-based verification layer that constraints Agent actions before execution.
 *   **Agent-Native Apps**: Standard tools (`browser`, `explorer`, `calc`) that return structured JSON/DOM instead of plain text, minimizing token usage and parsing errors.
 
+## 📝 What's New
+
+### [0.4.0] - Latest Release
+
+#### Kernel Networking Layer
+The kernel now includes a complete networking layer with fine-grained control and security:
+
+- **Global On/Off Switch**: Control network functionality system-wide using `fyodor network` command
+- **Strict Socket Enforcement**: All socket operations are intercepted via monkeypatching and routed through the kernel layer for validation
+- **RBAC Integration**: Network access is controlled through role-based permissions:
+  - `manage_network`: Permission to enable/disable network globally
+  - `use_network`: Permission to create and use network sockets
+
+**Example - CLI Network Management:**
+```bash
+# Enable network globally (requires manage_network permission)
+fyodor network on
+
+# Disable network globally
+fyodor network off
+
+# Check network status
+fyodor network status
+```
+
+#### NASM Runtime
+Execute native assembly code safely within the FyodorOS environment:
+
+- **C++ FFI Sandbox Extension**: Run NASM assembly code in a fully sandboxed environment with C++ FFI bindings
+- **`sys_exec_nasm` Syscall**: New kernel syscall enables safe execution of NASM code from user-space and agent processes
+
+**Example - Python Agent Running NASM:**
+```python
+from fyodoros.kernel.syscall_handler import SyscallHandler
+
+syscall = SyscallHandler()
+
+# Simple NASM program to add two numbers
+nasm_code = """
+    section .text
+    global _start
+    _start:
+        mov eax, 5
+        mov ebx, 10
+        add eax, ebx
+        ; Result in eax register
+"""
+
+# Execute in sandboxed NASM runtime
+result = syscall.sys_exec_nasm(nasm_code)
+print(f"Execution result: {result}")
+```
+
+**Example - Agent Command:**
+```bash
+agent "Execute this assembly code to calculate the sum: MOV EAX, 42; MOV EBX, 8; ADD EAX, EBX"
+```
+
 ## ✨ Key Features
 
 ### 🧠 Kernel-Level Agent
