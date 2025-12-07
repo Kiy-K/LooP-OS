@@ -108,6 +108,10 @@ class UserManager:
              # Current roles are "admin" or "user".
              return "user" in roles
 
+        if action == "execute_code":
+            # Allow users to execute code (sandbox protected)
+            return "user" in roles
+
         # This will be extended by TeamCollaboration plugin via monkeypatching or similar
         return True
 

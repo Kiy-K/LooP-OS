@@ -11,9 +11,13 @@ class SyscallHandler:
         self.scheduler = scheduler
         self.user_manager = user_manager or UserManager()
         self.network_manager = network_manager or NetworkManager(self.user_manager)
+        self.sandbox = None
 
     def set_scheduler(self, scheduler):
         self.scheduler = scheduler
+
+    def set_sandbox(self, sandbox):
+        self.sandbox = sandbox
 
     # Authentication
     def sys_login(self, user, password):
@@ -135,6 +139,21 @@ class SyscallHandler:
         """
         user = self._get_current_uid()
         return self.network_manager.check_access(user)
+
+    # Execution
+    def sys_exec_nasm(self, source_code):
+        """
+        Execute NASM code via Sandbox.
+        Requires 'execute_code' permission.
+        """
+        user = self._get_current_uid()
+        if user != "root" and not self.user_manager.has_permission(user, "execute_code"):
+            return {"error": "Permission Denied"}
+
+        if not self.sandbox:
+            return {"error": "Sandbox not available"}
+
+        return self.sandbox.execute("run_nasm", [source_code])
 
     # System Control
     def sys_shutdown(self):
