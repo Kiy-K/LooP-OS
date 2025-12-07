@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.5.0] - 2024-05-01
+### Added
+- **Docker Integration**: `sys_docker_*` syscalls, CLI commands, and Agent actions.
+- **Kubernetes Integration**: `sys_k8s_*` syscalls, CLI commands, and Agent actions.
+- **RBAC Updates**: Added `manage_docker` and `manage_k8s` permissions.
+- **Cloud Interface**: `DockerInterface` and `KubernetesInterface` in `kernel.cloud`.
+
 ## [0.4.0] - 2025-12-07
 
 ### Added

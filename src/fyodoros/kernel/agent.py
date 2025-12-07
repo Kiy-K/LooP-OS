@@ -143,6 +143,10 @@ AVAILABLE ACTIONS:
 - sys_docker_run(image, name=None, ports=None, env=None)  <-- ports/env should be JSON strings if complex, or None
 - sys_docker_stop(container_id)
 - sys_docker_logs(container_id)
+- sys_k8s_deploy(name, image, replicas=1, namespace="default")
+- sys_k8s_scale(name, replicas, namespace="default")
+- sys_k8s_delete(name, namespace="default")
+- sys_k8s_logs(pod_name, namespace="default")
 - done()  <-- Call this when the task is complete.
 
 Do not interact with system files (/kernel, /bin, /etc).

@@ -35,13 +35,18 @@ class SystemDOM:
         # Get docker state
         docker_state = []
         try:
-            # Check permissions first or just try?
-            # The agent typically runs as 'user' or 'root' depending on context.
-            # Syscalls handle permissions, so we should use syscall.
-            # However, sys_docker_ps returns a dict {success, data, error}
             res = self.sys.sys_docker_ps()
             if res.get("success"):
                 docker_state = res.get("data", [])
+        except Exception:
+            pass
+
+        # Get K8s state
+        k8s_state = []
+        try:
+            res = self.sys.sys_k8s_get_pods()
+            if res.get("success"):
+                k8s_state = res.get("data", [])
         except Exception:
             pass
 
@@ -49,7 +54,8 @@ class SystemDOM:
             "filesystem": self._get_fs_tree(self.sys.fs.root),
             "processes": self.sys.sys_proc_list(),
             "users": self.sys.user_manager.list_users(),
-            "docker": docker_state
+            "docker": docker_state,
+            "k8s_pods": k8s_state
         }
 
     def _get_fs_tree(self, node, path="/"):

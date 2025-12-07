@@ -22,10 +22,25 @@ We believe that for AI Agents to be truly useful and safe, they need an environm
 *   **Cognitive Loop**: Built-in ReAct (Reasoning + Acting) loop at the kernel level.
 *   **Safety Sandbox**: A strict, rule-based verification layer that constraints Agent actions before execution.
 *   **Agent-Native Apps**: Standard tools (`browser`, `explorer`, `calc`) that return structured JSON/DOM instead of plain text, minimizing token usage and parsing errors.
+*   **Cloud Integration (v0.5.0)**: Native Docker and Kubernetes support.
 
 ## 📝 What's New
 
-### [0.4.1] - Latest Release
+### [0.5.0] - Cloud Integration & Performance
+
+FyodorOS v0.5.0 introduces major cloud capabilities:
+
+#### Docker Integration
+- **Build & Run**: Build images and run containers directly from the shell or agent.
+- **Agent Control**: Agents can autonomously manage containers (`sys_docker_*` syscalls).
+- **CLI Commands**: `fyodor docker run`, `fyodor docker build`, `fyodor docker ps`.
+
+#### Kubernetes Integration
+- **Deployment Management**: Deploy, scale, and delete K8s resources.
+- **Pod Inspection**: View pod status and logs via CLI or Agent.
+- **RBAC**: New `manage_docker` and `manage_k8s` permissions.
+
+### [0.4.1]
 
 #### Comprehensive Documentation
 The entire codebase has been thoroughly documented with:

@@ -22,14 +22,17 @@ from fyodoros.kernel.network import NetworkManager
 from fyodoros.plugins.registry import PluginRegistry
 from fyodoros.utils.security import encrypt_value, decrypt_value
 from fyodoros.kernel.cloud.docker_interface import DockerInterface
+from fyodoros.kernel.cloud.k8s_interface import KubernetesInterface
 
 app = typer.Typer()
 plugin_app = typer.Typer()
 network_app = typer.Typer()
 docker_app = typer.Typer()
+k8s_app = typer.Typer()
 app.add_typer(plugin_app, name="plugin")
 app.add_typer(network_app, name="network")
 app.add_typer(docker_app, name="docker")
+app.add_typer(k8s_app, name="k8s")
 console = Console()
 
 BANNER = """
@@ -468,6 +471,70 @@ def docker_login(username: str, registry: str = "https://index.docker.io/v1/"):
         console.print("[green]Login successful[/green]")
     else:
         console.print(f"[red]Login failed: {res['error']}[/red]")
+
+@k8s_app.command("pods")
+def k8s_pods(namespace: str = "default"):
+    """List K8s pods."""
+    k8s = KubernetesInterface()
+    res = k8s.get_pods(namespace)
+    if res["success"]:
+        pods = res["data"]
+        if not pods:
+            console.print("[yellow]No pods found.[/yellow]")
+            return
+
+        from rich.table import Table
+        table = Table(title=f"Pods ({namespace})")
+        table.add_column("Name", style="cyan")
+        table.add_column("Status", style="magenta")
+        table.add_column("IP")
+        table.add_column("Node")
+
+        for p in pods:
+            table.add_row(p["name"], p["status"], p["ip"], p["node"])
+        console.print(table)
+    else:
+        console.print(f"[red]Error: {res['error']}[/red]")
+
+@k8s_app.command("deploy")
+def k8s_deploy(name: str, image: str = typer.Option(..., "--image", "-i"), replicas: int = typer.Option(1, "--replicas", "-r"), namespace: str = "default"):
+    """Create a Deployment."""
+    k8s = KubernetesInterface()
+    res = k8s.create_deployment(name, image, replicas, namespace)
+    if res["success"]:
+        console.print(f"[green]Deployment created: {res['data']['name']}[/green]")
+    else:
+        console.print(f"[red]Error: {res['error']}[/red]")
+
+@k8s_app.command("scale")
+def k8s_scale(name: str, replicas: int = typer.Option(..., "--replicas", "-r"), namespace: str = "default"):
+    """Scale a Deployment."""
+    k8s = KubernetesInterface()
+    res = k8s.scale_deployment(name, replicas, namespace)
+    if res["success"]:
+        console.print(f"[green]Scaled {name} to {replicas} replicas[/green]")
+    else:
+        console.print(f"[red]Error: {res['error']}[/red]")
+
+@k8s_app.command("delete")
+def k8s_delete(name: str, namespace: str = "default"):
+    """Delete a Deployment."""
+    k8s = KubernetesInterface()
+    res = k8s.delete_deployment(name, namespace)
+    if res["success"]:
+        console.print(f"[green]{res['data']}[/green]")
+    else:
+        console.print(f"[red]Error: {res['error']}[/red]")
+
+@k8s_app.command("logs")
+def k8s_logs(pod: str, namespace: str = "default"):
+    """Get logs from a Pod."""
+    k8s = KubernetesInterface()
+    res = k8s.get_pod_logs(pod, namespace)
+    if res["success"]:
+        console.print(Panel(res["data"], title=f"Logs: {pod}"))
+    else:
+        console.print(f"[red]Error: {res['error']}[/red]")
 
 @app.command()
 def dashboard(view: str = typer.Argument("tui", help="View mode: tui or logs")):

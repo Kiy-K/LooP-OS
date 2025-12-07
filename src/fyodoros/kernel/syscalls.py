@@ -13,6 +13,7 @@ from fyodoros.kernel.filesystem import FileSystem
 from fyodoros.kernel.users import UserManager
 from fyodoros.kernel.network import NetworkManager
 from fyodoros.kernel.cloud.docker_interface import DockerInterface
+from fyodoros.kernel.cloud.k8s_interface import KubernetesInterface
 
 class SyscallHandler:
     """
@@ -39,6 +40,7 @@ class SyscallHandler:
         self.user_manager = user_manager or UserManager()
         self.network_manager = network_manager or NetworkManager(self.user_manager)
         self.docker_interface = DockerInterface()
+        self.k8s_interface = KubernetesInterface()
         self.sandbox = None
 
     def set_scheduler(self, scheduler):
@@ -387,6 +389,39 @@ class SyscallHandler:
         if not self._check_docker_permission():
             return {"success": False, "error": "Permission Denied: manage_docker required"}
         return self.docker_interface.get_logs(container_id, tail)
+
+    # Kubernetes Integration
+    def _check_k8s_permission(self):
+        """Helper to check k8s permissions."""
+        user = self._get_current_uid()
+        if user == "root":
+            return True
+        return self.user_manager.has_permission(user, "manage_k8s")
+
+    def sys_k8s_deploy(self, name, image, replicas=1, namespace="default"):
+        if not self._check_k8s_permission():
+            return {"success": False, "error": "Permission Denied: manage_k8s required"}
+        return self.k8s_interface.create_deployment(name, image, replicas, namespace)
+
+    def sys_k8s_scale(self, name, replicas, namespace="default"):
+        if not self._check_k8s_permission():
+            return {"success": False, "error": "Permission Denied: manage_k8s required"}
+        return self.k8s_interface.scale_deployment(name, replicas, namespace)
+
+    def sys_k8s_delete(self, name, namespace="default"):
+        if not self._check_k8s_permission():
+            return {"success": False, "error": "Permission Denied: manage_k8s required"}
+        return self.k8s_interface.delete_deployment(name, namespace)
+
+    def sys_k8s_get_pods(self, namespace="default"):
+        if not self._check_k8s_permission():
+            return {"success": False, "error": "Permission Denied: manage_k8s required"}
+        return self.k8s_interface.get_pods(namespace)
+
+    def sys_k8s_logs(self, pod_name, namespace="default"):
+        if not self._check_k8s_permission():
+            return {"success": False, "error": "Permission Denied: manage_k8s required"}
+        return self.k8s_interface.get_pod_logs(pod_name, namespace)
 
     # System Control
     def sys_shutdown(self):
