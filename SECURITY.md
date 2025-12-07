@@ -6,8 +6,9 @@ FyodorOS is an experimental AI microkernel. We take security seriously, especial
 
 | Version | Supported          |
 | ------- | ------------------ |
+| 0.5.x   | :white_check_mark: |
 | 0.4.x   | :white_check_mark: |
-| 0.3.x   | :white_check_mark: |
+| 0.3.x   | :x:                |
 | < 0.3.0 | :x:                |
 
 ## Security Considerations
