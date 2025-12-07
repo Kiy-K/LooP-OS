@@ -1,13 +1,27 @@
 # bin/user.py
+"""
+User Management Application.
+
+Provides an interface for listing, adding, and deleting users.
+"""
+
 import json
 
 def main(args, sys):
     """
-    User Management App.
-    Usage:
-      run user list
-      run user add <username> <password>
-      run user delete <username>
+    User App entry point.
+
+    Supported Commands:
+      - list
+      - add <username> <password>
+      - delete <username>
+
+    Args:
+        args (list): Command arguments.
+        sys (SyscallHandler): System interface.
+
+    Returns:
+        str: JSON result.
     """
     if not args:
         return json.dumps({"error": "No command provided."})

@@ -1,4 +1,10 @@
 # kernel/users.py
+"""
+User Management System.
+
+This module handles user accounts, password hashing (via Argon2), and
+Role-Based Access Control (RBAC). It persists user data to a JSON file.
+"""
 
 import hashlib
 from argon2 import PasswordHasher
@@ -6,10 +12,22 @@ import json
 import os
 
 class UserManager:
+    """
+    Manages user authentication and authorization.
+
+    Attributes:
+        DB_FILE (str): The path to the JSON database file ("users.json").
+        _ph (PasswordHasher): Argon2 password hasher instance.
+        users (dict): In-memory cache of user data.
+    """
     DB_FILE = "users.json"
     _ph = PasswordHasher()
 
     def __init__(self):
+        """
+        Initialize the UserManager.
+        Loads users from the database or creates default users (root, guest).
+        """
         self.users = {}
         self._load()
 
@@ -30,11 +48,24 @@ class UserManager:
     def _hash(self, pw):
         """
         Hash a password using Argon2.
+
+        Args:
+            pw (str): The plaintext password.
+
+        Returns:
+            str: The password hash.
         """
         return self._ph.hash(pw)
     def _verify(self, hash_val, pw):
         """
         Verify a password against an Argon2 hash.
+
+        Args:
+            hash_val (str): The stored hash.
+            pw (str): The input password.
+
+        Returns:
+            bool: True if matches, False otherwise.
         """
         try:
             return self._ph.verify(hash_val, pw)
@@ -43,6 +74,10 @@ class UserManager:
 
 
     def _load(self):
+        """
+        Load users from the JSON database file.
+        Handles migration from older formats if necessary.
+        """
         if os.path.exists(self.DB_FILE):
             try:
                 with open(self.DB_FILE, "r") as f:
@@ -59,6 +94,9 @@ class UserManager:
                 self.users = {}
 
     def _save(self):
+        """
+        Save the current user data to the JSON database file.
+        """
         try:
             with open(self.DB_FILE, "w") as f:
                 json.dump(self.users, f, indent=2)
@@ -66,6 +104,16 @@ class UserManager:
             print(f"[UserManager] Error saving users: {e}")
 
     def authenticate(self, user, pw):
+        """
+        Authenticate a user.
+
+        Args:
+            user (str): Username.
+            pw (str): Password.
+
+        Returns:
+            bool: True if valid credentials, False otherwise.
+        """
         # Reload to ensure we have latest updates from CLI tools
         self._load()
         if user not in self.users:
@@ -77,12 +125,31 @@ class UserManager:
         return self._verify(hash_val, pw)
 
     def get_roles(self, user):
+        """
+        Get the roles assigned to a user.
+
+        Args:
+            user (str): Username.
+
+        Returns:
+            list[str]: List of role names.
+        """
         self._load()
         if user in self.users:
             return self.users[user].get("roles", [])
         return []
 
     def add_role(self, user, role):
+        """
+        Add a role to a user.
+
+        Args:
+            user (str): Username.
+            role (str): Role to add.
+
+        Returns:
+            bool: True if role added, False if user not found.
+        """
         self._load()
         if user in self.users:
             if role not in self.users[user]["roles"]:
@@ -92,6 +159,16 @@ class UserManager:
         return False
 
     def remove_role(self, user, role):
+        """
+        Remove a role from a user.
+
+        Args:
+            user (str): Username.
+            role (str): Role to remove.
+
+        Returns:
+            bool: True if role removed, False if user not found.
+        """
         self._load()
         if user in self.users:
             if role in self.users[user]["roles"]:
@@ -103,7 +180,13 @@ class UserManager:
     def has_permission(self, user, action):
         """
         Check if user has permission for action.
-        This can be hooked by plugins.
+
+        Args:
+            user (str): Username.
+            action (str): The action to perform.
+
+        Returns:
+            bool: True if permitted, False otherwise.
         """
         # Default behavior: root has all permissions
         if user == "root":
@@ -131,16 +214,26 @@ class UserManager:
         return True
 
     def list_users(self):
+        """
+        List all registered users.
+
+        Returns:
+            list[str]: A list of usernames.
+        """
         self._load()
         return list(self.users.keys())
 
     def add_user(self, user, pw, requestor="root"):
         """
         Add a new user.
+
         Args:
-            user: New username
-            pw: Password
-            requestor: User requesting the action (default: root for backward compatibility/CLI)
+            user (str): New username.
+            pw (str): Password.
+            requestor (str, optional): User requesting the action. Defaults to "root".
+
+        Returns:
+            bool: True if successful, False otherwise.
         """
         if not self.has_permission(requestor, "create_user"):
             return False
@@ -155,9 +248,13 @@ class UserManager:
     def delete_user(self, user, requestor="root"):
         """
         Delete a user.
+
         Args:
-            user: Username to delete
-            requestor: User requesting the action
+            user (str): Username to delete.
+            requestor (str, optional): User requesting the action.
+
+        Returns:
+            bool: True if successful, False otherwise.
         """
         if not self.has_permission(requestor, "delete_user"):
             return False

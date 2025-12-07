@@ -1,3 +1,10 @@
+"""
+Setup script for compiling the registry_core C++ extension.
+
+This script uses setuptools and pybind11 to build the `registry_core` extension,
+which provides high-performance plugin registry management.
+"""
+
 from setuptools import setup, Extension
 import pybind11
 

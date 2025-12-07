@@ -1,4 +1,12 @@
 # fyodoros/cli.py
+"""
+FyodorOS Command Line Interface.
+
+This module provides the main entry point for the `fyodor` command.
+It uses `typer` to define subcommands for managing the OS, plugins, network,
+users, and launching the TUI or GUI.
+"""
+
 import typer
 import os
 import json
@@ -33,7 +41,11 @@ BANNER = """
 
 def _load_env_safely():
     """
-    Robust .env loading.
+    Safely loads environment variables from the `.env` file.
+    Handles decryption of sensitive values.
+
+    Returns:
+        dict: The loaded environment variables.
     """
     env_file = ".env"
     env = os.environ.copy()
@@ -57,6 +69,12 @@ def _load_env_safely():
     return env
 
 def _run_kernel(args=None):
+    """
+    Runs the FyodorOS kernel in a subprocess.
+
+    Args:
+        args (list, optional): Command-line arguments to pass to the kernel.
+    """
     env = _load_env_safely()
 
     # Run the OS script via module
@@ -116,6 +134,7 @@ def user(username: str, password: str = typer.Argument(None)):
 def setup():
     """
     Configure FyodorOS (LLM Provider, API Keys).
+    Interactve wizard to set up .env file.
     """
     console.print(BANNER, style="bold cyan")
     console.print(Panel("Welcome to FyodorOS Setup", title="Setup", style="blue"))
@@ -153,6 +172,7 @@ def setup():
 def tui():
     """
     Launcher TUI Menu.
+    Displays an interactive menu for common tasks.
     """
     while True:
         console.clear()

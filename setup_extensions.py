@@ -1,3 +1,13 @@
+"""
+Setup script for compiling core FyodorOS C++ extensions.
+
+This script builds:
+1. `registry_core`: For high-performance plugin management.
+2. `sandbox_core`: For secure environment enforcement and execution.
+
+It utilizes pybind11 for Python/C++ interoperability.
+"""
+
 from setuptools import setup, Extension
 import pybind11
 

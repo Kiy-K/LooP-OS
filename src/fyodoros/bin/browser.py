@@ -1,17 +1,33 @@
 # bin/browser.py
+"""
+Headless Browser Application.
+
+This module provides a command-line interface to a headless Chromium browser
+via Playwright. It allows navigating to URLs, clicking elements, and typing text.
+The state (browser instance) is persisted in global variables to allow
+sequential commands.
+"""
+
 import json
 import sys
 from playwright.sync_api import sync_playwright
 
 def main(args, syscalls):
     """
-    Browser App using Playwright.
-    Usage:
-      run browser navigate <url>
-      run browser click <id>
-      run browser type <id> <text>
+    Browser App entry point.
 
-    Returns: JSON DOM
+    Supported Commands:
+      - navigate <url>
+      - click <id>
+      - type <id> <text>
+      - close
+
+    Args:
+        args (list): Command line arguments.
+        syscalls (SyscallHandler): System call interface (checked for network permissions).
+
+    Returns:
+        str: JSON representation of the current DOM or an error message.
     """
     if not args:
         return json.dumps({"error": "No command provided."})
@@ -76,7 +92,16 @@ def main(args, syscalls):
 
 def get_dom_tree(page):
     """
-    Extracts a simplified DOM tree from the page.
+    Extracts a simplified DOM tree from the current page.
+
+    Executes JavaScript in the browser context to traverse the DOM and
+    generate a JSON-serializable structure suitable for LLM consumption.
+
+    Args:
+        page (playwright.sync_api.Page): The Playwright page object.
+
+    Returns:
+        dict: A dictionary containing the URL, title, and DOM tree.
     """
     # Evaluate JS to traverse DOM and return JSON
     # We focus on interactive elements: a, button, input, textarea, form

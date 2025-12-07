@@ -25,7 +25,14 @@ We believe that for AI Agents to be truly useful and safe, they need an environm
 
 ## 📝 What's New
 
-### [0.4.0] - Latest Release
+### [0.4.1] - Latest Release
+
+#### Comprehensive Documentation
+The entire codebase has been thoroughly documented with:
+- **Full Docstring Coverage**: Every function, class, and module now includes detailed docstrings following Google Style (Python) and JSDoc (JavaScript) conventions.
+- **Improved Code Readability**: Clear explanations of purpose, arguments, and return values for all public APIs.
+
+### [0.4.0]
 
 #### Kernel Networking Layer
 The kernel now includes a complete networking layer with fine-grained control and security:
@@ -36,50 +43,11 @@ The kernel now includes a complete networking layer with fine-grained control an
   - `manage_network`: Permission to enable/disable network globally
   - `use_network`: Permission to create and use network sockets
 
-**Example - CLI Network Management:**
-```bash
-# Enable network globally (requires manage_network permission)
-fyodor network on
-
-# Disable network globally
-fyodor network off
-
-# Check network status
-fyodor network status
-```
-
 #### NASM Runtime
 Execute native assembly code safely within the FyodorOS environment:
 
 - **C++ FFI Sandbox Extension**: Run NASM assembly code in a fully sandboxed environment with C++ FFI bindings
 - **`sys_exec_nasm` Syscall**: New kernel syscall enables safe execution of NASM code from user-space and agent processes
-
-**Example - Python Agent Running NASM:**
-```python
-from fyodoros.kernel.syscall_handler import SyscallHandler
-
-syscall = SyscallHandler()
-
-# Simple NASM program to add two numbers
-nasm_code = """
-    section .text
-    global _start
-    _start:
-        mov eax, 5
-        mov ebx, 10
-        add eax, ebx
-        ; Result in eax register
-"""
-
-# Execute in sandboxed NASM runtime
-result = syscall.sys_exec_nasm(nasm_code)
-print(f"Execution result: {result}")
-```
-
-**Example - Agent Command:**
-```bash
-agent "Execute this assembly code to calculate the sum: MOV EAX, 42; MOV EBX, 8; ADD EAX, EBX"
-```
 
 ## ✨ Key Features
 
@@ -102,7 +70,7 @@ Every action taken by the Agent is intercepted by the C++ reinforced `AgentSandb
 - **App Whitelisting**: Only authorized "Agent Apps" can be executed.
 
 ## 🔌 Plugins (New in v0.3.0)
-FyodorOS now supports a powerful plugin system.
+FyodorOS supports a powerful plugin system.
 - **Github Integration**: `github` - List repos, create issues, view PRs.
 - **Slack Notifier**: `slack_notifier` - Send notifications to Slack.
 - **Usage Dashboard**: `usage_dashboard` - Background system monitoring. View with `fyodor dashboard`.
@@ -147,7 +115,7 @@ fyodor plugin install https://github.com/user/repo
 
     **Via pip (Recommended):**
     ```bash
-    pip install fyodoros
+    pip install .
     playwright install chromium
     ```
 

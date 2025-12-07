@@ -1,11 +1,22 @@
 # bin/system.py
+"""
+System Information Application.
+
+Provides system statistics (hardware, kernel info) in JSON format.
+"""
+
 import json
 
 def main(args, sys):
     """
-    System Information App.
-    Usage: run system
-    Returns: JSON with system stats.
+    System App entry point.
+
+    Args:
+        args (list): Unused.
+        sys (SyscallHandler): System interface to retrieve state.
+
+    Returns:
+        str: JSON string containing system info.
     """
     state = sys.sys_get_state()
 

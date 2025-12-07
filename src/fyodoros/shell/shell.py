@@ -1,4 +1,11 @@
 # shell/shell.py
+"""
+Interactive Shell Module.
+
+This module provides the command-line interface (CLI) for FyodorOS users.
+It handles user input, executes built-in commands (like `ls`, `cat`, `run`),
+and dispatches tasks to the AI Agent.
+"""
 
 import time
 from rich.prompt import Prompt
@@ -9,18 +16,27 @@ from fyodoros.kernel.agent import ReActAgent
 class Shell:
     """
     Interactive shell for FyodorOS.
-    Supports:
-      - ls
-      - cat
-      - write
-      - run <program>
-      - ps
-      - help
-      - reboot
-      - agent <task>
+
+    Provides a CLI environment for users to interact with the system.
+
+    Attributes:
+        sys (SyscallHandler): System call handler.
+        supervisor (Supervisor): Process supervisor.
+        cwd (str): Current working directory.
+        running (bool): Loop control flag.
+        current_user (str): Currently logged-in user.
+        agent (ReActAgent): Instance of the AI agent (lazy loaded).
+        plugin_commands (dict): Registered commands from plugins.
     """
 
     def __init__(self, syscall, supervisor=None):
+        """
+        Initialize the Shell.
+
+        Args:
+            syscall (SyscallHandler): The system call interface.
+            supervisor (Supervisor, optional): The process supervisor.
+        """
         self.sys = syscall
         self.supervisor = supervisor
         self.cwd = "/"
@@ -32,15 +48,37 @@ class Shell:
     def register_plugin_commands(self, commands):
         """
         Register commands provided by plugins.
+
+        Args:
+            commands (dict): A dictionary mapping command names to functions.
         """
         self.plugin_commands.update(commands)
 
     # ========== INPUT HANDLING ==========
     def _readline(self, prompt):
+        """
+        Read a line of input from the user.
+
+        Args:
+            prompt (str): The prompt string to display.
+
+        Returns:
+            str: The user's input.
+        """
         print(prompt, end="", flush=True)
         return input().strip()
 
     def login(self, auto_user=None, auto_pass=None):
+        """
+        Handle user login.
+
+        Args:
+            auto_user (str, optional): Username to auto-fill.
+            auto_pass (str, optional): Password to auto-fill.
+
+        Returns:
+            bool: True if login successful (or fallback to root).
+        """
         # We use standard input/print here because we might not have a running process yet
         # or we are the shell process.
 
@@ -70,7 +108,11 @@ class Shell:
 
     # ========== COMMAND EXECUTION ==========
     def run(self):
-        """Generator for scheduling."""
+        """
+        Main execution loop generator.
+
+        Yields control back to the scheduler after each command execution.
+        """
         while self.running:
             cmd = self._readline(f"{self.current_user}@fyodoros:{self.cwd}> ")
             output = self.execute(cmd)
@@ -79,6 +121,15 @@ class Shell:
             yield  # yield back to scheduler
 
     def execute(self, cmd):
+        """
+        Execute a single command string.
+
+        Args:
+            cmd (str): The command line string.
+
+        Returns:
+            str: The output of the command.
+        """
         if not cmd:
             return ""
 
@@ -222,6 +273,15 @@ class Shell:
 
     # ========== PROGRAM EXECUTION ==========
     def _run_program(self, args):
+        """
+        Execute an external program located in `fyodoros.bin`.
+
+        Args:
+            args (list): The command arguments (program name + args).
+
+        Returns:
+            str: The output or error message.
+        """
         program = args[0]
         prog_args = args[1:]
 

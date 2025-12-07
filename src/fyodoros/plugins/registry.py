@@ -1,3 +1,13 @@
+# plugins/registry.py
+"""
+Plugin Registry Management.
+
+This module manages the configuration, activation, and deactivation of plugins.
+It interfaces with the C++ `registry_core` extension (if available) for
+high-performance state management, while falling back to Python sets and
+dictionaries if the extension is missing. State is persisted to `~/.fyodor/plugins/config.json`.
+"""
+
 import json
 import os
 import sys
@@ -15,10 +25,22 @@ except ImportError:
 
 class PluginRegistry:
     """
-    Manages the enabled/disabled state of plugins using C++ Core.
-    Config is stored in ~/.fyodor/plugins/config.json
+    Manages the lifecycle and configuration of plugins.
+
+    Persists state to `~/.fyodor/plugins/config.json`.
+
+    Attributes:
+        config_dir (Path): Directory for plugin configuration.
+        config_file (Path): Path to the configuration JSON file.
+        core (RegistryCore): Instance of the C++ registry backend (or None).
+        _fallback_enabled (set): Fallback set of enabled plugins.
+        _fallback_settings (dict): Fallback dictionary of plugin settings.
     """
     def __init__(self):
+        """
+        Initialize the PluginRegistry.
+        Loads existing configuration from disk.
+        """
         self.config_dir = Path.home() / ".fyodor" / "plugins"
         self.config_file = self.config_dir / "config.json"
 
@@ -31,6 +53,9 @@ class PluginRegistry:
         self._load()
 
     def _load(self):
+        """
+        Load configuration from the JSON file into memory (and C++ core).
+        """
         # We load from JSON into the C++ core
         if self.config_file.exists():
             try:
@@ -65,6 +90,9 @@ class PluginRegistry:
                 self._fallback_settings = {}
 
     def _save(self):
+        """
+        Save current configuration to the JSON file.
+        """
         self.config_dir.mkdir(parents=True, exist_ok=True)
         try:
             # Dump C++ state to JSON
@@ -112,6 +140,15 @@ class PluginRegistry:
             print(f"[PluginRegistry] Error saving config: {e}")
 
     def activate(self, plugin_name):
+        """
+        Activate a plugin.
+
+        Args:
+            plugin_name (str): Name of the plugin.
+
+        Returns:
+            bool: True if activated, False if already active.
+        """
         if self.core:
             if not self.core.is_active(plugin_name):
                 self.core.add_plugin(plugin_name, "python", True) # Default type
@@ -127,6 +164,15 @@ class PluginRegistry:
             return False
 
     def deactivate(self, plugin_name):
+        """
+        Deactivate a plugin.
+
+        Args:
+            plugin_name (str): Name of the plugin.
+
+        Returns:
+            bool: True if deactivated, False if not active.
+        """
         if self.core:
             if self.core.is_active(plugin_name):
                 self.core.set_active(plugin_name, False)
@@ -141,16 +187,42 @@ class PluginRegistry:
             return False
 
     def is_active(self, plugin_name):
+        """
+        Check if a plugin is active.
+
+        Args:
+            plugin_name (str): Name of the plugin.
+
+        Returns:
+            bool: True if active.
+        """
         if self.core:
             return self.core.is_active(plugin_name)
         return plugin_name in self._fallback_enabled
 
     def list_plugins(self):
+        """
+        List all active plugins.
+
+        Returns:
+            list[str]: List of active plugin names.
+        """
         if self.core:
             return self.core.list_plugins()
         return list(self._fallback_enabled)
 
     def get_setting(self, plugin_name, key, default=None):
+        """
+        Retrieve a plugin setting.
+
+        Args:
+            plugin_name (str): Name of the plugin.
+            key (str): Setting key.
+            default (any, optional): Default value if not found.
+
+        Returns:
+            str: The setting value.
+        """
         if self.core:
             val = self.core.get_setting(plugin_name, key)
             if val == "":
@@ -162,6 +234,14 @@ class PluginRegistry:
         return self._fallback_settings.get(plugin_name, {}).get(key, default)
 
     def set_setting(self, plugin_name, key, value):
+        """
+        Set a plugin setting.
+
+        Args:
+            plugin_name (str): Name of the plugin.
+            key (str): Setting key.
+            value (str): Setting value.
+        """
         if self.core:
             self.core.add_plugin(plugin_name, "python", self.core.is_active(plugin_name)) # Ensure exists
             self.core.set_setting(plugin_name, key, value)

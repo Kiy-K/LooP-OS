@@ -3,10 +3,22 @@ import { invoke } from "@tauri-apps/api/tauri";
 import { Command } from "@tauri-apps/api/shell";
 import "./App.css";
 
+/**
+ * Main application component for the FyodorOS Desktop GUI.
+ *
+ * Displays a dashboard with the current kernel status and provides a button
+ * to launch the kernel subprocess via Tauri's IPC.
+ *
+ * @returns {JSX.Element} The rendered React component.
+ */
 function App() {
   const [status, setStatus] = useState("Idle");
   const [output, setOutput] = useState("");
 
+  /**
+   * Invokes the 'start_kernel' command in the Tauri backend.
+   * Updates the status state with the result or error.
+   */
   async function startKernel() {
     setStatus("Starting Kernel...");
     try {

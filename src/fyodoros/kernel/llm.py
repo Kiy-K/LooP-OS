@@ -1,10 +1,36 @@
 # kernel/llm.py
+"""
+LLM Provider Abstraction.
+
+This module provides a unified interface for interacting with various Large Language Models
+(LLMs) such as OpenAI, Gemini, and Anthropic. It also includes a mock provider for
+testing and offline development.
+"""
 
 import os
 import json
 
 class LLMProvider:
+    """
+    A unified interface for different LLM providers.
+
+    Handles initialization, authentication, and generation of responses from
+    OpenAI, Gemini, Anthropic, or a mock backend.
+
+    Attributes:
+        provider (str): The name of the provider (e.g., 'openai', 'gemini').
+        model (str): The specific model name to use.
+        is_mock (bool): True if running in mock mode.
+        client (object): The underlying client object for the API.
+    """
+
     def __init__(self, model=None):
+        """
+        Initialize the LLMProvider.
+
+        Args:
+            model (str, optional): Specific model to use. If None, uses a default based on provider.
+        """
         self.provider = os.environ.get("LLM_PROVIDER", "mock").lower()
         self.model = model or self._default_model_for_provider()
         self.is_mock = False
@@ -13,6 +39,12 @@ class LLMProvider:
         self._init_client()
 
     def _default_model_for_provider(self):
+        """
+        Get the default model name for the current provider.
+
+        Returns:
+            str: The default model name.
+        """
         if self.provider == "openai":
             return "gpt-4o"
         elif self.provider == "gemini":
@@ -23,6 +55,10 @@ class LLMProvider:
             return "mock"
 
     def _init_client(self):
+        """
+        Initialize the API client for the selected provider.
+        Sets is_mock to True if initialization fails or API keys are missing.
+        """
         if self.provider == "openai":
             api_key = os.environ.get("OPENAI_API_KEY")
             if not api_key:
@@ -67,6 +103,16 @@ class LLMProvider:
             self.is_mock = True
 
     def generate(self, prompt, stop=None):
+        """
+        Generate a response from the LLM.
+
+        Args:
+            prompt (str): The prompt to send to the LLM.
+            stop (list, optional): List of stop sequences.
+
+        Returns:
+            str: The generated text response.
+        """
         if self.is_mock:
             return self._mock_response(prompt)
 
@@ -109,6 +155,12 @@ class LLMProvider:
     def _mock_response(self, prompt):
         """
         Simple deterministic responses for testing based on keywords.
+
+        Args:
+            prompt (str): The input prompt.
+
+        Returns:
+            str: A mocked response.
         """
         prompt_lower = prompt.lower()
 

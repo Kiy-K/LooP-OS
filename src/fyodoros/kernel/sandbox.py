@@ -1,4 +1,12 @@
 # kernel/sandbox.py
+"""
+Agent Sandbox Enforcement.
+
+This module restricts the AI Agent's actions to a safe, confined environment.
+It leverages a C++ extension (`sandbox_core`) for robust path resolution and
+process isolation, ensuring the agent cannot break out of its designated workspace.
+"""
+
 import sys
 import os
 from pathlib import Path
@@ -16,8 +24,19 @@ except ImportError:
 class AgentSandbox:
     """
     Restricts Agent actions to safe boundaries using C++ Core.
+
+    Attributes:
+        sys (SyscallHandler): The system call handler.
+        root_path (str): The absolute path to the sandbox root (`~/.fyodor/sandbox`).
+        core (SandboxCore): The C++ sandbox backend instance.
     """
     def __init__(self, syscall_handler):
+        """
+        Initialize the AgentSandbox.
+
+        Args:
+            syscall_handler (SyscallHandler): The kernel syscall handler.
+        """
         self.sys = syscall_handler
         self.root_path = str(Path.home() / ".fyodor" / "sandbox")
 
@@ -27,6 +46,18 @@ class AgentSandbox:
             self.core = None
 
     def _resolve(self, path):
+        """
+        Resolve a path safely within the sandbox.
+
+        Args:
+            path (str): The relative path to resolve.
+
+        Returns:
+            str: The absolute path on the host system.
+
+        Raises:
+            PermissionError: If the path attempts to escape the sandbox.
+        """
         if self.core:
             try:
                 # Returns resolved absolute path on HOST
@@ -37,7 +68,14 @@ class AgentSandbox:
 
     def execute(self, action, args):
         """
-        Execute a command if it passes safety checks.
+        Execute a sandboxed action.
+
+        Args:
+            action (str): The action name (e.g., 'read_file', 'run_process').
+            args (list): List of arguments for the action.
+
+        Returns:
+            str or dict: The result of the action or an error message.
         """
         if action == "read_file":
             path = args[0]

@@ -1,5 +1,14 @@
 # fyodoros/__main__.py
+"""
+Entry point for FyodorOS.
+
+This module initializes the kernel, shell, and other core components,
+then enters the main execution loop. It handles boot arguments and
+reboot logic.
+"""
+
 import sys
+import argparse
 from fyodoros.kernel.kernel import Kernel
 from fyodoros.kernel import Scheduler, SyscallHandler
 from fyodoros.kernel.users import UserManager
@@ -9,6 +18,9 @@ from fyodoros.kernel.process import Process
 from fyodoros.kernel.plugin_loader import PluginLoader
 
 def boot_splash():
+    """
+    Displays the ASCII art boot splash screen.
+    """
     print("""
 ███████╗██╗   ██╗ ██████╗ ██████╗  ██████╗ ██████╗
 ██╔════╝╚██╗ ██╔╝██╔═══██╗██╔══██╗██╔═══██╗██╔══██╗
@@ -20,9 +32,13 @@ def boot_splash():
     """)
 
 
-import argparse
-
 def main():
+    """
+    Main function to bootstrap and run FyodorOS.
+
+    It parses command-line arguments, initializes the kernel and shell,
+    and runs the scheduler loop. It also handles the reboot cycle.
+    """
     parser = argparse.ArgumentParser(description="FyodorOS Kernel")
     parser.add_argument("--user", help="Auto-login username (or pre-fill)")
     parser.add_argument("--password", help="Auto-login password")
@@ -36,13 +52,13 @@ def main():
         # provided we hook everything up.
 
         # Using manual init for transparency in this "Simulated Microkernel" entry point
-        scheduler = Scheduler()
-        user_manager = UserManager()
-        syscall = SyscallHandler(scheduler, user_manager)
+        # scheduler = Scheduler()
+        # user_manager = UserManager()
+        # syscall = SyscallHandler(scheduler, user_manager)
 
         # Initialize Supervisor & Shell
-        supervisor = Supervisor(scheduler, syscall)
-        shell = Shell(syscall, supervisor)
+        # supervisor = Supervisor(scheduler, syscall)
+        # shell = Shell(syscall, supervisor)
 
         # Load Plugins
         # Create a mock Kernel-like object or pass the syscall handler context?

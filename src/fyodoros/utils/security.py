@@ -1,3 +1,11 @@
+# utils/security.py
+"""
+Security Utilities.
+
+This module handles encryption and decryption of sensitive data, such as API keys.
+It uses `cryptography.fernet` and manages a local secret key stored in `~/.fyodor/secret.key`.
+"""
+
 import os
 from pathlib import Path
 from cryptography.fernet import Fernet
@@ -5,7 +13,12 @@ from cryptography.fernet import Fernet
 ENC_PREFIX = "ENC:"
 
 def _get_key_path():
-    """Returns the path to the encryption key."""
+    """
+    Returns the path to the encryption key.
+
+    Returns:
+        Path: The path to the secret key file.
+    """
     fyodor_dir = Path.home() / ".fyodor"
     fyodor_dir.mkdir(parents=True, exist_ok=True)
     return fyodor_dir / "secret.key"
@@ -13,6 +26,11 @@ def _get_key_path():
 def get_key():
     """
     Retrieves the existing encryption key or generates a new one.
+
+    If generating a new key, it sets file permissions to 0o600 for security.
+
+    Returns:
+        bytes: The encryption key.
     """
     key_path = _get_key_path()
     if key_path.exists():
@@ -29,7 +47,12 @@ def get_key():
 def encrypt_value(value: str) -> str:
     """
     Encrypts a string value.
-    Returns the value prefixed with ENC: to identify it as encrypted.
+
+    Args:
+        value (str): The plaintext value to encrypt.
+
+    Returns:
+        str: The encrypted value prefixed with 'ENC:'.
     """
     if not value:
         return ""
@@ -40,8 +63,14 @@ def encrypt_value(value: str) -> str:
 
 def decrypt_value(value: str) -> str:
     """
-    Decrypts a string value if it is encrypted (starts with ENC:).
+    Decrypts a string value if it is encrypted (starts with 'ENC:').
     Otherwise returns the original value.
+
+    Args:
+        value (str): The value to decrypt.
+
+    Returns:
+        str: The decrypted plaintext, or the original value if not encrypted/decryption failed.
     """
     if not value.startswith(ENC_PREFIX):
         return value

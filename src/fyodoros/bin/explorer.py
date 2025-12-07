@@ -1,14 +1,29 @@
 # bin/explorer.py
+"""
+File Explorer Application.
+
+Provides file management capabilities (list, copy, move) via a JSON API
+suitable for the AI Agent.
+"""
+
 import json
 
 def main(args, sys):
     """
-    File Explorer App.
-    Usage:
-      run explorer list <path>
-      run explorer search <path> <query>
-      run explorer copy <src> <dst>
-      run explorer move <src> <dst>
+    Explorer entry point.
+
+    Supported Commands:
+      - list <path>
+      - search <path> <query> (Not implemented)
+      - copy <src> <dst>
+      - move <src> <dst>
+
+    Args:
+        args (list): Command arguments.
+        sys (SyscallHandler): System interface.
+
+    Returns:
+        str: JSON result.
     """
     if not args:
         return json.dumps({"error": "No command provided."})

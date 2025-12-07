@@ -1,11 +1,25 @@
 # bin/calc.py
+"""
+Calculator Application.
+
+A simple, safe calculator utility designed for the Agent.
+It evaluates mathematical expressions using a restricted environment.
+"""
+
 import json
 
 def main(args, sys):
     """
-    Simple Calculator App for Agent.
-    Usage: run calc <expression>
-    Returns: JSON {"result": value, "error": msg}
+    Calculator entry point.
+
+    Evaluates a mathematical expression passed as arguments.
+
+    Args:
+        args (list): The expression to evaluate (e.g., ["2", "+", "2"]).
+        sys (SyscallHandler): System interface (unused here).
+
+    Returns:
+        str: JSON string containing "result" or "error".
     """
     if not args:
         return json.dumps({"error": "Usage: calc <expression>"})

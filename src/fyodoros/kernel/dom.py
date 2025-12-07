@@ -1,16 +1,36 @@
 # kernel/dom.py
+"""
+System DOM Representation.
+
+This module provides the `SystemDOM` class, which converts the current
+operating system state (filesystem, processes, users) into a structured
+dictionary (DOM-like) format for the AI agent to consume.
+"""
 
 class SystemDOM:
     """
     Represents the Operating System state as a Document Object Model (DOM) tree.
+
     Used by the Agent to understand the environment.
+
+    Attributes:
+        sys (SyscallHandler): The system call handler to access kernel state.
     """
     def __init__(self, syscall_handler):
+        """
+        Initialize the SystemDOM.
+
+        Args:
+            syscall_handler (SyscallHandler): The kernel syscall handler.
+        """
         self.sys = syscall_handler
 
     def get_state(self):
         """
         Returns the full state of the OS as a dictionary.
+
+        Returns:
+            dict: A dictionary containing 'filesystem', 'processes', and 'users'.
         """
         return {
             "filesystem": self._get_fs_tree(self.sys.fs.root),
@@ -21,6 +41,13 @@ class SystemDOM:
     def _get_fs_tree(self, node, path="/"):
         """
         Recursively builds the filesystem tree.
+
+        Args:
+            node (FileNode or DirectoryNode): The current filesystem node.
+            path (str, optional): The current path. Defaults to "/".
+
+        Returns:
+            dict: A dictionary representation of the node and its children (if any).
         """
         # Avoid recursion depth issues or huge output by limiting depth or content?
         # For now, simple recursion.

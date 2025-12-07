@@ -1,4 +1,10 @@
 # kernel/agent.py
+"""
+AI Agent for FyodorOS.
+
+This module implements a ReAct (Reasoning and Acting) agent that can
+interact with the FyodorOS kernel to perform tasks autonomously.
+"""
 
 import re
 from fyodoros.kernel.dom import SystemDOM
@@ -6,7 +12,30 @@ from fyodoros.kernel.sandbox import AgentSandbox
 from fyodoros.kernel.llm import LLMProvider
 
 class ReActAgent:
+    """
+    A ReAct-based AI agent that interacts with the OS.
+
+    The agent uses an LLM to reason about tasks, plan steps, and execute
+    actions via a sandboxed interface.
+
+    Attributes:
+        sys (SyscallHandler): The system call handler.
+        dom (SystemDOM): The Document Object Model representation of the system.
+        sandbox (AgentSandbox): The sandboxed execution environment.
+        llm (LLMProvider): The Large Language Model provider.
+        max_turns (int): Maximum number of reasoning turns allowed per task.
+        history (list): History of interactions in the current task.
+        todo_list (list): List of planned steps.
+    """
+
     def __init__(self, syscall_handler, model="gpt-3.5-turbo"):
+        """
+        Initialize the ReActAgent.
+
+        Args:
+            syscall_handler (SyscallHandler): The kernel syscall handler.
+            model (str, optional): The name of the LLM model to use. Defaults to "gpt-3.5-turbo".
+        """
         self.sys = syscall_handler
         self.dom = SystemDOM(syscall_handler)
         self.sandbox = AgentSandbox(syscall_handler)
@@ -19,6 +48,12 @@ class ReActAgent:
     def run(self, task):
         """
         Executes the ReAct loop for a given task.
+
+        Args:
+            task (str): The task description from the user.
+
+        Returns:
+            str: The final result or status of the task.
         """
         print(f"[Agent] Starting task: {task}")
         self.history = [] # Reset history per task
@@ -59,6 +94,16 @@ class ReActAgent:
         return "Max turns reached."
 
     def _construct_prompt(self, task, state):
+        """
+        Constructs the prompt for the LLM.
+
+        Args:
+            task (str): The current task.
+            state (str): The current system state (DOM).
+
+        Returns:
+            str: The fully constructed prompt.
+        """
         history_text = "\n".join(self.history[-3:]) # Keep last 3 turns
 
         return f"""
@@ -102,7 +147,16 @@ Do not interact with system files (/kernel, /bin, /etc).
     def _parse_response(self, text):
         """
         Parses Thought, ToDo, and Action from the LLM output.
-        Returns: (thought, todo_list, action_name, action_args)
+
+        Args:
+            text (str): The raw output from the LLM.
+
+        Returns:
+            tuple: A tuple containing:
+                - thought (str): The agent's reasoning.
+                - todo_list (list): The list of todo items.
+                - action_name (str): The name of the action to execute.
+                - action_args (list): The arguments for the action.
         """
         thought = ""
         todo = []
