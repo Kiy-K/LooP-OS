@@ -1,0 +1,9 @@
+# Build artifacts
+build/
+dist/
+*.egg-info/
+__pycache__/
+*.pyc
+
+# Local binaries (optional)
+local_bin/
