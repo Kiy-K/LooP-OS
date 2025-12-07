@@ -1,6 +1,7 @@
 # shell/shell.py
 
 import time
+from rich.prompt import Prompt
 from fyodoros.kernel.process import Process
 from importlib import import_module
 from fyodoros.kernel.agent import ReActAgent
@@ -50,16 +51,13 @@ class Shell:
         if user and not pw:
              print("FyodorOS Login")
              print(f"Username: {user}")
-             print("Password: ", end="")
-             pw = input()
+             pw = Prompt.ask("Password", password=True)
 
         # If neither, interactive
         if not user:
             print("FyodorOS Login")
-            print("Username: ", end="")
-            user = input()
-            print("Password: ", end="")
-            pw = input()
+            user = Prompt.ask("Username")
+            pw = Prompt.ask("Password", password=True)
 
         if self.sys.sys_login(user, pw):
             print(f"Welcome {user}!")

@@ -26,7 +26,8 @@ dependencies = [
     "rich",
     "typer",
     "requests",
-    "psutil"
+    "psutil",
+    "cryptography"
 ]
 
 [project.scripts]
