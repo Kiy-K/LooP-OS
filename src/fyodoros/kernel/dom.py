@@ -30,12 +30,26 @@ class SystemDOM:
         Returns the full state of the OS as a dictionary.
 
         Returns:
-            dict: A dictionary containing 'filesystem', 'processes', and 'users'.
+            dict: A dictionary containing 'filesystem', 'processes', 'users', and 'docker'.
         """
+        # Get docker state
+        docker_state = []
+        try:
+            # Check permissions first or just try?
+            # The agent typically runs as 'user' or 'root' depending on context.
+            # Syscalls handle permissions, so we should use syscall.
+            # However, sys_docker_ps returns a dict {success, data, error}
+            res = self.sys.sys_docker_ps()
+            if res.get("success"):
+                docker_state = res.get("data", [])
+        except Exception:
+            pass
+
         return {
             "filesystem": self._get_fs_tree(self.sys.fs.root),
             "processes": self.sys.sys_proc_list(),
-            "users": self.sys.user_manager.list_users()
+            "users": self.sys.user_manager.list_users(),
+            "docker": docker_state
         }
 
     def _get_fs_tree(self, node, path="/"):

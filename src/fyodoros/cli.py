@@ -21,12 +21,15 @@ from fyodoros.kernel.users import UserManager
 from fyodoros.kernel.network import NetworkManager
 from fyodoros.plugins.registry import PluginRegistry
 from fyodoros.utils.security import encrypt_value, decrypt_value
+from fyodoros.kernel.cloud.docker_interface import DockerInterface
 
 app = typer.Typer()
 plugin_app = typer.Typer()
 network_app = typer.Typer()
+docker_app = typer.Typer()
 app.add_typer(plugin_app, name="plugin")
 app.add_typer(network_app, name="network")
+app.add_typer(docker_app, name="docker")
 console = Console()
 
 BANNER = """
@@ -365,6 +368,106 @@ def network_off():
     nm = NetworkManager()
     nm.set_enabled(False)
     console.print("[red]Network Disabled[/red]")
+
+@docker_app.command("ps")
+def docker_ps(all: bool = False):
+    """List Docker containers."""
+    docker = DockerInterface()
+    res = docker.list_containers(all=all)
+    if res["success"]:
+        containers = res["data"]
+        if not containers:
+            console.print("[yellow]No containers found.[/yellow]")
+            return
+
+        from rich.table import Table
+        table = Table(title="Docker Containers")
+        table.add_column("ID", style="cyan")
+        table.add_column("Image", style="magenta")
+        table.add_column("Name", style="green")
+        table.add_column("Status")
+        table.add_column("Ports")
+
+        for c in containers:
+            table.add_row(c["id"], c["image"], c["name"], c["status"], str(c["ports"]))
+        console.print(table)
+    else:
+        console.print(f"[red]Error: {res['error']}[/red]")
+
+@docker_app.command("run")
+def docker_run(image: str, name: str = typer.Option(None), ports: str = typer.Option(None, help="JSON string or '80:80'"), env: str = typer.Option(None, help="JSON string")):
+    """Run a Docker container."""
+    docker = DockerInterface()
+
+    ports_dict = None
+    if ports:
+        try:
+            ports_dict = json.loads(ports)
+        except json.JSONDecodeError:
+            # Simple format '8080:80'
+            if ":" in ports:
+                host, container = ports.split(":")
+                ports_dict = {f"{container}/tcp": int(host)}
+            else:
+                 console.print("[red]Invalid port format. Use JSON or host:container[/red]")
+                 return
+
+    env_dict = None
+    if env:
+        try:
+            env_dict = json.loads(env)
+        except json.JSONDecodeError:
+            console.print("[red]Invalid env format. Must be JSON.[/red]")
+            return
+
+    res = docker.run_container(image, name, ports=ports_dict, env=env_dict)
+    if res["success"]:
+        console.print(f"[green]Container started: {res['data']['container_id']} ({res['data']['name']})[/green]")
+    else:
+        console.print(f"[red]Error: {res['error']}[/red]")
+
+@docker_app.command("build")
+def docker_build(path: str, tag: str, dockerfile: str = "Dockerfile"):
+    """Build a Docker image."""
+    docker = DockerInterface()
+    console.print(f"Building {tag} from {path}...")
+    res = docker.build_image(path, tag, dockerfile)
+    if res["success"]:
+        console.print(f"[green]Build complete: {res['data']['image_id']}[/green]")
+        # Could print logs if verbose
+    else:
+        console.print(f"[red]Error: {res['error']}[/red]")
+
+@docker_app.command("stop")
+def docker_stop(container_id: str):
+    """Stop a Docker container."""
+    docker = DockerInterface()
+    res = docker.stop_container(container_id)
+    if res["success"]:
+        console.print(f"[green]{res['data']}[/green]")
+    else:
+        console.print(f"[red]Error: {res['error']}[/red]")
+
+@docker_app.command("logs")
+def docker_logs(container_id: str, tail: int = 100):
+    """Get logs from a container."""
+    docker = DockerInterface()
+    res = docker.get_logs(container_id, tail)
+    if res["success"]:
+        console.print(Panel(res["data"], title=f"Logs: {container_id}"))
+    else:
+        console.print(f"[red]Error: {res['error']}[/red]")
+
+@docker_app.command("login")
+def docker_login(username: str, registry: str = "https://index.docker.io/v1/"):
+    """Login to Docker registry."""
+    password = Prompt.ask("Password", password=True)
+    docker = DockerInterface()
+    res = docker.login(username, password, registry)
+    if res["success"]:
+        console.print("[green]Login successful[/green]")
+    else:
+        console.print(f"[red]Login failed: {res['error']}[/red]")
 
 @app.command()
 def dashboard(view: str = typer.Argument("tui", help="View mode: tui or logs")):
