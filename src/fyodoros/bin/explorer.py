@@ -8,6 +8,20 @@ suitable for the AI Agent.
 
 import json
 
+def _resolve_destination(sys, src, dst):
+    """
+    Resolve the final destination path.
+    If dst is a directory, append the filename from src.
+    """
+    try:
+        sys.sys_ls(dst)
+        # It is a directory, append filename
+        filename = src.rstrip("/").split("/")[-1]
+        return f"{dst}/{filename}".replace("//", "/")
+    except Exception:
+        # Not a directory or does not exist
+        return dst
+
 def main(args, sys):
     """
     Explorer entry point.
@@ -59,6 +73,7 @@ def main(args, sys):
         if len(args) < 3: return json.dumps({"error": "Usage: copy <src> <dst>"})
         src, dst = args[1], args[2]
         try:
+            dst = _resolve_destination(sys, src, dst)
             data = sys.sys_read(src)
             sys.sys_write(dst, data)
             return json.dumps({"status": "copied", "src": src, "dst": dst})
@@ -69,6 +84,7 @@ def main(args, sys):
         if len(args) < 3: return json.dumps({"error": "Usage: move <src> <dst>"})
         src, dst = args[1], args[2]
         try:
+            dst = _resolve_destination(sys, src, dst)
             # 1. Read
             data = sys.sys_read(src)
             # 2. Write
