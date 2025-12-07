@@ -395,6 +395,39 @@ def dashboard(view: str = typer.Argument("tui", help="View mode: tui or logs")):
         console.print(f"[red]Unknown view mode: {view}[/red]")
 
 @app.command()
+def gui():
+    """
+    Launch FyodorOS Desktop GUI (Tauri).
+    Installs/builds if necessary.
+    """
+    gui_dir = Path("gui")
+    if not gui_dir.exists():
+        console.print("[red]GUI directory not found![/red]")
+        return
+
+    # Check if built binary exists (assuming Linux/Release for now)
+    # The path depends on Cargo target dir. Default is src-tauri/target/release
+    binary_path = gui_dir / "src-tauri" / "target" / "release" / "fyodor-gui"
+
+    # Simple check: if not built or user requests rebuild (not implemented yet), run installer
+    if not binary_path.exists():
+        console.print("[yellow]GUI not installed/built. Running setup...[/yellow]")
+        setup_script = gui_dir / "setup_gui.py"
+        try:
+            subprocess.check_call([sys.executable, str(setup_script)])
+        except subprocess.CalledProcessError:
+            console.print("[red]GUI Setup Failed.[/red]")
+            return
+
+    console.print("[green]Launching GUI...[/green]")
+    try:
+        # Launch the binary
+        # We might need to handle detaching or blocking. Blocking for now.
+        subprocess.call([str(binary_path)])
+    except Exception as e:
+        console.print(f"[red]Failed to launch GUI: {e}[/red]")
+
+@app.command()
 def info():
     """
     Show info about the installation.
