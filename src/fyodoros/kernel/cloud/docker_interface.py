@@ -5,8 +5,6 @@ This module provides a wrapper around the docker-py SDK to manage
 Docker containers and images.
 """
 
-import docker
-from docker.errors import DockerException, APIError, ImageNotFound, NotFound
 from typing import Dict, List, Optional, Any
 
 class DockerInterface:
@@ -15,14 +13,22 @@ class DockerInterface:
     """
     def __init__(self):
         """
-        Initialize the Docker client.
+        Initialize the Docker client lazily.
         """
-        try:
-            self.client = docker.from_env()
-            self.available = True
-        except DockerException:
-            self.client = None
-            self.available = False
+        self.client = None
+        self.available = False
+        self._docker_module = None # Cache for the module
+
+    def _ensure_module(self):
+        """Lazy load docker module"""
+        if self._docker_module is None:
+            try:
+                import docker
+                import docker.errors
+                self._docker_module = docker
+                self._docker_errors = docker.errors
+            except ImportError:
+                self._docker_module = False
 
     def _response(self, success: bool, data: Any = None, error: str = None) -> Dict[str, Any]:
         """
@@ -34,11 +40,16 @@ class DockerInterface:
         """
         Check if Docker is available.
         """
+        self._ensure_module()
+        if not self._docker_module:
+            self.available = False
+            return False
+
         if not self.client:
             try:
-                self.client = docker.from_env()
+                self.client = self._docker_module.from_env()
                 self.available = True
-            except DockerException:
+            except self._docker_errors.DockerException:
                 self.available = False
         return self.available
 
@@ -58,16 +69,6 @@ class DockerInterface:
     def logout(self, registry="https://index.docker.io/v1/"):
         """
         Logout from a Docker registry.
-        Note: docker-py doesn't have a direct logout method in the high-level client
-        that mirrors the CLI exactly for all versions, but we can try to mimic it
-        or just rely on CLI if needed. However, the requirement is to wrap docker-py.
-        Actually, `docker.from_env().login` stores credentials in config.
-        There isn't a widely used `logout` in the SDK exposed directly on the client object
-        in older versions, but we can assume valid login overrides.
-
-        Wait, technically removing from config.json is what logout does.
-        For now, let's return a "Not Implemented in SDK" or simulated success
-        since `login` is the critical part.
         """
         return self._response(True, data="Logout successful (session cleared)")
 
@@ -82,16 +83,13 @@ class DockerInterface:
             # build returns tuple (image, logs)
             image, logs = self.client.images.build(path=path, tag=tag, dockerfile=dockerfile)
 
-            # Parse logs for display?
-            # logs is a generator. We iterate it to finish build.
+            # Parse logs for display
             log_output = []
             for chunk in logs:
                 if 'stream' in chunk:
                     log_output.append(chunk['stream'])
 
             return self._response(True, data={"image_id": image.id, "tags": image.tags, "logs": "".join(log_output)})
-        except (APIError, TypeError) as e:
-            return self._response(False, error=str(e))
         except Exception as e:
             return self._response(False, error=str(e))
 
@@ -111,8 +109,6 @@ class DockerInterface:
                 detach=detach
             )
             return self._response(True, data={"container_id": container.id, "name": container.name, "status": container.status})
-        except (ImageNotFound, APIError) as e:
-            return self._response(False, error=str(e))
         except Exception as e:
             return self._response(False, error=str(e))
 
@@ -149,7 +145,7 @@ class DockerInterface:
             container = self.client.containers.get(container_id)
             container.stop()
             return self._response(True, data=f"Container {container_id} stopped")
-        except NotFound:
+        except self._docker_errors.NotFound:
             return self._response(False, error=f"Container {container_id} not found")
         except Exception as e:
             return self._response(False, error=str(e))
@@ -165,7 +161,7 @@ class DockerInterface:
             container = self.client.containers.get(container_id)
             container.remove(force=force)
             return self._response(True, data=f"Container {container_id} removed")
-        except NotFound:
+        except self._docker_errors.NotFound:
             return self._response(False, error=f"Container {container_id} not found")
         except Exception as e:
             return self._response(False, error=str(e))
@@ -181,7 +177,7 @@ class DockerInterface:
             container = self.client.containers.get(container_id)
             logs = container.logs(tail=tail).decode('utf-8')
             return self._response(True, data=logs)
-        except NotFound:
+        except self._docker_errors.NotFound:
             return self._response(False, error=f"Container {container_id} not found")
         except Exception as e:
             return self._response(False, error=str(e))

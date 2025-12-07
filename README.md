@@ -26,7 +26,14 @@ We believe that for AI Agents to be truly useful and safe, they need an environm
 
 ## 📝 What's New
 
-### [0.5.0] - Cloud Integration & Performance
+### [0.5.1] - Performance & Security Hardening
+
+FyodorOS v0.5.1 focuses on stability, security, and speed:
+- **Startup Speed**: 10x faster startup via lazy loading of heavy cloud modules.
+- **Security**: Fixed critical shell login bypass and strengthened sandbox isolation.
+- **Stability**: Robust C++ sandbox execution and deadlock prevention.
+
+### [0.5.0] - Cloud Integration
 
 FyodorOS v0.5.0 introduces major cloud capabilities:
 

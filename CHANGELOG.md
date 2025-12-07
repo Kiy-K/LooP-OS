@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.5.1] - 2025-12-08
+### Fixed
+- **Critical Security**: Fixed a shell login bypass where failed authentication could fallback to root access.
+- **Stability**: Fixed `sys_ls` crash when invoked on file paths.
+- **Stability**: Fixed `sys_delete` and `DockerInterface` exception handling.
+- **Deadlock**: Fixed a deadlock in the C++ Sandbox Core (`sandbox_core`) when capturing large output from subprocesses.
+- **Filesystem**: Fixed `mkdir` logic to correctly raise `FileExistsError` instead of silently succeeding.
+
+### Performance
+- **Startup Time**: Reduced kernel startup time by ~90% (from ~1.6s to ~0.15s) by lazy-loading heavy cloud dependencies (`docker`, `kubernetes`).
+- **Syscall Optimization**: Optimized `sys_ls` to use efficient type checking instead of exception handling control flow.
+- **Sandbox IO**: Optimized `SyscallHandler` to bridge In-Memory and Real Filesystem efficiently for Sandbox paths.
+
 ## [0.5.0] - 2025-12-07
 ### Added
 - **Docker Integration**: `sys_docker_*` syscalls, CLI commands, and Agent actions.

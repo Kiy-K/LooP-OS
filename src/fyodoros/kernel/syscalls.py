@@ -161,21 +161,23 @@ class SyscallHandler:
 
         # Fallback to In-Memory
         uid = self._get_current_uid()
-        try:
+        node_type = self.fs.get_node_type(path)
+
+        if node_type == 'dir':
             return self.fs.list_dir(path, uid)
-        except ValueError:
-            # Handle "Not a directory" gracefully -> return single file
-            try:
-                # Check if it is a file
-                self.fs.read_file(path, uid)
-                return [path.split("/")[-1]]
-            except:
-                raise # Re-raise if neither
-        except Exception:
-            # Return empty list or raise?
-            # Standard ls raises error. But our shell prints "Error".
-            # Let's re-raise to let shell handle it, but fixed the ValueError case.
-            raise
+        elif node_type == 'file':
+            # Verify read permission by trying to read?
+            # Or just assume ls permission implies seeing the name.
+            # But standard ls requires access to parent.
+            # self.fs.list_dir checks 'r' on directory.
+            # Here we just return the name if it exists as file.
+            return [path.split("/")[-1]]
+        elif node_type is None:
+            # Not found
+            raise FileNotFoundError(f"Path not found: {path}")
+
+        # Should not happen
+        raise ValueError("Unknown node type")
 
     def sys_read(self, path):
         """

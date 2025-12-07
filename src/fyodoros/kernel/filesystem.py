@@ -137,6 +137,21 @@ class FileSystem:
         # TODO: Group/World permissions
         return False
 
+    def get_node_type(self, path):
+        """
+        Get the type of the node ('file', 'dir', or None if not found).
+        Used for efficient checks without raising exceptions.
+        """
+        try:
+            node = self._resolve(path)
+            if isinstance(node, DirectoryNode):
+                return 'dir'
+            elif isinstance(node, FileNode):
+                return 'file'
+        except KeyError:
+            pass
+        return None
+
     def list_dir(self, path="/", uid="root"):
         """
         List the contents of a directory.
