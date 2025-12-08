@@ -17,6 +17,7 @@ from fyodoros.supervisor.supervisor import Supervisor
 from fyodoros.kernel.process import Process
 from fyodoros.kernel.plugin_loader import PluginLoader
 
+
 def boot_splash():
     """
     Displays the ASCII art boot splash screen.
@@ -38,6 +39,11 @@ def main():
 
     It parses command-line arguments, initializes the kernel and shell,
     and runs the scheduler loop. It also handles the reboot cycle.
+
+    Arguments:
+        None (uses argparse to read sys.argv)
+            --user: Auto-login username.
+            --password: Auto-login password.
     """
     parser = argparse.ArgumentParser(description="FyodorOS Kernel")
     parser.add_argument("--user", help="Auto-login username (or pre-fill)")
@@ -111,6 +117,7 @@ def main():
         # Check exit reason
         if hasattr(scheduler, "exit_reason") and scheduler.exit_reason == "SHUTDOWN":
             break
+
 
 if __name__ == "__main__":
     main()

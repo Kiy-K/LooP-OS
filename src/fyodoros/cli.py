@@ -45,6 +45,7 @@ BANNER = """
           The Experimental AI Microkernel
 """
 
+
 def _load_env_safely():
     """
     Safely loads environment variables from the `.env` file.
@@ -74,6 +75,7 @@ def _load_env_safely():
                     env[key.strip()] = val
     return env
 
+
 def _run_kernel(args=None):
     """
     Runs the FyodorOS kernel in a subprocess.
@@ -95,6 +97,7 @@ def _run_kernel(args=None):
     except KeyboardInterrupt:
         console.print("\n[yellow]Shutdown.[/yellow]")
 
+
 @app.command()
 def start():
     """
@@ -103,10 +106,14 @@ def start():
     console.print(BANNER, style="bold cyan")
     _run_kernel(["--user", "guest", "--password", "guest"])
 
+
 @app.command()
 def login(user: str = typer.Option(None, help="Username to pre-fill")):
     """
     Launch FyodorOS with interactive login.
+
+    Args:
+        user (str): Username to pre-fill in the login prompt.
     """
     console.print(BANNER, style="bold cyan")
     args = []
@@ -114,10 +121,15 @@ def login(user: str = typer.Option(None, help="Username to pre-fill")):
         args.extend(["--user", user])
     _run_kernel(args)
 
+
 @app.command()
 def user(username: str, password: str = typer.Argument(None)):
     """
     Create a new user.
+
+    Args:
+        username (str): The username for the new user.
+        password (str): The password for the new user. If not provided, will be prompted.
     """
     if not password:
         password = Prompt.ask(f"Enter password for '{username}'", password=True)
@@ -135,6 +147,7 @@ def user(username: str, password: str = typer.Argument(None)):
         console.print(f"[green]User '{username}' created successfully![/green]")
     else:
         console.print(f"[red]Failed to create user '{username}' (Permission denied or already exists).[/red]")
+
 
 @app.command()
 def setup():
@@ -174,6 +187,7 @@ def setup():
     console.print(f"\n[green]Configuration saved to .env[/green]")
     console.print("[bold]Setup Complete![/bold] Run [cyan]fyodor tui[/cyan] or [cyan]fyodor start[/cyan] to launch.")
 
+
 @app.command()
 def tui():
     """
@@ -204,6 +218,7 @@ def tui():
             console.print("Goodbye!")
             break
 
+
 @plugin_app.command("list")
 def list_plugins():
     """List active plugins."""
@@ -214,27 +229,46 @@ def list_plugins():
     else:
         console.print("[yellow]No active plugins.[/yellow]")
 
+
 @plugin_app.command("activate")
 def activate_plugin(name: str):
-    """Activate a plugin by module name."""
+    """
+    Activate a plugin by module name.
+
+    Args:
+        name (str): The name of the plugin to activate.
+    """
     reg = PluginRegistry()
     if reg.activate(name):
         console.print(f"[green]Plugin '{name}' activated.[/green]")
     else:
         console.print(f"[yellow]Plugin '{name}' already active.[/yellow]")
 
+
 @plugin_app.command("deactivate")
 def deactivate_plugin(name: str):
-    """Deactivate a plugin."""
+    """
+    Deactivate a plugin.
+
+    Args:
+        name (str): The name of the plugin to deactivate.
+    """
     reg = PluginRegistry()
     if reg.deactivate(name):
         console.print(f"[green]Plugin '{name}' deactivated.[/green]")
     else:
         console.print(f"[yellow]Plugin '{name}' was not active.[/yellow]")
 
+
 @plugin_app.command("install")
 def install_plugin(url: str, name: str = typer.Option(None, help="Rename plugin directory")):
-    """Install a plugin from a Git URL."""
+    """
+    Install a plugin from a Git URL.
+
+    Args:
+        url (str): The Git URL of the plugin repository.
+        name (str): The directory name for the plugin (defaults to repo name).
+    """
     if not name:
         name = url.split("/")[-1].replace(".git", "")
 
@@ -252,16 +286,29 @@ def install_plugin(url: str, name: str = typer.Option(None, help="Rename plugin 
     except Exception as e:
         console.print(f"[red]Installation failed: {e}[/red]")
 
+
 @plugin_app.command("build")
 def build_plugin(name: str):
-    """Build a plugin (Node/C++/Python)."""
+    """
+    Build a plugin (Node/C++/Python).
+
+    Args:
+        name (str): The name of the plugin to build.
+    """
     target_dir = Path.home() / ".fyodor" / "plugins" / name
     if not target_dir.exists():
         console.print(f"[red]Plugin '{name}' not found.[/red]")
         return
     _build_plugin(target_dir)
 
+
 def _build_plugin(path: Path):
+    """
+    Detects and builds plugin dependencies.
+
+    Args:
+        path (Path): The path to the plugin directory.
+    """
     if (path / "package.json").exists():
         console.print("[cyan]Detected Node.js plugin. Installing dependencies...[/cyan]")
         try:
@@ -293,9 +340,16 @@ def _build_plugin(path: Path):
         except Exception as e:
             console.print(f"[red]Python dependency installation failed: {e}[/red]")
 
+
 @plugin_app.command("create")
 def create_plugin(name: str, lang: str = typer.Option("python", help="Language: python, cpp, node")):
-    """Scaffold a new plugin."""
+    """
+    Scaffold a new plugin.
+
+    Args:
+        name (str): The name of the new plugin.
+        lang (str): The programming language for the plugin ('python', 'cpp', or 'node').
+    """
     target_dir = Path.home() / ".fyodor" / "plugins" / name
     if target_dir.exists():
         console.print(f"[red]Directory already exists.[/red]")
@@ -330,9 +384,17 @@ extern "C" void init_plugin() {
 
     console.print(f"[green]Created {lang} plugin at {target_dir}[/green]")
 
+
 @plugin_app.command("settings")
 def plugin_settings(name: str, key: str = typer.Argument(None), value: str = typer.Argument(None)):
-    """Configure plugin settings."""
+    """
+    Configure plugin settings.
+
+    Args:
+        name (str): The name of the plugin.
+        key (str): The setting key to retrieve or set.
+        value (str): The value to set (if updating).
+    """
     reg = PluginRegistry()
 
     if not key:
@@ -349,6 +411,7 @@ def plugin_settings(name: str, key: str = typer.Argument(None), value: str = typ
         val = reg.get_setting(name, key)
         console.print(f"{name}.{key} = {val}")
 
+
 @network_app.command("status")
 def network_status():
     """Check network status."""
@@ -356,6 +419,7 @@ def network_status():
     status = "Active" if nm.is_enabled() else "Inactive"
     color = "green" if nm.is_enabled() else "red"
     console.print(f"Network Status: [{color}]{status}[/{color}]")
+
 
 @network_app.command("on")
 def network_on():
@@ -365,6 +429,7 @@ def network_on():
     nm.set_enabled(True)
     console.print("[green]Network Enabled[/green]")
 
+
 @network_app.command("off")
 def network_off():
     """Disable network."""
@@ -372,9 +437,15 @@ def network_off():
     nm.set_enabled(False)
     console.print("[red]Network Disabled[/red]")
 
+
 @docker_app.command("ps")
 def docker_ps(all: bool = False):
-    """List Docker containers."""
+    """
+    List Docker containers.
+
+    Args:
+        all (bool): If True, lists all containers (including stopped ones).
+    """
     docker = DockerInterface()
     res = docker.list_containers(all=all)
     if res["success"]:
@@ -397,9 +468,18 @@ def docker_ps(all: bool = False):
     else:
         console.print(f"[red]Error: {res['error']}[/red]")
 
+
 @docker_app.command("run")
 def docker_run(image: str, name: str = typer.Option(None), ports: str = typer.Option(None, help="JSON string or '80:80'"), env: str = typer.Option(None, help="JSON string")):
-    """Run a Docker container."""
+    """
+    Run a Docker container.
+
+    Args:
+        image (str): The Docker image to run.
+        name (str, optional): The name to assign to the container.
+        ports (str, optional): Port mapping as a JSON string or 'host:container' format.
+        env (str, optional): Environment variables as a JSON string.
+    """
     docker = DockerInterface()
 
     ports_dict = None
@@ -429,9 +509,17 @@ def docker_run(image: str, name: str = typer.Option(None), ports: str = typer.Op
     else:
         console.print(f"[red]Error: {res['error']}[/red]")
 
+
 @docker_app.command("build")
 def docker_build(path: str, tag: str, dockerfile: str = "Dockerfile"):
-    """Build a Docker image."""
+    """
+    Build a Docker image.
+
+    Args:
+        path (str): The path to the build context.
+        tag (str): The tag to assign to the built image.
+        dockerfile (str, optional): The name of the Dockerfile (default: 'Dockerfile').
+    """
     docker = DockerInterface()
     console.print(f"Building {tag} from {path}...")
     res = docker.build_image(path, tag, dockerfile)
@@ -441,9 +529,15 @@ def docker_build(path: str, tag: str, dockerfile: str = "Dockerfile"):
     else:
         console.print(f"[red]Error: {res['error']}[/red]")
 
+
 @docker_app.command("stop")
 def docker_stop(container_id: str):
-    """Stop a Docker container."""
+    """
+    Stop a Docker container.
+
+    Args:
+        container_id (str): The ID or name of the container to stop.
+    """
     docker = DockerInterface()
     res = docker.stop_container(container_id)
     if res["success"]:
@@ -451,9 +545,16 @@ def docker_stop(container_id: str):
     else:
         console.print(f"[red]Error: {res['error']}[/red]")
 
+
 @docker_app.command("logs")
 def docker_logs(container_id: str, tail: int = 100):
-    """Get logs from a container."""
+    """
+    Get logs from a container.
+
+    Args:
+        container_id (str): The ID or name of the container.
+        tail (int): Number of lines to retrieve from the end of the logs.
+    """
     docker = DockerInterface()
     res = docker.get_logs(container_id, tail)
     if res["success"]:
@@ -461,9 +562,16 @@ def docker_logs(container_id: str, tail: int = 100):
     else:
         console.print(f"[red]Error: {res['error']}[/red]")
 
+
 @docker_app.command("login")
 def docker_login(username: str, registry: str = "https://index.docker.io/v1/"):
-    """Login to Docker registry."""
+    """
+    Login to Docker registry.
+
+    Args:
+        username (str): The username for the registry.
+        registry (str): The registry URL (default: Docker Hub).
+    """
     password = Prompt.ask("Password", password=True)
     docker = DockerInterface()
     res = docker.login(username, password, registry)
@@ -472,9 +580,15 @@ def docker_login(username: str, registry: str = "https://index.docker.io/v1/"):
     else:
         console.print(f"[red]Login failed: {res['error']}[/red]")
 
+
 @k8s_app.command("pods")
 def k8s_pods(namespace: str = "default"):
-    """List K8s pods."""
+    """
+    List K8s pods.
+
+    Args:
+        namespace (str): The Kubernetes namespace.
+    """
     k8s = KubernetesInterface()
     res = k8s.get_pods(namespace)
     if res["success"]:
@@ -496,9 +610,18 @@ def k8s_pods(namespace: str = "default"):
     else:
         console.print(f"[red]Error: {res['error']}[/red]")
 
+
 @k8s_app.command("deploy")
 def k8s_deploy(name: str, image: str = typer.Option(..., "--image", "-i"), replicas: int = typer.Option(1, "--replicas", "-r"), namespace: str = "default"):
-    """Create a Deployment."""
+    """
+    Create a Deployment.
+
+    Args:
+        name (str): The name of the deployment.
+        image (str): The container image to use.
+        replicas (int): The number of replicas.
+        namespace (str): The Kubernetes namespace.
+    """
     k8s = KubernetesInterface()
     res = k8s.create_deployment(name, image, replicas, namespace)
     if res["success"]:
@@ -506,9 +629,17 @@ def k8s_deploy(name: str, image: str = typer.Option(..., "--image", "-i"), repli
     else:
         console.print(f"[red]Error: {res['error']}[/red]")
 
+
 @k8s_app.command("scale")
 def k8s_scale(name: str, replicas: int = typer.Option(..., "--replicas", "-r"), namespace: str = "default"):
-    """Scale a Deployment."""
+    """
+    Scale a Deployment.
+
+    Args:
+        name (str): The name of the deployment to scale.
+        replicas (int): The new number of replicas.
+        namespace (str): The Kubernetes namespace.
+    """
     k8s = KubernetesInterface()
     res = k8s.scale_deployment(name, replicas, namespace)
     if res["success"]:
@@ -516,9 +647,16 @@ def k8s_scale(name: str, replicas: int = typer.Option(..., "--replicas", "-r"), 
     else:
         console.print(f"[red]Error: {res['error']}[/red]")
 
+
 @k8s_app.command("delete")
 def k8s_delete(name: str, namespace: str = "default"):
-    """Delete a Deployment."""
+    """
+    Delete a Deployment.
+
+    Args:
+        name (str): The name of the deployment to delete.
+        namespace (str): The Kubernetes namespace.
+    """
     k8s = KubernetesInterface()
     res = k8s.delete_deployment(name, namespace)
     if res["success"]:
@@ -526,9 +664,16 @@ def k8s_delete(name: str, namespace: str = "default"):
     else:
         console.print(f"[red]Error: {res['error']}[/red]")
 
+
 @k8s_app.command("logs")
 def k8s_logs(pod: str, namespace: str = "default"):
-    """Get logs from a Pod."""
+    """
+    Get logs from a Pod.
+
+    Args:
+        pod (str): The name of the pod.
+        namespace (str): The Kubernetes namespace.
+    """
     k8s = KubernetesInterface()
     res = k8s.get_pod_logs(pod, namespace)
     if res["success"]:
@@ -536,10 +681,14 @@ def k8s_logs(pod: str, namespace: str = "default"):
     else:
         console.print(f"[red]Error: {res['error']}[/red]")
 
+
 @app.command()
 def dashboard(view: str = typer.Argument("tui", help="View mode: tui or logs")):
     """
     View Usage Dashboard (requires usage_dashboard plugin).
+
+    Args:
+        view (str): The view mode, either 'tui' (interactive) or 'logs' (JSON dump).
     """
     log_file = Path.home() / ".fyodor" / "dashboard" / "stats.json"
 
@@ -584,6 +733,7 @@ def dashboard(view: str = typer.Argument("tui", help="View mode: tui or logs")):
     else:
         console.print(f"[red]Unknown view mode: {view}[/red]")
 
+
 @app.command()
 def gui():
     """
@@ -617,6 +767,7 @@ def gui():
     except Exception as e:
         console.print(f"[red]Failed to launch GUI: {e}[/red]")
 
+
 @app.command()
 def info():
     """
@@ -634,6 +785,7 @@ def info():
                     console.print(f"  {line.strip()}")
     else:
         console.print("[red]Config missing (run setup)[/red]")
+
 
 if __name__ == "__main__":
     app()

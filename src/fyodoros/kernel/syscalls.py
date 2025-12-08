@@ -16,6 +16,7 @@ from fyodoros.kernel.network import NetworkManager
 from fyodoros.kernel.cloud.docker_interface import DockerInterface
 from fyodoros.kernel.cloud.k8s_interface import KubernetesInterface
 
+
 class SyscallHandler:
     """
     Handles system calls from processes.
@@ -429,6 +430,17 @@ class SyscallHandler:
         return self.user_manager.has_permission(user, "manage_docker")
 
     def sys_docker_login(self, username, password, registry="https://index.docker.io/v1/"):
+        """
+        Log in to a Docker registry.
+
+        Args:
+            username (str): Username.
+            password (str): Password.
+            registry (str, optional): Registry URL.
+
+        Returns:
+            dict: Success status or error.
+        """
         if not self._check_docker_permission():
             return {"success": False, "error": "Permission Denied: manage_docker required"}
         try:
@@ -437,6 +449,15 @@ class SyscallHandler:
             return {"success": False, "error": str(e)}
 
     def sys_docker_logout(self, registry="https://index.docker.io/v1/"):
+        """
+        Log out from a Docker registry.
+
+        Args:
+            registry (str, optional): Registry URL.
+
+        Returns:
+            dict: Success status or error.
+        """
         if not self._check_docker_permission():
             return {"success": False, "error": "Permission Denied: manage_docker required"}
         try:
@@ -445,6 +466,17 @@ class SyscallHandler:
              return {"success": False, "error": str(e)}
 
     def sys_docker_build(self, path, tag, dockerfile="Dockerfile"):
+        """
+        Build a Docker image.
+
+        Args:
+            path (str): Build context path.
+            tag (str): Image tag.
+            dockerfile (str, optional): Dockerfile name.
+
+        Returns:
+            dict: Success status or error.
+        """
         if not self._check_docker_permission():
             return {"success": False, "error": "Permission Denied: manage_docker required"}
         try:
@@ -453,6 +485,18 @@ class SyscallHandler:
             return {"success": False, "error": str(e)}
 
     def sys_docker_run(self, image, name=None, ports=None, env=None):
+        """
+        Run a Docker container.
+
+        Args:
+            image (str): Image name.
+            name (str, optional): Container name.
+            ports (dict/str, optional): Port mapping.
+            env (dict/str, optional): Environment variables.
+
+        Returns:
+            dict: Success status or error.
+        """
         if not self._check_docker_permission():
             return {"success": False, "error": "Permission Denied: manage_docker required"}
 
@@ -469,6 +513,15 @@ class SyscallHandler:
             return {"success": False, "error": str(e)}
 
     def sys_docker_ps(self, all=False):
+        """
+        List Docker containers.
+
+        Args:
+            all (bool, optional): List all containers.
+
+        Returns:
+            dict: Success status or error.
+        """
         if not self._check_docker_permission():
             return {"success": False, "error": "Permission Denied: manage_docker required"}
         try:
@@ -477,6 +530,15 @@ class SyscallHandler:
             return {"success": False, "error": str(e)}
 
     def sys_docker_stop(self, container_id):
+        """
+        Stop a Docker container.
+
+        Args:
+            container_id (str): Container ID or name.
+
+        Returns:
+            dict: Success status or error.
+        """
         if not self._check_docker_permission():
             return {"success": False, "error": "Permission Denied: manage_docker required"}
         try:
@@ -485,6 +547,16 @@ class SyscallHandler:
             return {"success": False, "error": str(e)}
 
     def sys_docker_logs(self, container_id, tail=100):
+        """
+        Get Docker container logs.
+
+        Args:
+            container_id (str): Container ID or name.
+            tail (int, optional): Number of lines.
+
+        Returns:
+            dict: Success status or error.
+        """
         if not self._check_docker_permission():
             return {"success": False, "error": "Permission Denied: manage_docker required"}
         try:
@@ -501,6 +573,18 @@ class SyscallHandler:
         return self.user_manager.has_permission(user, "manage_k8s")
 
     def sys_k8s_deploy(self, name, image, replicas=1, namespace="default"):
+        """
+        Deploy to Kubernetes.
+
+        Args:
+            name (str): Deployment name.
+            image (str): Container image.
+            replicas (int, optional): Replica count.
+            namespace (str, optional): Namespace.
+
+        Returns:
+            dict: Success status or error.
+        """
         if not self._check_k8s_permission():
             return {"success": False, "error": "Permission Denied: manage_k8s required"}
         try:
@@ -509,6 +593,17 @@ class SyscallHandler:
             return {"success": False, "error": str(e)}
 
     def sys_k8s_scale(self, name, replicas, namespace="default"):
+        """
+        Scale a Kubernetes deployment.
+
+        Args:
+            name (str): Deployment name.
+            replicas (int): New replica count.
+            namespace (str, optional): Namespace.
+
+        Returns:
+            dict: Success status or error.
+        """
         if not self._check_k8s_permission():
             return {"success": False, "error": "Permission Denied: manage_k8s required"}
         try:
@@ -517,6 +612,16 @@ class SyscallHandler:
             return {"success": False, "error": str(e)}
 
     def sys_k8s_delete(self, name, namespace="default"):
+        """
+        Delete a Kubernetes deployment.
+
+        Args:
+            name (str): Deployment name.
+            namespace (str, optional): Namespace.
+
+        Returns:
+            dict: Success status or error.
+        """
         if not self._check_k8s_permission():
             return {"success": False, "error": "Permission Denied: manage_k8s required"}
         try:
@@ -525,6 +630,15 @@ class SyscallHandler:
             return {"success": False, "error": str(e)}
 
     def sys_k8s_get_pods(self, namespace="default"):
+        """
+        Get Kubernetes pods.
+
+        Args:
+            namespace (str, optional): Namespace.
+
+        Returns:
+            dict: Success status or error.
+        """
         if not self._check_k8s_permission():
             return {"success": False, "error": "Permission Denied: manage_k8s required"}
         try:
@@ -533,6 +647,16 @@ class SyscallHandler:
             return {"success": False, "error": str(e)}
 
     def sys_k8s_logs(self, pod_name, namespace="default"):
+        """
+        Get logs from a Kubernetes pod.
+
+        Args:
+            pod_name (str): Pod name.
+            namespace (str, optional): Namespace.
+
+        Returns:
+            dict: Success status or error.
+        """
         if not self._check_k8s_permission():
             return {"success": False, "error": "Permission Denied: manage_k8s required"}
         try:

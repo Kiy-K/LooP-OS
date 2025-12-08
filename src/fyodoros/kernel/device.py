@@ -7,6 +7,7 @@ This module contains simple abstractions for hardware devices, such as TTY.
 
 from collections import deque
 
+
 class TTYDevice:
     """
     A simple TTY (Teletypewriter) device abstraction.

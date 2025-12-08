@@ -12,6 +12,7 @@ import socket
 import logging
 from fyodoros.kernel.users import UserManager
 
+
 class NetworkManager:
     """
     Manages the global network state and permission checks.
@@ -131,6 +132,7 @@ class NetworkManager:
             return False
 
         return True
+
 
 class NetworkGuard:
     """

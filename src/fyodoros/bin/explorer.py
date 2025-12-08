@@ -8,10 +8,19 @@ suitable for the AI Agent.
 
 import json
 
+
 def _resolve_destination(sys, src, dst):
     """
     Resolve the final destination path.
     If dst is a directory, append the filename from src.
+
+    Args:
+        sys (SyscallHandler): System interface for checking file existence/type.
+        src (str): Source path.
+        dst (str): Destination path.
+
+    Returns:
+        str: The resolved destination path.
     """
     try:
         sys.sys_ls(dst)
@@ -21,6 +30,7 @@ def _resolve_destination(sys, src, dst):
     except Exception:
         # Not a directory or does not exist
         return dst
+
 
 def main(args, sys):
     """

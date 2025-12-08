@@ -8,6 +8,7 @@ Kubernetes resources.
 from typing import Dict, List, Optional, Any
 import os
 
+
 class KubernetesInterface:
     """
     Wrapper for Kubernetes operations.
@@ -45,12 +46,23 @@ class KubernetesInterface:
     def _response(self, success: bool, data: Any = None, error: str = None) -> Dict[str, Any]:
         """
         Helper to format the response.
+
+        Args:
+            success (bool): Whether the operation was successful.
+            data (Any, optional): Data returned by the operation.
+            error (str, optional): Error message if failed.
+
+        Returns:
+            Dict[str, Any]: Formatted response.
         """
         return {"success": success, "data": data, "error": error}
 
     def check_availability(self) -> bool:
         """
         Check if Kubernetes is reachable.
+
+        Returns:
+            bool: True if Kubernetes is available, False otherwise.
         """
         self._ensure_module()
         if not self._k8s_module:
@@ -86,6 +98,15 @@ class KubernetesInterface:
     def create_deployment(self, name: str, image: str, replicas: int = 1, namespace: str = "default") -> Dict[str, Any]:
         """
         Create a Kubernetes Deployment.
+
+        Args:
+            name (str): Name of the deployment.
+            image (str): Container image to use.
+            replicas (int, optional): Number of replicas. Defaults to 1.
+            namespace (str, optional): Target namespace. Defaults to "default".
+
+        Returns:
+            Dict[str, Any]: Operation result.
         """
         if not self.check_availability():
             return self._response(False, error="Kubernetes not available")
@@ -127,6 +148,14 @@ class KubernetesInterface:
     def scale_deployment(self, name: str, replicas: int, namespace: str = "default") -> Dict[str, Any]:
         """
         Scale a Deployment.
+
+        Args:
+            name (str): Name of the deployment.
+            replicas (int): New number of replicas.
+            namespace (str, optional): Target namespace. Defaults to "default".
+
+        Returns:
+            Dict[str, Any]: Operation result.
         """
         if not self.check_availability():
             return self._response(False, error="Kubernetes not available")
@@ -146,6 +175,13 @@ class KubernetesInterface:
     def delete_deployment(self, name: str, namespace: str = "default") -> Dict[str, Any]:
         """
         Delete a Deployment.
+
+        Args:
+            name (str): Name of the deployment.
+            namespace (str, optional): Target namespace. Defaults to "default".
+
+        Returns:
+            Dict[str, Any]: Operation result.
         """
         if not self.check_availability():
             return self._response(False, error="Kubernetes not available")
@@ -162,6 +198,12 @@ class KubernetesInterface:
     def get_pods(self, namespace: str = "default") -> Dict[str, Any]:
         """
         List Pods in a namespace.
+
+        Args:
+            namespace (str, optional): Target namespace. Defaults to "default".
+
+        Returns:
+            Dict[str, Any]: Operation result containing pod list.
         """
         if not self.check_availability():
             return self._response(False, error="Kubernetes not available")
@@ -183,6 +225,14 @@ class KubernetesInterface:
     def get_pod_logs(self, pod_name: str, namespace: str = "default", tail: int = 100) -> Dict[str, Any]:
         """
         Get logs from a Pod.
+
+        Args:
+            pod_name (str): Name of the pod.
+            namespace (str, optional): Target namespace. Defaults to "default".
+            tail (int, optional): Number of lines to tail. Defaults to 100.
+
+        Returns:
+            Dict[str, Any]: Operation result containing logs.
         """
         if not self.check_availability():
             return self._response(False, error="Kubernetes not available")

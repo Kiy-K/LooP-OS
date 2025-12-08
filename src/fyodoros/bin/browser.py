@@ -12,6 +12,7 @@ import json
 import sys
 from playwright.sync_api import sync_playwright
 
+
 def main(args, syscalls):
     """
     Browser App entry point.
@@ -89,6 +90,7 @@ def main(args, syscalls):
         return json.dumps({"error": str(e)})
 
     return json.dumps({"error": "Unknown command"})
+
 
 def get_dom_tree(page):
     """

@@ -7,6 +7,7 @@ Provides system statistics (hardware, kernel info) in JSON format.
 
 import json
 
+
 def main(args, sys):
     """
     System App entry point.

@@ -21,6 +21,7 @@ except ImportError:
     print("Warning: C++ Sandbox Core not found. Compilation needed?")
     sandbox_core = None
 
+
 class AgentSandbox:
     """
     Restricts Agent actions to safe boundaries using C++ Core.

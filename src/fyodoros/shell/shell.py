@@ -13,6 +13,7 @@ from fyodoros.kernel.process import Process
 from importlib import import_module
 from fyodoros.kernel.agent import ReActAgent
 
+
 class Shell:
     """
     Interactive shell for FyodorOS.

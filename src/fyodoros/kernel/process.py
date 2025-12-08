@@ -11,6 +11,7 @@ import time
 from collections import deque
 from enum import Enum, auto
 
+
 class ProcessState(Enum):
     """
     Enumeration of possible process states.
@@ -20,6 +21,7 @@ class ProcessState(Enum):
     WAITING = auto()
     THINKING = auto()   # AI Specific: Waiting for LLM
     TERMINATED = auto()
+
 
 class Process:
     """
@@ -152,4 +154,10 @@ class Process:
         self.state = ProcessState.THINKING
 
     def __repr__(self):
+        """
+        Return a string representation of the Process.
+
+        Returns:
+            str: String representation.
+        """
         return f"<Process {self.name} pid={self.pid} state={self.state.name}>"

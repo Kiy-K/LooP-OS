@@ -8,6 +8,7 @@ directories, and basic permissions. It emulates a standard Unix-like hierarchy.
 
 import time
 
+
 class Permissions:
     """
     Represents file or directory permissions.
@@ -141,6 +142,12 @@ class FileSystem:
         """
         Get the type of the node ('file', 'dir', or None if not found).
         Used for efficient checks without raising exceptions.
+
+        Args:
+            path (str): The path to check.
+
+        Returns:
+            str | None: 'file' or 'dir', or None if not found.
         """
         try:
             node = self._resolve(path)

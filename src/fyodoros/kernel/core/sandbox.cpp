@@ -16,8 +16,20 @@
 namespace py = pybind11;
 namespace fs = std::filesystem;
 
+/**
+ * @brief SandboxCore provides a secure execution environment for agents.
+ *
+ * It handles path resolution to prevent traversal attacks and manages process
+ * execution with output capture.
+ */
 class SandboxCore {
 public:
+    /**
+     * @brief Initialize the SandboxCore.
+     *
+     * @param root_path The absolute path to the sandbox root directory.
+     *                  Will be created if it does not exist.
+     */
     SandboxCore(const std::string& root_path) {
         // Resolve absolute path of the sandbox root
         try {
@@ -30,6 +42,15 @@ public:
         }
     }
 
+    /**
+     * @brief Resolves a virtual path to a safe absolute path within the sandbox.
+     *
+     * Ensures that the resolved path does not escape the sandbox root (e.g., via "..").
+     *
+     * @param virtual_path The path relative to the sandbox root.
+     * @return std::string The absolute path on the host filesystem.
+     * @throws std::runtime_error If the path attempts to escape the sandbox.
+     */
     std::string resolve_path(const std::string& virtual_path) {
         fs::path p = virtual_path;
 
@@ -60,13 +81,29 @@ public:
         return norm_str;
     }
 
+    /**
+     * @brief Executes a command within the sandbox.
+     *
+     * @param cmd The command to execute.
+     * @param args A list of arguments for the command.
+     * @param env A map of environment variables.
+     * @return std::map<std::string, py::object> A dictionary containing 'stdout', 'stderr', and 'return_code'.
+     */
     std::map<std::string, py::object> execute(const std::string& cmd, const std::vector<std::string>& args, const std::map<std::string, std::string>& env) {
         // Capture output by default so Agent can see results
         return execute_internal(cmd, args, env, true);
     }
 
-    // Compiles and runs NASM code
-    // Returns {stdout: string, stderr: string, return_code: int}
+    /**
+     * @brief Compiles and runs NASM assembly code.
+     *
+     * This utility simplifies the process of writing assembly, compiling it with nasm,
+     * linking with gcc, and executing the result.
+     *
+     * @param source The NASM assembly source code.
+     * @param output_name The base name for output files (asm, object, executable).
+     * @return std::map<std::string, py::object> Result dictionary containing output and return code.
+     */
     std::map<std::string, py::object> compile_and_run_nasm(const std::string& source, const std::string& output_name) {
         std::string asm_file = output_name + ".asm";
         std::string obj_file = output_name + ".o";

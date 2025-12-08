@@ -4,6 +4,14 @@
 use std::process::Command;
 use tauri::Manager;
 
+/// Starts the FyodorOS kernel as a subprocess.
+///
+/// This command is invoked from the React frontend. It attempts to execute
+/// `python3 -m fyodoros` to launch the kernel.
+///
+/// # Returns
+///
+/// A `String` indicating success ("Kernel Process Spawned") or an error message.
 #[tauri::command]
 fn start_kernel() -> String {
     // Attempt to spawn the python kernel
@@ -22,6 +30,10 @@ fn start_kernel() -> String {
         }
 }
 
+/// Main entry point for the Tauri backend.
+///
+/// Initializes the Tauri application, registers the `start_kernel` command,
+/// and runs the application loop.
 fn main() {
   tauri::Builder::default()
     .invoke_handler(tauri::generate_handler![start_kernel])

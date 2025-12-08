@@ -10,6 +10,7 @@ and aggregates commands and tools exposed by them.
 import importlib
 from fyodoros.plugins.registry import PluginRegistry
 
+
 class PluginLoader:
     """
     Manages the lifecycle of plugins.

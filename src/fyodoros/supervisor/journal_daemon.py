@@ -7,6 +7,7 @@ A simple background service that logs a heartbeat to the system journal.
 
 import time
 
+
 def journal_daemon(syscall):
     """
     Background journaling service generator.

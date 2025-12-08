@@ -5,18 +5,29 @@ import psutil
 from pathlib import Path
 from fyodoros.plugins import Plugin
 
+
 class UsageDashboardPlugin(Plugin):
     """
     Usage Dashboard plugin.
     Features: Background logging of system stats.
     """
     def __init__(self):
+        """
+        Initialize the UsageDashboardPlugin.
+        Sets up the log directory and initial state.
+        """
         self.running = False
         self.thread = None
         self.log_dir = Path.home() / ".fyodor" / "dashboard"
         self.log_file = self.log_dir / "stats.json"
 
     def setup(self, kernel):
+        """
+        Initialize the plugin with the kernel and start the monitoring thread.
+
+        Args:
+            kernel (Kernel): The active kernel instance.
+        """
         self.log_dir.mkdir(parents=True, exist_ok=True)
         self.running = True
         self.thread = threading.Thread(target=self._monitor_loop, daemon=True)
@@ -24,6 +35,10 @@ class UsageDashboardPlugin(Plugin):
         print("[UsageDashboard] Monitoring started.")
 
     def _monitor_loop(self):
+        """
+        Background loop to collect system statistics using `psutil`.
+        Persists data to JSON file.
+        """
         while self.running:
             try:
                 stats = {
@@ -59,12 +74,27 @@ class UsageDashboardPlugin(Plugin):
             time.sleep(5) # Update every 5 seconds
 
     def stop(self):
+        """
+        Stop the monitoring thread.
+        """
         self.running = False
         if self.thread:
             self.thread.join()
 
     def get_shell_commands(self):
+        """
+        Register shell commands (None for this plugin).
+
+        Returns:
+            dict: Empty dictionary.
+        """
         return {}
 
     def get_agent_tools(self):
+        """
+        Register agent tools (None for this plugin).
+
+        Returns:
+            list: Empty list.
+        """
         return []
