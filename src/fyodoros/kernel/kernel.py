@@ -15,7 +15,6 @@ from .network import NetworkManager, NetworkGuard
 from .sandbox import AgentSandbox
 from fyodoros.supervisor.supervisor import Supervisor
 from fyodoros.kernel.plugin_loader import PluginLoader
-from fyodoros.kernel.service_manager import ServiceManager
 
 
 class Kernel:
@@ -33,7 +32,6 @@ class Kernel:
         sys (SyscallHandler): System call interface.
         sandbox (AgentSandbox): Sandboxed environment for agents.
         supervisor (Supervisor): Process and service supervisor.
-        service_manager (ServiceManager): Service lifecycle manager.
         plugin_loader (PluginLoader): Plugin management system.
         shell: The shell instance (optional).
     """
@@ -46,7 +44,6 @@ class Kernel:
         sandbox: Optional[AgentSandbox] = None,
         supervisor: Optional[Supervisor] = None,
         network_guard: Optional[NetworkGuard] = None,
-        service_manager: Optional[ServiceManager] = None,
     ):
         """
         Initialize the Kernel and all its subsystems.
@@ -84,9 +81,6 @@ class Kernel:
 
         # Supervisor
         self.supervisor = supervisor if supervisor else Supervisor(self.scheduler, self.sys)
-
-        # Service Manager
-        self.service_manager = service_manager if service_manager else ServiceManager()
 
         # Plugins
         self.plugin_loader = PluginLoader(self)

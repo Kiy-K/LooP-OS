@@ -1,9 +1,5 @@
 # Changelog
 
-## [0.6.0] - 2025-12-09
-### Fixed
-- **Teardown Correctness**: Fix teardown atomicity in ServiceManager: cleanup() always guaranteed even when stop() fails.
-
 ## [0.5.1] - 2025-12-08
 ### Fixed
 - **Critical Security**: Fixed a shell login bypass where failed authentication could fallback to root access.

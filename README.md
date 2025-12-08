@@ -26,11 +26,6 @@ We believe that for AI Agents to be truly useful and safe, they need an environm
 
 ## 📝 What's New
 
-### [0.6.0] - Robust Service Lifecycle
-
-FyodorOS v0.6.0 introduces a robust ServiceManager to handle system services.
-- **Atomic Teardown**: ServiceManager teardown is atomic; cleanup always executes regardless of failure conditions.
-
 ### [0.5.1] - Performance & Security Hardening
 
 FyodorOS v0.5.1 focuses on stability, security, and speed:
