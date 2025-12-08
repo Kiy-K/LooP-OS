@@ -11,6 +11,7 @@ from argon2 import PasswordHasher
 import json
 import os
 
+
 class UserManager:
     """
     Manages user authentication and authorization.
@@ -56,6 +57,7 @@ class UserManager:
             str: The password hash.
         """
         return self._ph.hash(pw)
+
     def _verify(self, hash_val, pw):
         """
         Verify a password against an Argon2 hash.

@@ -11,6 +11,7 @@ from fyodoros.kernel.dom import SystemDOM
 from fyodoros.kernel.sandbox import AgentSandbox
 from fyodoros.kernel.llm import LLMProvider
 
+
 class ReActAgent:
     """
     A ReAct-based AI agent that interacts with the OS.

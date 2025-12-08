@@ -8,6 +8,7 @@ It provides the standard interface for setup, command registration, and agent to
 
 from abc import ABC, abstractmethod
 
+
 class Plugin(ABC):
     """
     Abstract Base Class for FyodorOS plugins.

@@ -2,18 +2,37 @@ import requests
 from fyodoros.plugins import Plugin
 from fyodoros.plugins.registry import PluginRegistry
 
+
 class GithubPlugin(Plugin):
     """
     GitHub integration plugin.
     Features: list repos, create issues, view PRs.
     """
     def setup(self, kernel):
+        """
+        Initialize the plugin with the kernel.
+
+        Args:
+            kernel (Kernel): The active kernel instance.
+        """
         self.kernel = kernel
 
     def get_token(self):
+        """
+        Retrieve the GitHub API token from settings.
+
+        Returns:
+            str: The API token, or None if not set.
+        """
         return PluginRegistry().get_setting("github", "token")
 
     def get_headers(self):
+        """
+        Construct request headers with authentication.
+
+        Returns:
+            dict: The headers dictionary, or None if token is missing.
+        """
         token = self.get_token()
         if not token:
             return None
@@ -23,6 +42,15 @@ class GithubPlugin(Plugin):
         }
 
     def list_repos(self, username=None):
+        """
+        List repositories for the authenticated user or a specified user.
+
+        Args:
+            username (str, optional): The username to list repos for. Defaults to authenticated user.
+
+        Returns:
+            str: A formatted list of repositories or error message.
+        """
         headers = self.get_headers()
         if not headers:
             return "Error: GitHub token not configured. Use 'fyodor plugin settings github token <YOUR_TOKEN>'."
@@ -37,6 +65,17 @@ class GithubPlugin(Plugin):
             return f"Error listing repos: {e}"
 
     def create_issue(self, repo, title, body=""):
+        """
+        Create a new issue in a repository.
+
+        Args:
+            repo (str): The repository name (owner/repo).
+            title (str): The issue title.
+            body (str, optional): The issue body description.
+
+        Returns:
+            str: Success message with URL, or error message.
+        """
         headers = self.get_headers()
         if not headers:
             return "Error: GitHub token not configured."
@@ -52,6 +91,16 @@ class GithubPlugin(Plugin):
             return f"Error creating issue: {e}"
 
     def view_prs(self, repo, state="open"):
+        """
+        View Pull Requests for a repository.
+
+        Args:
+            repo (str): The repository name (owner/repo).
+            state (str, optional): PR state ('open', 'closed', 'all'). Defaults to 'open'.
+
+        Returns:
+            str: A list of PRs or error message.
+        """
         headers = self.get_headers()
         if not headers:
             return "Error: GitHub token not configured."
@@ -68,6 +117,12 @@ class GithubPlugin(Plugin):
             return f"Error viewing PRs: {e}"
 
     def get_shell_commands(self):
+        """
+        Register GitHub shell commands.
+
+        Returns:
+            dict: Mapping of command names to functions.
+        """
         return {
             "github_repos": self.list_repos,
             "github_issue": self.create_issue,
@@ -75,6 +130,12 @@ class GithubPlugin(Plugin):
         }
 
     def get_agent_tools(self):
+        """
+        Register GitHub tools for the agent.
+
+        Returns:
+            list: List of tool dictionaries.
+        """
         # Tools description for the Agent
         return [
             {

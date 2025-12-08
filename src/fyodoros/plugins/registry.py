@@ -23,6 +23,7 @@ except ImportError:
     print("Warning: C++ Registry Core not found. Compilation needed?")
     registry_core = None
 
+
 class PluginRegistry:
     """
     Manages the lifecycle and configuration of plugins.

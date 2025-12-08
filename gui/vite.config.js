@@ -1,7 +1,14 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 
-// https://vitejs.dev/config/
+/**
+ * Vite Configuration.
+ *
+ * Configures the build tool for the React frontend, ensuring compatibility
+ * with Tauri's development server and build process.
+ *
+ * @type {import('vite').UserConfig}
+ */
 export default defineConfig(async () => ({
   plugins: [react()],
 

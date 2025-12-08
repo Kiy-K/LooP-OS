@@ -1,10 +1,22 @@
 #!/usr/bin/env python3
+"""
+GUI Setup Script.
+
+This script automates the installation and compilation of the FyodorOS Desktop GUI.
+It checks for necessary dependencies (Node.js/npm, Rust/Cargo), installs NPM packages,
+and builds the Tauri application in release mode.
+"""
+
 import subprocess
 import sys
 import os
 from pathlib import Path
 
+
 def main():
+    """
+    Main entry point for the GUI setup script.
+    """
     gui_dir = Path(__file__).parent.resolve()
     print(f"Installing FyodorOS GUI in {gui_dir}...")
 
@@ -34,6 +46,7 @@ def main():
     except subprocess.CalledProcessError as e:
         print(f"Build failed: {e}")
         sys.exit(1)
+
 
 if __name__ == "__main__":
     main()

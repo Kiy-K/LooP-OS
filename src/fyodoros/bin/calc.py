@@ -8,6 +8,7 @@ It evaluates mathematical expressions using a restricted environment.
 
 import json
 
+
 def main(args, sys):
     """
     Calculator entry point.

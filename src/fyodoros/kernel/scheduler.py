@@ -7,6 +7,7 @@ This module implements a simple round-robin scheduler for managing process execu
 
 from fyodoros.kernel.process import ProcessState
 
+
 class Scheduler:
     """
     Manages and schedules processes.

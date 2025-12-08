@@ -81,6 +81,7 @@ class Supervisor:
             if svc == "journal":
                 from fyodoros.supervisor.journal_daemon import journal_daemon
                 self.start_service("journal", journal_daemon(self.sys))
+
     def kill_process(self, pid):
         """
         Kill a process by PID.

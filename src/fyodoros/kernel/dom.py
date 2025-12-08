@@ -7,6 +7,7 @@ operating system state (filesystem, processes, users) into a structured
 dictionary (DOM-like) format for the AI agent to consume.
 """
 
+
 class SystemDOM:
     """
     Represents the Operating System state as a Document Object Model (DOM) tree.
@@ -29,8 +30,12 @@ class SystemDOM:
         """
         Returns the full state of the OS as a dictionary.
 
+        This method aggregates the current state of the filesystem, running processes,
+        registered users, and cloud resources (Docker, Kubernetes) into a single
+        JSON-serializable dictionary.
+
         Returns:
-            dict: A dictionary containing 'filesystem', 'processes', 'users', and 'docker'.
+            dict: A dictionary containing 'filesystem', 'processes', 'users', 'docker', and 'k8s_pods'.
         """
         # Get docker state
         docker_state = []

@@ -1,12 +1,20 @@
 from fyodoros.plugins import Plugin
 from fyodoros.kernel.users import UserManager
 
+
 class TeamCollaborationPlugin(Plugin):
     """
     Team Collaboration plugin.
     Features: Role-Based Access Control (RBAC).
     """
     def setup(self, kernel):
+        """
+        Initialize the plugin with the kernel.
+        Enables RBAC by monkeypatching UserManager.
+
+        Args:
+            kernel (Kernel): The active kernel instance.
+        """
         self.kernel = kernel
         # Monkeypatch UserManager.has_permission
         self.original_has_permission = UserManager.has_permission
@@ -31,6 +39,17 @@ class TeamCollaborationPlugin(Plugin):
         print("[TeamCollaboration] RBAC enabled.")
 
     def _check_permission(self, user_manager_instance, user, action):
+        """
+        Internal method to check permissions against RBAC policies.
+
+        Args:
+            user_manager_instance (UserManager): The UserManager instance.
+            user (str): The user to check.
+            action (str): The action requested.
+
+        Returns:
+            bool: True if permitted.
+        """
         # Root is god
         if user == "root":
             return True
@@ -51,18 +70,53 @@ class TeamCollaborationPlugin(Plugin):
         return True
 
     def add_role(self, target_user, role):
+        """
+        Add a role to a user.
+
+        Args:
+            target_user (str): The username.
+            role (str): The role to add.
+
+        Returns:
+            bool: True if successful.
+        """
         um = UserManager()
         return um.add_role(target_user, role)
 
     def remove_role(self, target_user, role):
+        """
+        Remove a role from a user.
+
+        Args:
+            target_user (str): The username.
+            role (str): The role to remove.
+
+        Returns:
+            bool: True if successful.
+        """
         um = UserManager()
         return um.remove_role(target_user, role)
 
     def list_roles(self, target_user):
+        """
+        List roles assigned to a user.
+
+        Args:
+            target_user (str): The username.
+
+        Returns:
+            list[str]: A list of roles.
+        """
         um = UserManager()
         return um.get_roles(target_user)
 
     def get_shell_commands(self):
+        """
+        Register Team Collaboration shell commands.
+
+        Returns:
+            dict: Mapping of command names to functions.
+        """
         return {
             "team_add_role": self.add_role,
             "team_remove_role": self.remove_role,
@@ -70,6 +124,12 @@ class TeamCollaborationPlugin(Plugin):
         }
 
     def get_agent_tools(self):
+        """
+        Register Team Collaboration tools for the agent.
+
+        Returns:
+            list: List of tool dictionaries.
+        """
         return [
             {
                 "name": "team_add_role",

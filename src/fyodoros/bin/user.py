@@ -7,6 +7,7 @@ Provides an interface for listing, adding, and deleting users.
 
 import json
 
+
 def main(args, sys):
     """
     User App entry point.
@@ -46,7 +47,6 @@ def main(args, sys):
         # Wait, sys_get_state calls user_manager.list_users()
         try:
              # This is a bit of a hack: re-using get_state to list users
-             state = sys.sys_get_state()
              # Wait, sys_get_state isn't returning users in my implementation yet?
              # I need to check kernel/dom.py or syscalls.py
 

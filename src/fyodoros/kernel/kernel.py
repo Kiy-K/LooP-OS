@@ -15,6 +15,7 @@ from .sandbox import AgentSandbox
 from fyodoros.supervisor.supervisor import Supervisor
 from fyodoros.kernel.plugin_loader import PluginLoader
 
+
 class Kernel:
     """
     The central Kernel class.

@@ -12,6 +12,7 @@ from cryptography.fernet import Fernet
 
 ENC_PREFIX = "ENC:"
 
+
 def _get_key_path():
     """
     Returns the path to the encryption key.
@@ -22,6 +23,7 @@ def _get_key_path():
     fyodor_dir = Path.home() / ".fyodor"
     fyodor_dir.mkdir(parents=True, exist_ok=True)
     return fyodor_dir / "secret.key"
+
 
 def get_key():
     """
@@ -44,6 +46,7 @@ def get_key():
             f.write(key)
         return key
 
+
 def encrypt_value(value: str) -> str:
     """
     Encrypts a string value.
@@ -60,6 +63,7 @@ def encrypt_value(value: str) -> str:
     f = Fernet(key)
     encrypted = f.encrypt(value.encode()).decode()
     return f"{ENC_PREFIX}{encrypted}"
+
 
 def decrypt_value(value: str) -> str:
     """
