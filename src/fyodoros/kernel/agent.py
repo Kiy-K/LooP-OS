@@ -38,7 +38,13 @@ class ReActAgent:
         """
         self.sys = syscall_handler
         self.dom = SystemDOM(syscall_handler)
-        self.sandbox = AgentSandbox(syscall_handler)
+
+        # Use existing sandbox from syscall handler if available, otherwise create new.
+        if hasattr(syscall_handler, 'sandbox') and syscall_handler.sandbox:
+            self.sandbox = syscall_handler.sandbox
+        else:
+            self.sandbox = AgentSandbox(syscall_handler)
+
         self.llm = LLMProvider(model=model)
 
         self.max_turns = 10
