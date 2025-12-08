@@ -85,3 +85,17 @@ class PluginLoader:
         for plugin in self.loaded_plugins.values():
             tools.extend(plugin.get_agent_tools())
         return tools
+
+    def teardown(self):
+        """
+        Teardown all loaded plugins.
+        """
+        for plugin_name, plugin_instance in self.loaded_plugins.items():
+            if hasattr(plugin_instance, "teardown"):
+                try:
+                    plugin_instance.teardown()
+                    print(f"[PluginLoader] Teardown {plugin_name}")
+                except Exception as e:
+                    print(f"[PluginLoader] Error tearing down {plugin_name}: {e}")
+
+        self.loaded_plugins.clear()

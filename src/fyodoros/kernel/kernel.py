@@ -108,3 +108,23 @@ class Kernel:
         # Note: This start implementation is blocking and basic, mainly for testing.
         # The robust implementation is in __main__.py
         shell.run()
+
+    def shutdown(self):
+        """
+        Gracefully shut down the kernel and its subsystems.
+        """
+        print("\n--- FyodorOS Shutdown Sequence ---")
+
+        # 1. Stop Services
+        if self.supervisor:
+            self.supervisor.shutdown()
+
+        # 2. Teardown Plugins
+        if self.plugin_loader:
+            self.plugin_loader.teardown()
+
+        # 3. Disable Network Guard (Release patches)
+        if self.network_guard:
+            self.network_guard.disable()
+
+        print("[Kernel] Shutdown complete.")

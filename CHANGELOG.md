@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.6.0] - 2025-12-09
+### Verified
+- **System Stability**: Completed "Phase 2.3" destructive test sweep of core subsystems.
+- **Boot Integrity**: Confirmed deterministic boot and clean double-boot isolation.
+- **Teardown Correctness**: Verified LIFO service shutdown and no ghost state leakage.
+- **Sandbox Security**: Confirmed path resolution integrity and error containment.
+
+### Fixed
+- **Kernel**: Added graceful `shutdown()` method to orchestrate subsystem teardown.
+- **Supervisor**: Implemented `shutdown()` to stop services in LIFO order and clear process registry.
+- **Plugin Loader**: Implemented `teardown()` to safely stop active plugins.
+- **Sandbox**: Patched a security vulnerability where missing C++ core allowed relative path traversal (e.g., `../../etc/passwd`). Added secure Python fallback.
+
 ## [0.5.1] - 2025-12-08
 ### Fixed
 - **Critical Security**: Fixed a shell login bypass where failed authentication could fallback to root access.

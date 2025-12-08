@@ -26,50 +26,26 @@ We believe that for AI Agents to be truly useful and safe, they need an environm
 
 ## 📝 What's New
 
+### [0.6.0] - Verified System Integrity (Test Sweep Phase 2.3)
+
+FyodorOS v0.6.0 focuses on system integrity and reliability:
+- **Verified Core Subsystems**: Successfully passed extensive adversarial tests for Service Manager, Kernel Boot, Sandbox, and Plugin Lifecycle.
+- **Boot Determinism**: Confirmed clean, deterministic startup and shutdown cycles.
+- **Teardown Correctness**: Implemented proper LIFO (Last-In-First-Out) service shutdown to prevent ghost processes.
+- **Sandbox Security Patch**: Fixed a vulnerability where fallback to Python implementation allowed path traversal. Now enforces strict sandbox rooting.
+
 ### [0.5.1] - Performance & Security Hardening
 
 FyodorOS v0.5.1 focuses on stability, security, and speed:
-- **Startup Speed**: 10x faster startup via lazy loading of heavy cloud modules.
+- **Startup Speed**: 10x faster startup via lazy loading of heavy cloud dependencies.
 - **Security**: Fixed critical shell login bypass and strengthened sandbox isolation.
 - **Stability**: Robust C++ sandbox execution and deadlock prevention.
 
 ### [0.5.0] - Cloud Integration
 
 FyodorOS v0.5.0 introduces major cloud capabilities:
-
-#### Docker Integration
-- **Build & Run**: Build images and run containers directly from the shell or agent.
-- **Agent Control**: Agents can autonomously manage containers (`sys_docker_*` syscalls).
-- **CLI Commands**: `fyodor docker run`, `fyodor docker build`, `fyodor docker ps`.
-
-#### Kubernetes Integration
-- **Deployment Management**: Deploy, scale, and delete K8s resources.
-- **Pod Inspection**: View pod status and logs via CLI or Agent.
-- **RBAC**: New `manage_docker` and `manage_k8s` permissions.
-
-### [0.4.1]
-
-#### Comprehensive Documentation
-The entire codebase has been thoroughly documented with:
-- **Full Docstring Coverage**: Every function, class, and module now includes detailed docstrings following Google Style (Python) and JSDoc (JavaScript) conventions.
-- **Improved Code Readability**: Clear explanations of purpose, arguments, and return values for all public APIs.
-
-### [0.4.0]
-
-#### Kernel Networking Layer
-The kernel now includes a complete networking layer with fine-grained control and security:
-
-- **Global On/Off Switch**: Control network functionality system-wide using `fyodor network` command
-- **Strict Socket Enforcement**: All socket operations are intercepted via monkeypatching and routed through the kernel layer for validation
-- **RBAC Integration**: Network access is controlled through role-based permissions:
-  - `manage_network`: Permission to enable/disable network globally
-  - `use_network`: Permission to create and use network sockets
-
-#### NASM Runtime
-Execute native assembly code safely within the FyodorOS environment:
-
-- **C++ FFI Sandbox Extension**: Run NASM assembly code in a fully sandboxed environment with C++ FFI bindings
-- **`sys_exec_nasm` Syscall**: New kernel syscall enables safe execution of NASM code from user-space and agent processes
+- **Docker Integration**: Agent control of containers via `sys_docker_*` syscalls.
+- **Kubernetes Integration**: Deployment management and pod inspection.
 
 ## ✨ Key Features
 
@@ -84,12 +60,25 @@ FyodorOS includes a specialized browser for agents.
 - **Interaction**: Agents can `click` and `type` using element IDs directly.
 - **Efficiency**: Strips unnecessary noise (CSS/Scripts) to save context window.
 
-### 🛡️ Safety Sandbox (Enhanced in v0.3.5)
+### 🛡️ Safety Sandbox (Verified v0.6.0)
 Every action taken by the Agent is intercepted by the C++ reinforced `AgentSandbox`.
 - **Virtual Filesystem**: The agent is jailed in `~/.fyodor/sandbox`. All paths are virtualized.
-- **Path Traversal Protection**: C++ layer prevents escaping the sandbox (e.g., `../../etc/passwd`).
+- **Path Traversal Protection**: C++ layer prevents escaping the sandbox (e.g., `../../etc/passwd`). Verified Python fallback ensures security even without C++ extensions.
 - **Process Isolation**: Commands run with cleared environments and restricted paths.
 - **App Whitelisting**: Only authorized "Agent Apps" can be executed.
+
+## 🧪 Test Coverage (v0.6.0)
+
+We maintain rigorous test suites to ensure system invariants hold under pressure.
+- **Service Manager**: Boot correctness, reverse teardown, failure resilience.
+- **Kernel**: Deterministic boot, double-boot isolation, controlled shutdown.
+- **Sandbox**: File resolution integrity, IOError containment, leakage prevention.
+- **Plugins**: Lifecycle management (init/exec/teardown), fault tolerance.
+
+Tests are run using `pytest`:
+```bash
+pytest tests/phase2_3/
+```
 
 ## 🔌 Plugins (New in v0.3.0)
 FyodorOS supports a powerful plugin system.

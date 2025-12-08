@@ -125,3 +125,23 @@ class Supervisor:
             self.start_service("journal", journal_daemon(self.sys))
             return "journal started"
         return f"service {name} not found"
+
+    def shutdown(self):
+        """
+        Stop all running services in reverse order (LIFO).
+        """
+        # Iterate in reverse order of insertion (insertion order is preserved in dicts since Python 3.7)
+        for name, proc in reversed(list(self.services.items())):
+            print(f"[supervisor] Stopping {name}...")
+            # We use kill_process since we don't have a graceful stop protocol for generators yet
+            # unless we signal them?
+            # For now, we just kill them.
+            self.kill_process(proc.pid)
+            # Remove from scheduler?
+            if proc in self.scheduler.processes:
+                self.scheduler.processes.remove(proc)
+
+        self.services.clear()
+        # Also clear the all_processes registry
+        self.all_processes.clear()
+        print("[supervisor] All services stopped.")

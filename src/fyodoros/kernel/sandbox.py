@@ -65,7 +65,24 @@ class AgentSandbox:
                 return self.core.resolve_path(path)
             except Exception as e:
                 raise PermissionError(f"Sandbox Violation: {e}")
-        return path # Fallback (unsafe)
+
+        # Fallback: Secure Python Implementation
+        # 1. Construct absolute target path
+        # 2. Resolve symlinks and '..'
+        # 3. Ensure it starts with sandbox root
+
+        base = Path(self.root_path).resolve()
+        target = (base / path).resolve()
+
+        # Use commonpath to strictly verify containment (prevents sibling attacks like /var/sandbox_conf)
+        try:
+            if os.path.commonpath([base, target]) != str(base):
+                 raise PermissionError(f"Sandbox Violation: Path {path} escapes sandbox root {base}")
+        except ValueError:
+             # Occurs if paths are on different drives on Windows, implying escape
+             raise PermissionError(f"Sandbox Violation: Path {path} on different drive than {base}")
+
+        return str(target)
 
     def execute(self, action, args):
         """
