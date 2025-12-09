@@ -18,7 +18,7 @@ from fyodoros.kernel.syscalls import SyscallHandler
 from fyodoros.kernel.sandbox import AgentSandbox
 from fyodoros.kernel.scheduler import Scheduler
 from fyodoros.kernel.network import NetworkManager, NetworkGuard
-from fyodoros.supervisor.supervisor import Supervisor
+from fyodoros.servicemanager.servicemanager import ServiceManager
 from fyodoros.kernel.plugin_loader import PluginLoader
 from fyodoros.shell.shell import Shell
 from fyodoros.kernel.process import Process
@@ -109,9 +109,9 @@ def boot() -> Kernel:
         log("AgentSandbox created and linked")
 
         # 6. Initialize required kernel services
-        # Supervisor
-        log("Initializing Supervisor...")
-        supervisor = Supervisor(scheduler, syscall_handler)
+        # Service Manager
+        log("Initializing Service Manager...")
+        service_manager = ServiceManager(scheduler, syscall_handler)
 
         # Plugin Loader
         # PluginLoader needs the 'kernel' instance.
@@ -130,7 +130,7 @@ def boot() -> Kernel:
             network_manager=network_manager,
             syscall_handler=syscall_handler,
             sandbox=sandbox,
-            supervisor=supervisor,
+            service_manager=service_manager,
             network_guard=network_guard
             # plugin_loader will be handled inside or passed
         )
@@ -153,7 +153,7 @@ def boot() -> Kernel:
         # The Kernel or Main will run the scheduler.
 
         # Create Shell Instance
-        shell = Shell(syscall_handler, supervisor)
+        shell = Shell(syscall_handler, service_manager)
 
         # Register plugin commands (Now that kernel is ready)
         if hasattr(kernel, 'plugin_loader'):

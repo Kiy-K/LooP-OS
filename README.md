@@ -32,6 +32,7 @@ FyodorOS v0.6.0 focuses on system integrity and reliability:
 - **Verified Core Subsystems**: Successfully passed extensive adversarial tests for Service Manager, Kernel Boot, Sandbox, and Plugin Lifecycle.
 - **Boot Determinism**: Confirmed clean, deterministic startup and shutdown cycles.
 - **Teardown Correctness**: Implemented proper LIFO (Last-In-First-Out) service shutdown to prevent ghost processes.
+- **Atomic Teardown**: ServiceManager supports atomic teardown; cleanup always executes regardless of kill failures.
 - **Sandbox Security Patch**: Fixed a vulnerability where fallback to Python implementation allowed path traversal. Now enforces strict sandbox rooting.
 
 ### [0.5.1] - Performance & Security Hardening

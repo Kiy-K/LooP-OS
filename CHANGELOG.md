@@ -9,6 +9,7 @@
 
 ### Fixed
 - **Kernel**: Added graceful `shutdown()` method to orchestrate subsystem teardown.
+- **Service Manager**: Renamed from Supervisor; gained deterministic teardown semantics matching ServiceManager (cleanup always executes).
 - **Supervisor**: Implemented `shutdown()` to stop services in LIFO order and clear process registry.
 - **Plugin Loader**: Implemented `teardown()` to safely stop active plugins.
 - **Sandbox**: Patched a security vulnerability where missing C++ core allowed relative path traversal (e.g., `../../etc/passwd`). Added secure Python fallback.

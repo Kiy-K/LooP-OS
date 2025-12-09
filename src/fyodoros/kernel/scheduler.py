@@ -25,7 +25,16 @@ class Scheduler:
         self.processes = []
         self.current_process = None
         self.running = True # Control flag for the loop
+        self.accepting_new = True # Flag to control if new processes can be added
         self.exit_reason = "REBOOT" # Default to reboot if stopped, unless specified
+
+    def shutdown(self):
+        """
+        Initiate scheduler shutdown phase.
+        Stops accepting new processes.
+        """
+        print("[scheduler] Entering shutdown phase - rejecting new processes")
+        self.accepting_new = False
 
     def add(self, process):
         """
@@ -33,7 +42,14 @@ class Scheduler:
 
         Args:
             process (Process): The process to add.
+
+        Raises:
+            RuntimeError: If scheduler is in shutdown mode.
         """
+        if not self.accepting_new:
+            print(f"[scheduler] Rejected process {process.name} due to shutdown")
+            return
+
         self.processes.append(process)
 
     def run(self):

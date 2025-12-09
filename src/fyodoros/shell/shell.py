@@ -10,6 +10,7 @@ and dispatches tasks to the AI Agent.
 import time
 from rich.prompt import Prompt
 from fyodoros.kernel.process import Process
+from fyodoros.servicemanager.servicemanager import ServiceManager
 from importlib import import_module
 from fyodoros.kernel.agent import ReActAgent
 
@@ -22,7 +23,7 @@ class Shell:
 
     Attributes:
         sys (SyscallHandler): System call handler.
-        supervisor (Supervisor): Process supervisor.
+        service_manager (ServiceManager): Process supervisor.
         cwd (str): Current working directory.
         running (bool): Loop control flag.
         current_user (str): Currently logged-in user.
@@ -30,16 +31,16 @@ class Shell:
         plugin_commands (dict): Registered commands from plugins.
     """
 
-    def __init__(self, syscall, supervisor=None):
+    def __init__(self, syscall, service_manager=None):
         """
         Initialize the Shell.
 
         Args:
             syscall (SyscallHandler): The system call interface.
-            supervisor (Supervisor, optional): The process supervisor.
+            service_manager (ServiceManager, optional): The process supervisor.
         """
         self.sys = syscall
-        self.supervisor = supervisor
+        self.service_manager = service_manager
         self.cwd = "/"
         self.running = True
         self.current_user = None
@@ -173,7 +174,7 @@ class Shell:
             elif op == "run-service":
                 if len(args) < 1:
                     return "Usage: run-service <service>"
-                return self.supervisor.run_service(args[0])
+                return self.service_manager.run_service(args[0])
 
             elif op == "journal":
                 try:
