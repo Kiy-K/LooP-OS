@@ -1,0 +1,14 @@
+graph TD
+    CLI[CLI] --> Agent
+    Agent[Agent (LLM adapters)] --> Parser[JSON Parser]
+    Agent --> Browser[Agent Browser]
+    Browser --> SystemDOM[SystemDOM]
+    Agent --> Sandbox[Sandbox VFS]
+    Agent --> Syscall[SyscallHandler]
+    Syscall --> SM[ServiceManager / Scheduler]
+    Syscall --> Plugin[Plugin Runtime]
+    Sandbox --> Syscall
+    Plugin --> Syscall
+    Tests[Tests/CI] --> Agent
+    Tests --> Syscall
+    Tests --> Sandbox

@@ -1,0 +1,45 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Agent Action Schema",
+  "type": "object",
+  "properties": {
+    "thought": {
+      "type": "string",
+      "description": "Reasoning for the current action"
+    },
+    "todo": {
+      "type": "string",
+      "description": "Plan of upcoming steps"
+    },
+    "action": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "enum": [
+            "list_dir",
+            "read_file",
+            "write_file",
+            "append_file",
+            "run_process",
+            "sys_docker_build",
+            "sys_docker_run",
+            "sys_docker_stop",
+            "sys_docker_logs",
+            "sys_k8s_deploy",
+            "sys_k8s_scale",
+            "sys_k8s_delete",
+            "sys_k8s_logs",
+            "done"
+          ]
+        },
+        "args": {
+          "type": "array",
+          "items": {}
+        }
+      },
+      "required": ["name", "args"]
+    }
+  },
+  "required": ["thought", "todo", "action"]
+}
