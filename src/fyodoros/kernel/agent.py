@@ -6,7 +6,7 @@ This module implements a ReAct (Reasoning and Acting) agent that can
 interact with the FyodorOS kernel to perform tasks autonomously.
 """
 
-import re
+import json
 from fyodoros.kernel.dom import SystemDOM
 from fyodoros.kernel.sandbox import AgentSandbox
 from fyodoros.kernel.llm import LLMProvider
@@ -178,35 +178,37 @@ Do not interact with system files (/kernel, /bin, /etc).
         action = None
         args = []
 
-        # Regex extraction
-        # Thought
-        m_thought = re.search(r"Thought:\s*(.*?)(?=ToDo:|Action:|$)", text, re.DOTALL)
-        if m_thought:
-            thought = m_thought.group(1).strip()
+        try:
+            json_str = text.strip()
+            # Remove markdown code blocks
+            if json_str.startswith("```json"):
+                json_str = json_str[7:]
+            elif json_str.startswith("```"):
+                json_str = json_str[3:]
 
-        # ToDo
-        m_todo = re.search(r"ToDo:\s*(.*?)(?=Action:|$)", text, re.DOTALL)
-        if m_todo:
-            todo_text = m_todo.group(1).strip()
-            # Simple line splitting for todo items
-            todo = [line.strip() for line in todo_text.split('\n') if line.strip()]
+            if json_str.endswith("```"):
+                json_str = json_str[:-3]
 
-        # Action
-        m_action = re.search(r"Action:\s*(\w+)\((.*?)\)", text, re.DOTALL)
-        if m_action:
-            action = m_action.group(1)
-            args_str = m_action.group(2)
-            # Naive arg parsing (handling quotes)
-            # We assume args are either quoted strings or simple values.
-            # Using eval() is risky but safe-ish if we trust the regex context AND we are sandboxed.
-            # But let's try to parse strings manually or use a safer parser.
-            # For now, let's use a simple split or regex for args.
+            # Locate strict JSON block
+            start = json_str.find("{")
+            end = json_str.rfind("}")
 
-            # Try to handle: "arg1", "arg2"
-            # match quoted strings
-            args = re.findall(r'"(.*?)"', args_str)
-            if not args and args_str.strip():
-                # Maybe unquoted?
-                args = [args_str.strip()]
+            if start != -1 and end != -1:
+                json_str = json_str[start:end+1]
+                data = json.loads(json_str)
+
+                thought = data.get("thought", "")
+                todo = data.get("todo", [])
+
+                # Check for action object
+                if "action" in data:
+                    action_data = data["action"]
+                    if isinstance(action_data, dict):
+                        action = action_data.get("name")
+                        args = action_data.get("args", [])
+
+        except (json.JSONDecodeError, AttributeError):
+            # Deterministic failure behavior
+            pass
 
         return thought, todo, action, args

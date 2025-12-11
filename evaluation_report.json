@@ -1,0 +1,37 @@
+{
+  "determinism_findings": [
+    "Non-deterministic outputs observed: ['Run 2 differed from Run 1', 'Run 3 differed from Run 1']",
+    {
+      "run_1": "Turn 1 Output:\nThought: I need to create a file named 'determinism.txt' with content 'Hello World'. The '/home/guest' directory is a suitable location for this file since it allows write permissions a...",
+      "run_other": "Turn 1 Output:\nThought: The task is to create a file named 'determinism.txt' with the content \"Hello World\". I should determine an appropriate directory for this file\u2014likely within the root's home dir..."
+    }
+  ],
+  "sandbox_findings": [
+    "Path traversal did not leak data, but explicit SecurityError was not found (likely resolved safely to non-existent sandbox path).",
+    "Symlink traversal failed or was blocked."
+  ],
+  "dom_findings": [
+    "DOM parsing is consistent across 2 runs for http://example.com.",
+    "DOM missing expected content 'Example Domain'."
+  ],
+  "plugin_findings": [
+    "Initial active plugins: []",
+    "usage_dashboard activated successfully (state persisted).",
+    "usage_dashboard deactivated successfully.",
+    "usage_dashboard source found on disk."
+  ],
+  "error_handling_findings": [
+    "Parser failed to extract action. Result: None",
+    "Execution of unknown function returned: Unknown or disallowed action: None"
+  ],
+  "structured_output_findings": [
+    "Parser failed on missing ToDo.",
+    "Parsed complex args: []",
+    "Complex JSON arg parsing FAILED (Regex fragility detected)."
+  ],
+  "recommendations": [
+    "Upgrade Agent parser to use a strict JSON schema or a robust grammar-based parser instead of Regex.",
+    "Explicitly handle JSON parsing for syscall arguments in the Agent layer.",
+    "Add timeout/watchdog for plugin activation to prevent hangs."
+  ]
+}
