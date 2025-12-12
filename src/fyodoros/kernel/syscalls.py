@@ -15,6 +15,7 @@ from fyodoros.kernel.users import UserManager
 from fyodoros.kernel.network import NetworkManager
 from fyodoros.kernel.cloud.docker_interface import DockerInterface
 from fyodoros.kernel.cloud.k8s_interface import KubernetesInterface
+from fyodoros.kernel.memory import MemoryManager
 
 
 class SyscallHandler:
@@ -43,6 +44,7 @@ class SyscallHandler:
         self.network_manager = network_manager or NetworkManager(self.user_manager)
         self.docker_interface = DockerInterface()
         self.k8s_interface = KubernetesInterface()
+        self.memory_manager = MemoryManager()
         self.sandbox = None
 
     def set_scheduler(self, scheduler):
@@ -233,6 +235,7 @@ class SyscallHandler:
 
         uid = self._get_current_uid()
         groups = self._get_current_groups()
+        # Explicitly passing groups to match FileSystem API and Test Expectations
         self.fs.write_file(path, data, uid, groups)
         self.sys_log(f"[fs] write {path} by {uid}")
         return True
@@ -738,3 +741,36 @@ class SyscallHandler:
         except:
             pass # Boot time issues
         return True
+
+    # Memory System
+    def sys_memory_store(self, content, metadata=None):
+        """
+        Store a memory in the vector database.
+
+        Args:
+            content (str): The content to store.
+            metadata (dict, optional): Metadata.
+
+        Returns:
+            str: Document ID.
+        """
+        return self.memory_manager.store(content, metadata)
+
+    def sys_memory_search(self, query, limit=5):
+        """
+        Search memories.
+
+        Args:
+            query (str): The search query.
+            limit (int): Max results.
+
+        Returns:
+            list: Matching memories.
+        """
+        return self.memory_manager.recall(query, n_results=limit)
+
+    def sys_memory_recall(self, query, limit=5):
+        """
+        Alias for memory search (to match requirements).
+        """
+        return self.sys_memory_search(query, limit)

@@ -10,6 +10,7 @@ users, and launching the TUI or GUI.
 import typer
 import os
 import json
+import shutil
 from pathlib import Path
 import sys
 import subprocess
@@ -29,10 +30,12 @@ plugin_app = typer.Typer()
 network_app = typer.Typer()
 docker_app = typer.Typer()
 k8s_app = typer.Typer()
+memory_app = typer.Typer()
 app.add_typer(plugin_app, name="plugin")
 app.add_typer(network_app, name="network")
 app.add_typer(docker_app, name="docker")
 app.add_typer(k8s_app, name="k8s")
+app.add_typer(memory_app, name="memory")
 console = Console()
 
 BANNER = """
@@ -682,6 +685,79 @@ def k8s_logs(pod: str, namespace: str = "default"):
         console.print(f"[red]Error: {res['error']}[/red]")
 
 
+@memory_app.command("query")
+def memory_query(query: str, limit: int = 5):
+    """
+    Query the persistent memory.
+
+    Args:
+        query (str): Search query.
+        limit (int): Max results.
+    """
+    from fyodoros.kernel.memory import MemoryManager
+    mem = MemoryManager()
+    results = mem.recall(query, n_results=limit)
+
+    if not results:
+        console.print("[yellow]No memories found.[/yellow]")
+        return
+
+    for m in results:
+        console.print(Panel(f"[bold]{m['content']}[/bold]\n\n[dim]{m['metadata']}[/dim]", title=f"Memory {m['id']}"))
+
+
+@memory_app.command("clear")
+def memory_clear():
+    """
+    Clear all memories.
+    """
+    from fyodoros.kernel.memory import MemoryManager
+    if Confirm.ask("Are you sure you want to delete ALL persistent memories?"):
+        mem = MemoryManager()
+        mem.clear()
+        console.print("[green]Memory cleared.[/green]")
+
+
+@app.command()
+def resources():
+    """
+    View Live Resource Usage & Costs.
+    """
+    from fyodoros.kernel.resource_monitor import ResourceMonitor
+    from rich.live import Live
+    from rich.table import Table
+    import time
+
+    # ResourceMonitor now persists stats to JSON, allowing us to see Kernel activity
+    monitor = ResourceMonitor()
+
+    console.print("[dim]Monitoring System & Agent Resources...[/dim]")
+
+    with Live(refresh_per_second=1) as live:
+        while True:
+            try:
+                # Reload stats from disk
+                monitor.usage = monitor._load_stats()
+                stats = monitor.get_stats()
+                limits = monitor.limits
+
+                table = Table(title="Resource Monitor")
+                table.add_column("Metric", style="cyan")
+                table.add_column("Current", style="green")
+                table.add_column("Limit", style="red")
+
+                table.add_row("CPU Usage", f"{stats['cpu_percent']}%", f"{limits['max_cpu_percent']}%")
+                table.add_row("Memory Usage", f"{stats['memory_percent']}%", f"{limits['max_memory_percent']}%")
+                table.add_row("Session Tokens", f"{stats['tokens']}", f"{limits['max_tokens_per_task']}")
+                table.add_row("Session Cost", f"${stats['cost']:.4f}", f"${limits['budget_per_session_usd']:.4f}")
+                table.add_row("Duration", f"{stats['duration']:.1f}s", f"{limits['timeout_seconds']}s")
+
+                live.update(Panel(table))
+                time.sleep(1)
+            except KeyboardInterrupt:
+                break
+
+
 @app.command()
 def dashboard(view: str = typer.Argument("tui", help="View mode: tui or logs")):
     """
@@ -769,12 +845,135 @@ def gui():
 
 
 @app.command()
+def trust(action: str, allow: bool = typer.Option(False, "--allow", help="Whitelist this action")):
+    """
+    Manage trusted actions.
+
+    Args:
+        action (str): The action name (e.g., 'browser', 'run_process').
+        allow (bool): Whitelist the action.
+    """
+    from fyodoros.kernel.confirmation import ConfirmationManager
+    cm = ConfirmationManager()
+
+    if allow:
+        if cm.whitelist_action(action):
+            console.print(f"[green]Action '{action}' is now trusted.[/green]")
+        else:
+            console.print(f"[yellow]Action '{action}' was already trusted.[/yellow]")
+    else:
+        # Show status
+        if action in cm.whitelist["allowed_actions"]:
+            console.print(f"[green]'{action}' is currently TRUSTED.[/green]")
+        else:
+            console.print(f"[yellow]'{action}' is NOT trusted.[/yellow]")
+
+
+@app.command()
+def replay(task_id: str = typer.Argument(None, help="Task ID to replay"), last: bool = typer.Option(False, "--last", help="Replay last task"), filter_app: str = typer.Option(None, "--filter", help="Filter by app (action arg)")):
+    """
+    Replay agent actions.
+    """
+    from fyodoros.kernel.action_logger import ActionLogger
+    logger = ActionLogger()
+
+    if last:
+        task_id = logger.get_last_task_id()
+        if not task_id:
+            console.print("[red]No logs found.[/red]")
+            return
+
+    if not task_id:
+        console.print("[red]Please provide a TASK_ID or use --last[/red]")
+        return
+
+    logs = logger.get_logs(task_id)
+    if not logs:
+        console.print(f"[yellow]No logs found for task {task_id}[/yellow]")
+        return
+
+    console.print(f"[bold cyan]Replaying Task: {task_id}[/bold cyan]")
+
+    for entry in logs:
+        # Check filter
+        if filter_app:
+            # Check if filter string is in action name or args
+            if filter_app not in str(entry["action"]) and filter_app not in str(entry["args"]):
+                continue
+
+        console.print(Panel(
+            f"[bold]Step {entry['step']}: {entry['action']}[/bold]\n"
+            f"Args: {entry['args']}\n"
+            f"Reasoning: {entry['reasoning']}\n"
+            f"Result: {entry['result']}\n"
+            f"[dim]Duration: {entry['duration_ms']:.2f}ms | Tokens: {entry['tokens_used']}[/dim]",
+            title=f"{entry['timestamp']}"
+        ))
+
+
+@app.command()
+def diagnose():
+    """
+    Troubleshoot system issues.
+    Checks logs, config, network, and services.
+    """
+    console.print(Panel("FyodorOS Diagnostic Tool", style="bold blue"))
+
+    # 1. Check Config
+    config_path = Path(".env")
+    if config_path.exists():
+        console.print("[green]✓ Configuration file exists[/green]")
+        # Check permission (should be 600)
+        mode = oct(config_path.stat().st_mode)[-3:]
+        if mode == "600":
+            console.print("[green]✓ Config permissions secure (600)[/green]")
+        else:
+            console.print(f"[yellow]! Config permissions insecure ({mode}). Run 'chmod 600 .env'[/yellow]")
+    else:
+        console.print("[red]✗ Configuration file missing (run 'fyodor setup')[/red]")
+
+    # 2. Check Network
+    try:
+        import socket
+        socket.create_connection(("8.8.8.8", 53), timeout=2)
+        console.print("[green]✓ Network connectivity verified[/green]")
+    except Exception as e:
+        console.print(f"[red]✗ Network unreachable: {e}[/red]")
+
+    # 3. Check Dependencies
+    deps = ["docker", "kubectl", "nasm"]
+    for dep in deps:
+        if shutil.which(dep):
+            console.print(f"[green]✓ {dep} found[/green]")
+        else:
+            console.print(f"[yellow]! {dep} not found in PATH[/yellow]")
+
+    # 4. Check Logs
+    log_dir = Path.home() / ".fyodor" / "logs"
+    error_log = log_dir / "errors.log"
+    if error_log.exists() and error_log.stat().st_size > 0:
+        console.print(f"[yellow]! Found errors in {error_log}:[/yellow]")
+        try:
+            with open(error_log, "r") as f:
+                lines = f.readlines()
+                last_few = lines[-5:]
+                for line in last_few:
+                    console.print(f"  [red]{line.strip()}[/red]")
+        except:
+            pass
+    else:
+        console.print("[green]✓ No recent error logs found[/green]")
+
+    console.print("\n[blue]Diagnosis complete.[/blue]")
+
+
+@app.command()
 def info():
     """
     Show info about the installation.
     """
     console.print(BANNER, style="bold cyan")
-    console.print("Version: 0.3.0")
+    console.print("Version: 0.7.0")
     console.print("Location: " + os.getcwd())
 
     if os.path.exists(".env"):

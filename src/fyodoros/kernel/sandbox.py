@@ -10,6 +10,7 @@ process isolation, ensuring the agent cannot break out of its designated workspa
 import sys
 import os
 from pathlib import Path
+from fyodoros.kernel.confirmation import ConfirmationManager
 
 # Add core path to sys.path
 core_path = Path(__file__).parent / "core"
@@ -30,6 +31,7 @@ class AgentSandbox:
         sys (SyscallHandler): The system call handler.
         root_path (str): The absolute path to the sandbox root (`~/.fyodor/sandbox`).
         core (SandboxCore): The C++ sandbox backend instance.
+        confirmation (ConfirmationManager): Security confirmation system.
     """
     def __init__(self, syscall_handler):
         """
@@ -40,6 +42,7 @@ class AgentSandbox:
         """
         self.sys = syscall_handler
         self.root_path = str(Path.home() / ".fyodor" / "sandbox")
+        self.confirmation = ConfirmationManager()
 
         if sandbox_core:
             self.core = sandbox_core.SandboxCore(self.root_path)
@@ -95,6 +98,10 @@ class AgentSandbox:
         Returns:
             str or dict: The result of the action or an error message.
         """
+        # Security Confirmation
+        if not self.confirmation.request_approval(action, args):
+            return "Action Denied by User"
+
         if action == "read_file":
             path = args[0]
             try:

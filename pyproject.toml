@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "fyodoros"
-version = "0.6.1"
+version = "0.7.0"
 authors = [
   { name="Kiy-K", email="khoitruong071510@gmail.com" },
 ]
@@ -31,6 +31,7 @@ dependencies = [
     "argon2-cffi",
     "docker>=6.0.0",
     "kubernetes>=28.0.0",
+    "chromadb>=0.4.0",
     "pytest",
     "pytest-cov",
     "pytest-mock",

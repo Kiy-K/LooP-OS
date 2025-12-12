@@ -10,6 +10,11 @@ import json
 from fyodoros.kernel.dom import SystemDOM
 from fyodoros.kernel.sandbox import AgentSandbox
 from fyodoros.kernel.llm import LLMProvider
+from fyodoros.kernel.resource_monitor import ResourceMonitor
+from fyodoros.utils.error_recovery import ErrorRecovery
+from fyodoros.kernel.action_logger import ActionLogger
+import hashlib
+import time
 
 
 class ReActAgent:
@@ -39,6 +44,9 @@ class ReActAgent:
         """
         self.sys = syscall_handler
         self.dom = SystemDOM(syscall_handler)
+        self.resource_monitor = ResourceMonitor()
+        self.action_logger = ActionLogger()
+        self.model = model
 
         # Use existing sandbox from syscall handler if available, otherwise create new.
         if hasattr(syscall_handler, 'sandbox') and syscall_handler.sandbox:
@@ -66,16 +74,55 @@ class ReActAgent:
         self.history = [] # Reset history per task
         self.todo_list = []
 
+        # Generate Task ID
+        task_id = hashlib.md5(f"{task}{time.time()}".encode()).hexdigest()[:8]
+
+        # Auto-recall memory
+        try:
+            memories = self.sys.sys_memory_search(task, limit=3)
+            if memories:
+                mem_str = "\n".join([f"- {m['content']} (Meta: {m['metadata']})" for m in memories])
+                print(f"[Agent] Recalled relevant memories:\n{mem_str}")
+                self.history.append(f"System Note: Relevant past memories:\n{mem_str}")
+        except Exception as e:
+            print(f"[Agent] Memory recall failed: {e}")
+
         loop_count = 0
         while loop_count < self.max_turns:
             loop_count += 1
             print(f"[Agent] Turn {loop_count}...")
 
+            # 0. Check Limits
+            limit_error = self.resource_monitor.check_limits()
+            if limit_error:
+                print(f"[Agent] Resource Limit Reached: {limit_error}")
+                return f"Stopped: {limit_error}"
+
             # 1. Observe / Think
             state = self.dom.get_state()
             prompt = self._construct_prompt(task, state)
 
-            response = self.llm.generate(prompt)
+            # Count input tokens (approx)
+            input_chars = len(prompt)
+            input_tokens = input_chars // 4
+
+            # Wrap LLM call with retry logic
+            @ErrorRecovery.retry(max_attempts=3, backoff_factor=2)
+            def safe_generate():
+                return self.llm.generate(prompt)
+
+            try:
+                response = safe_generate()
+            except Exception as e:
+                print(f"[Agent] LLM Generation Failed: {e}")
+                return f"Error: LLM Generation Failed after retries: {e}"
+
+            # Count output tokens
+            output_chars = len(response)
+            output_tokens = output_chars // 4
+
+            self.resource_monitor.track_tokens(self.model, input_tokens, output_tokens)
+
             print(f"[Agent] Response:\n{response}\n")
 
             self.history.append(f"Turn {loop_count} Output:\n{response}")
@@ -88,11 +135,20 @@ class ReActAgent:
 
             # 3. Act
             if action:
+                start_act = time.time()
+
                 if action == "done":
                     print("[Agent] Task completed.")
+                    # Log final step
+                    self.action_logger.log_action(task_id, loop_count, thought, "done", [], "Success", 0, input_tokens+output_tokens)
                     return "Task Completed"
 
                 result = self.sandbox.execute(action, args)
+                duration = (time.time() - start_act) * 1000
+
+                # Log Action
+                self.action_logger.log_action(task_id, loop_count, thought, action, args, result, duration, input_tokens+output_tokens)
+
                 print(f"[Agent] Execution Result: {result}")
                 self.history.append(f"Turn {loop_count} Result: {result}")
             else:
@@ -132,13 +188,15 @@ INSTRUCTIONS:
 1. Analyze the state and history.
 2. Update your ToDo list if needed.
 3. Choose a single Action to perform.
-4. Output MUST follow this format exactly:
-
-Thought: <your reasoning>
-ToDo:
-1. <step 1>
-2. <step 2>
-Action: <function_name>(<args>)
+4. Output MUST be a valid JSON object with no markdown formatting:
+{{
+  "thought": "<your reasoning>",
+  "todo": ["<step 1>", "<step 2>"],
+  "action": {{
+      "name": "<function_name>",
+      "args": [<arg1>, <arg2>]
+  }}
+}}
 
 AVAILABLE ACTIONS:
 - list_dir(path)
@@ -146,6 +204,8 @@ AVAILABLE ACTIONS:
 - write_file(path, content)
 - append_file(path, content)
 - run_process(app_name, args) <-- Use this to run apps: 'browser', 'calc', 'explorer', 'system', 'user'.
+- sys_memory_store(content, metadata) <-- Store useful facts for later.
+- sys_memory_search(query) <-- Search for past information.
 - sys_docker_build(path, tag, dockerfile="Dockerfile")
 - sys_docker_run(image, name=None, ports=None, env=None)  <-- ports/env should be JSON strings if complex, or None
 - sys_docker_stop(container_id)

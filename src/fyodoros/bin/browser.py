@@ -11,6 +11,7 @@ sequential commands.
 import json
 import sys
 from playwright.sync_api import sync_playwright
+from fyodoros.utils.error_recovery import ErrorRecovery
 
 
 def main(args, syscalls):
@@ -51,10 +52,16 @@ def main(args, syscalls):
         if cmd == "navigate":
             url = args[1]
             try:
-                _page.goto(url)
+                # Retry navigation up to 3 times
+                @ErrorRecovery.retry(max_attempts=3, backoff_factor=1)
+                def navigate():
+                    _page.goto(url)
+
+                navigate()
                 return json.dumps(get_dom_tree(_page))
             except Exception as e:
-                return json.dumps({"error": f"Navigation failed: {e}"})
+                # Fallback: Try a simplified view or just return error
+                return json.dumps({"error": f"Navigation failed after retries: {e}"})
 
         elif cmd == "click":
             selector = args[1] # ID or selector

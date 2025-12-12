@@ -57,12 +57,14 @@ def test_sys_write_read(syscall_handler):
 
     # sys_write
     syscall_handler.sys_write("/test.txt", "data")
-    syscall_handler.fs.write_file.assert_called_with("/test.txt", "data", "root")
+    # Updated expectation: FS now expects groups arg
+    syscall_handler.fs.write_file.assert_called_with("/test.txt", "data", "root", ['root', 'admin'])
 
     # sys_read
     syscall_handler.fs.read_file.return_value = "data"
     assert syscall_handler.sys_read("/test.txt") == "data"
-    syscall_handler.fs.read_file.assert_called_with("/test.txt", "root")
+    # Updated expectation: FS now expects groups arg
+    syscall_handler.fs.read_file.assert_called_with("/test.txt", "root", ['root', 'admin'])
 
 def test_sys_docker_calls(syscall_handler):
     # Setup docker interface mock
