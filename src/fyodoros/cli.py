@@ -874,7 +874,7 @@ def replay(task_id: str = typer.Argument(None, help="Task ID to replay"), last: 
     """
     Replay agent actions.
     """
-    from fyodoros.kernel.action_logger import ActionLogger
+    from fyodoros.utils.logging import ActionLogger
     logger = ActionLogger()
 
     if last:

@@ -1,4 +1,4 @@
-# src/fyodoros/kernel/init.py
+# src/fyodoros/kernel/boot.py
 """
 System Initialization (Boot) Sequence.
 
@@ -14,7 +14,7 @@ from fyodoros.kernel.config import ConfigLoader
 from fyodoros.kernel.kernel import Kernel
 from fyodoros.kernel.filesystem import FileSystem
 from fyodoros.kernel.users import UserManager
-from fyodoros.kernel.syscalls import SyscallHandler
+from fyodoros.kernel.syscall import SyscallHandler
 from fyodoros.kernel.sandbox import AgentSandbox
 from fyodoros.kernel.scheduler import Scheduler
 from fyodoros.kernel.network import NetworkManager, NetworkGuard

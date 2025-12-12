@@ -8,7 +8,7 @@ scheduler, process management, system calls, filesystem, and user management.
 
 from .scheduler import Scheduler
 from .process import Process
-from .syscalls import SyscallHandler
+from .syscall import SyscallHandler
 from .filesystem import FileSystem
 __all__ = [
     "Scheduler",

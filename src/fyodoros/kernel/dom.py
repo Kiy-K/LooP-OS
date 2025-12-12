@@ -56,7 +56,7 @@ class SystemDOM:
             pass
 
         return {
-            "filesystem": self._get_fs_tree(self.sys.fs.root),
+            "filesystem": self._get_fs_tree(self.sys.rootfs.ramdisk.root),
             "processes": self.sys.sys_proc_list(),
             "users": self.sys.user_manager.list_users(),
             "docker": docker_state,

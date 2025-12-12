@@ -19,19 +19,21 @@ sys.path.append(str(core_path))
 try:
     import sandbox_core
 except ImportError:
-    print("Warning: C++ Sandbox Core not found. Compilation needed?")
+    # print("Warning: C++ Sandbox Core not found. Compilation needed?")
     sandbox_core = None
 
 
 class AgentSandbox:
     """
-    Restricts Agent actions to safe boundaries using C++ Core.
+    Restricts Agent actions to safe boundaries.
+
+    Now delegates actual filesystem operations to SyscallHandler,
+    which uses VirtualRootFS for path resolution and safety.
 
     Attributes:
         sys (SyscallHandler): The system call handler.
-        root_path (str): The absolute path to the sandbox root (`~/.fyodor/sandbox`).
-        core (SandboxCore): The C++ sandbox backend instance.
         confirmation (ConfirmationManager): Security confirmation system.
+        core (SandboxCore): The C++ sandbox backend instance (for execution).
     """
     def __init__(self, syscall_handler):
         """
@@ -41,51 +43,13 @@ class AgentSandbox:
             syscall_handler (SyscallHandler): The kernel syscall handler.
         """
         self.sys = syscall_handler
-        self.root_path = str(Path.home() / ".fyodor" / "sandbox")
         self.confirmation = ConfirmationManager()
+        self.root_path = str(Path.home() / ".fyodor" / "sandbox")
 
         if sandbox_core:
             self.core = sandbox_core.SandboxCore(self.root_path)
         else:
             self.core = None
-
-    def _resolve(self, path):
-        """
-        Resolve a path safely within the sandbox.
-
-        Args:
-            path (str): The relative path to resolve.
-
-        Returns:
-            str: The absolute path on the host system.
-
-        Raises:
-            PermissionError: If the path attempts to escape the sandbox.
-        """
-        if self.core:
-            try:
-                # Returns resolved absolute path on HOST
-                return self.core.resolve_path(path)
-            except Exception as e:
-                raise PermissionError(f"Sandbox Violation: {e}")
-
-        # Fallback: Secure Python Implementation
-        # 1. Construct absolute target path
-        # 2. Resolve symlinks and '..'
-        # 3. Ensure it starts with sandbox root
-
-        base = Path(self.root_path).resolve()
-        target = (base / path).resolve()
-
-        # Use commonpath to strictly verify containment (prevents sibling attacks like /var/sandbox_conf)
-        try:
-            if os.path.commonpath([base, target]) != str(base):
-                 raise PermissionError(f"Sandbox Violation: Path {path} escapes sandbox root {base}")
-        except ValueError:
-             # Occurs if paths are on different drives on Windows, implying escape
-             raise PermissionError(f"Sandbox Violation: Path {path} on different drive than {base}")
-
-        return str(target)
 
     def execute(self, action, args):
         """
@@ -102,46 +66,92 @@ class AgentSandbox:
         if not self.confirmation.request_approval(action, args):
             return "Action Denied by User"
 
+        # NOTE: With VirtualRootFS, we just pass the path to the system call.
+        # However, for backward compatibility and clarity, if the agent
+        # asks to read "foo.txt", it usually implies relative to the sandbox.
+        # But SyscallHandler.sys_ls("/") lists the root of the RAM disk.
+        # The agent usually sees the RAM disk now.
+        # BUT, if the agent wants to access the sandbox, it must use "/sandbox/..."
+        # OR we assume the agent's CWD is /sandbox?
+
+        # In the previous implementation, `_resolve("foo.txt")` mapped to `~/.fyodor/sandbox/foo.txt`.
+        # To maintain "Zero-Logic-Drift", we should preserve this behavior IF the agent thinks it's in a sandbox.
+        # But the Requirement says "All file I/O must pass through the new rootfs module".
+
+        # If the Agent says "read_file foo.txt", and we pass it to `sys.sys_read("foo.txt")`:
+        # - `rootfs` sees "foo.txt". It's not starting with "/sandbox".
+        # - It checks RAMDISK. If RAMDISK has "foo.txt" in root, it reads it.
+        # - If not, it fails.
+
+        # PREVIOUSLY: `_resolve("foo.txt")` -> HOST `.../sandbox/foo.txt`.
+
+        # So, we MUST prefix paths with `/sandbox/` if we want to target the sandbox,
+        # OR `AgentSandbox` needs to prepend it to maintain behavior.
+
+        # Given "Backward Compatibility: Existing users must be migrated safely",
+        # existing Agents expect "read_file foo.txt" to read from their sandbox.
+
+        # So I will prepend "/sandbox/" to paths that are not absolute?
+        # Or just assume all Agent file ops target `/sandbox` unless specified?
+        # The AgentSandbox IS the sandbox. So yes.
+
+        def to_sandbox_path(p):
+            # If it already starts with /sandbox, leave it.
+            # If it is absolute but not /sandbox, it might be trying to read system files (RAM disk).
+            # If the Agent is allowed to read RAM disk (like /var/log), we should let it.
+            # But `AgentSandbox` is supposed to restrict to "safe boundaries".
+            # The previous `_resolve` FORCED everything into `~/.fyodor/sandbox`.
+            # So `read_file /etc/passwd` would try to read `~/.fyodor/sandbox/etc/passwd`.
+
+            # To strictly maintain this behavior:
+            # We map everything to `/sandbox/...` in the new VirtualRootFS.
+            if str(p).startswith("/"):
+                 # Strip leading slash to make it relative to /sandbox
+                 # e.g. /etc/hosts -> /sandbox/etc/hosts
+                 return f"/sandbox/{str(p).lstrip('/')}"
+            return f"/sandbox/{p}"
+
         if action == "read_file":
-            path = args[0]
+            path = to_sandbox_path(args[0])
             try:
-                real_path = self._resolve(path)
-                # We need to bypass syscall handler's internal path logic if possible,
-                # or pass the resolved path. Syscall handler might not expect absolute host paths
-                # if it thinks it's simulating an OS.
-                # However, syscall_handler in this project seems to operate on real OS files directly?
-                # Let's check syscall_handler implementation.
-                # Assuming sys_read takes a path and opens it.
-                return self.sys.sys_read(real_path)
+                return self.sys.sys_read(path)
             except Exception as e:
                 return f"Error: {e}"
 
         elif action == "write_file":
-            path = args[0]
+            path = to_sandbox_path(args[0])
             content = args[1]
             try:
-                real_path = self._resolve(path)
-                self.sys.sys_write(real_path, content)
-                return f"Successfully wrote to {path}"
+                self.sys.sys_write(path, content)
+                return f"Successfully wrote to {args[0]}"
             except Exception as e:
                 return f"Error: {e}"
 
         elif action == "append_file":
-            path = args[0]
+            path = to_sandbox_path(args[0])
             content = args[1]
             try:
-                real_path = self._resolve(path)
-                self.sys.sys_append(real_path, content)
-                return f"Successfully appended to {path}"
+                self.sys.sys_append(path, content)
+                return f"Successfully appended to {args[0]}"
             except Exception as e:
                 return f"Error: {e}"
 
         elif action == "list_dir":
-            path = args[0] if args else "/"
+            path = args[0] if args else ""
+            target = to_sandbox_path(path)
             try:
-                real_path = self._resolve(path)
-                files = self.sys.sys_ls(real_path)
+                files = self.sys.sys_ls(target)
                 return "\n".join(files)
+            except Exception as e:
+                return f"Error: {e}"
+
+        elif action == "delete_file":
+            path = to_sandbox_path(args[0])
+            try:
+                if self.sys.sys_delete(path):
+                    return f"Successfully deleted {args[0]}"
+                else:
+                    return f"Failed to delete {args[0]}"
             except Exception as e:
                 return f"Error: {e}"
 
@@ -162,15 +172,10 @@ class AgentSandbox:
                     else:
                         return f"Error: {prog} has no main()"
                 except ImportError:
-                    # Not a built-in, maybe a real binary?
-                    # Try executing via C++ Sandbox
+                    # Fallback to C++ Core for real binaries if available
                     if self.core:
                          try:
-                             # We use empty env for strict isolation
-                             # But we might need PATH?
-                             # Let's map PATH to a safe bin dir if we had one.
                              res = self.core.execute(prog, prog_args, {})
-                             # Return structured output if possible, or just stdout
                              if res["return_code"] == 0:
                                  return res["stdout"]
                              else:

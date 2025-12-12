@@ -14,7 +14,7 @@ from fyodoros.kernel.sandbox import AgentSandbox
 from fyodoros.kernel.llm import LLMProvider
 from fyodoros.kernel.resource_monitor import ResourceMonitor
 from fyodoros.utils.error_recovery import ErrorRecovery
-from fyodoros.kernel.action_logger import ActionLogger
+from fyodoros.utils.logging import ActionLogger
 
 
 class ReActAgent:

@@ -14,7 +14,7 @@ from fyodoros.kernel.kernel import Kernel
 from fyodoros.kernel.users import UserManager
 from fyodoros.kernel.scheduler import Scheduler
 from fyodoros.kernel.network import NetworkManager
-from fyodoros.kernel.syscalls import SyscallHandler
+from fyodoros.kernel.syscall import SyscallHandler
 from fyodoros.kernel.sandbox import AgentSandbox
 from fyodoros.servicemanager.servicemanager import ServiceManager
 

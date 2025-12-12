@@ -1,6 +1,6 @@
 import pytest
 from unittest.mock import Mock, patch
-from fyodoros.kernel.syscalls import SyscallHandler
+from fyodoros.kernel.syscall import SyscallHandler
 from fyodoros.kernel.users import UserManager
 
 
@@ -28,29 +28,29 @@ def syscall_handler():
         network_manager=mock_net,
     )
 
-    # Mock the internal filesystem if needed, but SyscallHandler creates its own FileSystem()
-    # We should mock `fyodoros.kernel.syscalls.FileSystem` if we want to mock FS calls.
-    # Or replace handler.fs with a mock after init.
-    handler.fs = Mock()
+    # Mock the internal filesystem if needed, but SyscallHandler creates its own VirtualRootFS()
+    # We should mock `fyodoros.kernel.rootfs.VirtualRootFS` if we want to mock FS calls.
+    # Or replace handler.rootfs with a mock after init.
+    handler.rootfs = Mock()
 
     return handler
 
 
 def test_sys_ls(syscall_handler):
-    syscall_handler.fs.list_dir.return_value = ["file1", "file2"]
+    syscall_handler.rootfs.list_dir.return_value = ["file1", "file2"]
 
     result = syscall_handler.sys_ls("/home")
     assert result == ["file1", "file2"]
 
     # Test reading non-existent
-    # sys_ls now catches KeyError from fs.list_dir (via _resolve)
-    syscall_handler.fs.list_dir.side_effect = KeyError("Path not found")
+    # sys_ls now catches KeyError from rootfs.list_dir (via _resolve)
+    syscall_handler.rootfs.list_dir.side_effect = KeyError("Path not found")
     with pytest.raises(FileNotFoundError):
         syscall_handler.sys_ls("/nonexistent")
 
     # Test listing a file (not a directory)
-    # sys_ls catches ValueError from fs.list_dir
-    syscall_handler.fs.list_dir.side_effect = ValueError("Not a directory")
+    # sys_ls catches ValueError from rootfs.list_dir
+    syscall_handler.rootfs.list_dir.side_effect = ValueError("Not a directory")
     result = syscall_handler.sys_ls("/somefile")
     assert result == ["somefile"]
 
@@ -71,15 +71,15 @@ def test_sys_write_read(syscall_handler):
     # sys_write
     syscall_handler.sys_write("/test.txt", "data")
     # Updated expectation: FS now expects groups arg
-    syscall_handler.fs.write_file.assert_called_with(
+    syscall_handler.rootfs.write_file.assert_called_with(
         "/test.txt", "data", "root", ["root", "admin"]
     )
 
     # sys_read
-    syscall_handler.fs.read_file.return_value = "data"
+    syscall_handler.rootfs.read_file.return_value = "data"
     assert syscall_handler.sys_read("/test.txt") == "data"
     # Updated expectation: FS now expects groups arg
-    syscall_handler.fs.read_file.assert_called_with(
+    syscall_handler.rootfs.read_file.assert_called_with(
         "/test.txt", "root", ["root", "admin"]
     )
 

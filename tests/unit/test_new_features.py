@@ -8,7 +8,7 @@ from fyodoros.kernel.memory import MemoryManager
 from fyodoros.kernel.resource_monitor import ResourceMonitor
 from fyodoros.utils.error_recovery import ErrorRecovery
 from fyodoros.kernel.confirmation import ConfirmationManager
-from fyodoros.kernel.action_logger import ActionLogger
+from fyodoros.utils.logging import ActionLogger
 from pathlib import Path
 
 # --- Memory Tests ---

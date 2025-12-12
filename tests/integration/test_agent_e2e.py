@@ -1,7 +1,7 @@
 import pytest
 from unittest.mock import MagicMock
 from fyodoros.kernel.agent import ReActAgent
-from fyodoros.kernel.syscalls import SyscallHandler
+from fyodoros.kernel.syscall import SyscallHandler
 from fyodoros.kernel.sandbox import AgentSandbox
 
 def test_agent_e2e_flow(tmp_path):
@@ -10,8 +10,12 @@ def test_agent_e2e_flow(tmp_path):
     # Force Python implementation to respect root_path change
     sys_handler.sandbox.core = None
 
-    # Update root path to tmp dir
+    # Update root path to tmp dir and sync with SyscallHandler
     sys_handler.sandbox.root_path = str(tmp_path)
+    sys_handler.set_sandbox(sys_handler.sandbox) # Sync root path
+
+    # White-list the write_file action for this test (medium risk)
+    sys_handler.sandbox.confirmation.whitelist_action("write_file")
 
     mock_llm_response = """
     {

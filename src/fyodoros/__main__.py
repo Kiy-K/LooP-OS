@@ -9,7 +9,7 @@ reboot logic.
 
 import sys
 import argparse
-from fyodoros.kernel.init import boot
+from fyodoros.kernel.boot import boot
 from fyodoros.kernel.process import Process
 
 

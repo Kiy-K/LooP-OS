@@ -14,7 +14,7 @@ os.environ["LLM_PROVIDER"] = "openai"
 
 from fyodoros.kernel.kernel import Kernel
 from fyodoros.kernel.agent import ReActAgent
-from fyodoros.kernel.syscalls import SyscallHandler
+from fyodoros.kernel.syscall import SyscallHandler
 from fyodoros.kernel.scheduler import Scheduler
 from fyodoros.kernel.users import UserManager
 from fyodoros.kernel.network import NetworkManager, NetworkGuard

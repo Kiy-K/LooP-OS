@@ -1,7 +1,7 @@
 import pytest
 from unittest.mock import MagicMock, patch, ANY
 from fyodoros.kernel.kernel import Kernel
-from fyodoros.kernel.init import boot
+from fyodoros.kernel.boot import boot
 import sys
 
 # 3.1 Deterministic Boot
@@ -9,16 +9,16 @@ def test_deterministic_boot():
     """Verify boot sequence produces identical state for identical inputs."""
 
     # Mock all external dependencies to ensure determinism
-    with patch("fyodoros.kernel.init.ConfigLoader") as MockConfig, \
-         patch("fyodoros.kernel.init.FileSystem") as MockFS, \
-         patch("fyodoros.kernel.init.UserManager") as MockUser, \
-         patch("fyodoros.kernel.init.NetworkManager") as MockNet, \
-         patch("fyodoros.kernel.init.NetworkGuard") as MockGuard, \
-         patch("fyodoros.kernel.init.SyscallHandler") as MockSys, \
-         patch("fyodoros.kernel.init.AgentSandbox") as MockSand, \
-         patch("fyodoros.kernel.init.ServiceManager") as MockSuper, \
-         patch("fyodoros.kernel.init.PluginLoader") as MockLoader, \
-         patch("fyodoros.kernel.init.Shell") as MockShell:
+    with patch("fyodoros.kernel.boot.ConfigLoader") as MockConfig, \
+         patch("fyodoros.kernel.boot.FileSystem") as MockFS, \
+         patch("fyodoros.kernel.boot.UserManager") as MockUser, \
+         patch("fyodoros.kernel.boot.NetworkManager") as MockNet, \
+         patch("fyodoros.kernel.boot.NetworkGuard") as MockGuard, \
+         patch("fyodoros.kernel.boot.SyscallHandler") as MockSys, \
+         patch("fyodoros.kernel.boot.AgentSandbox") as MockSand, \
+         patch("fyodoros.kernel.boot.ServiceManager") as MockSuper, \
+         patch("fyodoros.kernel.boot.PluginLoader") as MockLoader, \
+         patch("fyodoros.kernel.boot.Shell") as MockShell:
 
         # Setup consistent config
         mock_conf = MagicMock()
@@ -53,8 +53,8 @@ def test_double_boot_isolation():
     # We can't easily do parallel boot in one process.
     # We simulate boot -> shutdown -> boot.
 
-    with patch("fyodoros.kernel.init.ConfigLoader") as MockConfig, \
-         patch("fyodoros.kernel.init.NetworkGuard") as MockGuard:
+    with patch("fyodoros.kernel.boot.ConfigLoader") as MockConfig, \
+         patch("fyodoros.kernel.boot.NetworkGuard") as MockGuard:
 
         mock_conf = MagicMock()
         mock_conf.load.return_value = {"kernel": {"network_enabled": "false"}}
