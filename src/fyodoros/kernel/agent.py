@@ -7,14 +7,14 @@ interact with the FyodorOS kernel to perform tasks autonomously.
 """
 
 import json
+import hashlib
+import time
 from fyodoros.kernel.dom import SystemDOM
 from fyodoros.kernel.sandbox import AgentSandbox
 from fyodoros.kernel.llm import LLMProvider
 from fyodoros.kernel.resource_monitor import ResourceMonitor
 from fyodoros.utils.error_recovery import ErrorRecovery
 from fyodoros.kernel.action_logger import ActionLogger
-import hashlib
-import time
 
 
 class ReActAgent:
@@ -79,11 +79,13 @@ class ReActAgent:
 
         # Auto-recall memory
         try:
-            memories = self.sys.sys_memory_search(task, limit=3)
-            if memories:
-                mem_str = "\n".join([f"- {m['content']} (Meta: {m['metadata']})" for m in memories])
-                print(f"[Agent] Recalled relevant memories:\n{mem_str}")
-                self.history.append(f"System Note: Relevant past memories:\n{mem_str}")
+            # Check if sys_memory_search exists (in case running on old syscalls)
+            if hasattr(self.sys, 'sys_memory_search'):
+                memories = self.sys.sys_memory_search(task, limit=3)
+                if memories:
+                    mem_str = "\n".join([f"- {m['content']} (Meta: {m['metadata']})" for m in memories])
+                    print(f"[Agent] Recalled relevant memories:\n{mem_str}")
+                    self.history.append(f"System Note: Relevant past memories:\n{mem_str}")
         except Exception as e:
             print(f"[Agent] Memory recall failed: {e}")
 
@@ -107,12 +109,12 @@ class ReActAgent:
             input_tokens = input_chars // 4
 
             # Wrap LLM call with retry logic
-            @ErrorRecovery.retry(max_attempts=3, backoff_factor=2)
-            def safe_generate():
-                return self.llm.generate(prompt)
-
+            # Using ErrorRecovery utility
             try:
-                response = safe_generate()
+                # We use a closure or partial to pass to retry logic if we had a generic retry runner,
+                # but let's use the retry_with_backoff decorator from utils
+                # Since decorators wrap functions at definition, we can use a helper method here.
+                response = self._generate_with_retry(prompt)
             except Exception as e:
                 print(f"[Agent] LLM Generation Failed: {e}")
                 return f"Error: LLM Generation Failed after retries: {e}"
@@ -143,6 +145,7 @@ class ReActAgent:
                     self.action_logger.log_action(task_id, loop_count, thought, "done", [], "Success", 0, input_tokens+output_tokens)
                     return "Task Completed"
 
+                # Execute via Sandbox
                 result = self.sandbox.execute(action, args)
                 duration = (time.time() - start_act) * 1000
 
@@ -155,6 +158,10 @@ class ReActAgent:
                 self.history.append(f"Turn {loop_count} Result: No action parsed.")
 
         return "Max turns reached."
+
+    @ErrorRecovery.retry_with_backoff(retries=3, backoff_in_seconds=1)
+    def _generate_with_retry(self, prompt):
+        return self.llm.generate(prompt)
 
     def _construct_prompt(self, task, state):
         """
@@ -206,8 +213,10 @@ AVAILABLE ACTIONS:
 - run_process(app_name, args) <-- Use this to run apps: 'browser', 'calc', 'explorer', 'system', 'user'.
 - sys_memory_store(content, metadata) <-- Store useful facts for later.
 - sys_memory_search(query) <-- Search for past information.
+- sys_memory_recall(query) <-- Same as search.
+- sys_memory_delete(key_id_or_query) <-- Delete memory.
 - sys_docker_build(path, tag, dockerfile="Dockerfile")
-- sys_docker_run(image, name=None, ports=None, env=None)  <-- ports/env should be JSON strings if complex, or None
+- sys_docker_run(image, name=None, ports=None, env=None)
 - sys_docker_stop(container_id)
 - sys_docker_logs(container_id)
 - sys_k8s_deploy(name, image, replicas=1, namespace="default")

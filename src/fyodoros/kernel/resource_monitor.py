@@ -26,6 +26,9 @@ class ResourceMonitor:
              self.usage["start_time"] = time.time()
         self.start_time = self.usage["start_time"]
 
+        # Initial network counters
+        self.initial_net = psutil.net_io_counters()
+
         # Pricing per 1k tokens (approximate)
         self.pricing = {
             "gpt-3.5-turbo": {"input": 0.0015, "output": 0.002},
@@ -64,7 +67,9 @@ class ResourceMonitor:
             "max_memory_percent": 80.0,
             "max_tokens_per_task": 5000,
             "budget_per_session_usd": 1.0,
-            "timeout_seconds": 300
+            "timeout_seconds": 300,
+            "max_processes": 200,  # Increased from 50 due to system baseline
+            "max_network_mb": 100
         }
 
         if not self.config_path.exists():
@@ -88,11 +93,15 @@ class ResourceMonitor:
         """
         cpu = psutil.cpu_percent()
         mem = psutil.virtual_memory().percent
+        procs = len(psutil.pids())
 
         if cpu > self.limits["max_cpu_percent"]:
             return False
         if mem > self.limits["max_memory_percent"]:
             return False
+        if procs > self.limits["max_processes"]:
+            return False
+
         return True
 
     def track_tokens(self, model, input_tokens, output_tokens):
@@ -128,15 +137,36 @@ class ResourceMonitor:
         if duration > self.limits["timeout_seconds"]:
             return f"Timeout exceeded: {duration:.1f}s > {self.limits['timeout_seconds']}s"
 
+        # Check process count
+        procs = len(psutil.pids())
+        if procs > self.limits["max_processes"]:
+            return f"Process limit exceeded: {procs} > {self.limits['max_processes']}"
+
+        # Check network usage (Total bytes sent + recv)
+        curr_net = psutil.net_io_counters()
+        bytes_sent = curr_net.bytes_sent - self.initial_net.bytes_sent
+        bytes_recv = curr_net.bytes_recv - self.initial_net.bytes_recv
+        total_mb = (bytes_sent + bytes_recv) / (1024 * 1024)
+
+        if total_mb > self.limits["max_network_mb"]:
+            return f"Network limit exceeded: {total_mb:.2f}MB > {self.limits['max_network_mb']}MB"
+
         return None
 
     def get_stats(self):
         """
         Get current stats.
         """
+        curr_net = psutil.net_io_counters()
+        bytes_sent = curr_net.bytes_sent - self.initial_net.bytes_sent
+        bytes_recv = curr_net.bytes_recv - self.initial_net.bytes_recv
+        total_mb = (bytes_sent + bytes_recv) / (1024 * 1024)
+
         return {
             "cpu_percent": psutil.cpu_percent(),
             "memory_percent": psutil.virtual_memory().percent,
+            "process_count": len(psutil.pids()),
+            "network_mb": total_mb,
             "tokens": self.usage["total_tokens"],
             "cost": self.usage["total_cost"],
             "duration": time.time() - self.start_time

@@ -1,113 +1,92 @@
 # utils/error_recovery.py
 """
-Error Recovery Utility.
+Error Recovery & Retry Logic.
 
-Provides retry mechanisms, circuit breakers, and fallback strategies
-to enhance system reliability.
+Provides decorators and utilities for robust error handling, retries with backoff,
+and circuit breaking.
 """
 
 import time
 import functools
 import logging
+from typing import Type, Tuple, Optional, Callable
 from pathlib import Path
 
-# Setup Error Logging
-log_dir = Path.home() / ".fyodor" / "logs"
-log_dir.mkdir(parents=True, exist_ok=True)
-logging.basicConfig(
-    filename=log_dir / "errors.log",
-    level=logging.ERROR,
-    format='%(asctime)s %(levelname)s:%(message)s'
-)
+# Configure logging
+log_path = Path.home() / ".fyodor" / "logs" / "errors.log"
+log_path.parent.mkdir(parents=True, exist_ok=True)
 
-class CircuitBreakerOpenException(Exception):
-    pass
+logging.basicConfig(
+    filename=str(log_path),
+    level=logging.ERROR,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
+logger = logging.getLogger("ErrorRecovery")
+
 
 class ErrorRecovery:
     """
-    Utilities for error handling and recovery.
+    Utilities for error recovery.
     """
 
     @staticmethod
-    def retry(max_attempts=3, backoff_factor=2, exceptions=(Exception,)):
+    def retry_with_backoff(
+        retries: int = 3,
+        backoff_in_seconds: int = 1,
+        exceptions: Tuple[Type[Exception], ...] = (Exception,)
+    ):
         """
         Decorator to retry a function with exponential backoff.
-
-        Args:
-            max_attempts (int): Maximum number of retries.
-            backoff_factor (int): Multiplier for wait time.
-            exceptions (tuple): Exceptions to catch and retry.
         """
         def decorator(func):
             @functools.wraps(func)
             def wrapper(*args, **kwargs):
-                attempts = 0
-                delay = 1
-                while attempts < max_attempts:
+                x = 0
+                while True:
                     try:
                         return func(*args, **kwargs)
                     except exceptions as e:
-                        attempts += 1
-                        logging.error(f"Error in {func.__name__}: {e}. Retrying ({attempts}/{max_attempts})...")
-                        if attempts == max_attempts:
-                            logging.error(f"Max retries reached for {func.__name__}.")
+                        if x == retries:
+                            logger.error(f"Failed after {retries} retries: {e}")
                             raise
-                        time.sleep(delay)
-                        delay *= backoff_factor
+
+                        sleep = (backoff_in_seconds * 2 ** x)
+                        logger.warning(f"Error: {e}. Retrying in {sleep}s...")
+                        time.sleep(sleep)
+                        x += 1
             return wrapper
         return decorator
 
     @staticmethod
-    def circuit_breaker(failure_threshold=3, recovery_timeout=60):
+    def circuit_breaker(
+        failure_threshold: int = 5,
+        recovery_timeout: int = 60
+    ):
         """
-        Decorator that implements the Circuit Breaker pattern.
+        Decorator to implement circuit breaker pattern.
         """
         def decorator(func):
-            # State attached to the wrapper function
-            func.failures = 0
-            func.last_failure_time = 0
-            func.state = "CLOSED" # CLOSED (working), OPEN (broken), HALF-OPEN (testing)
+            failures = 0
+            last_failure_time = 0
 
             @functools.wraps(func)
             def wrapper(*args, **kwargs):
-                now = time.time()
+                nonlocal failures, last_failure_time
 
-                if func.state == "OPEN":
-                    if now - func.last_failure_time > recovery_timeout:
-                        func.state = "HALF-OPEN"
+                if failures >= failure_threshold:
+                    if time.time() - last_failure_time < recovery_timeout:
+                         raise RuntimeError("Circuit Breaker Open: Too many failures.")
                     else:
-                        raise CircuitBreakerOpenException(f"Circuit is OPEN for {func.__name__}")
+                        # Reset (Half-Open state effectively)
+                        failures = 0
 
                 try:
                     result = func(*args, **kwargs)
-                    if func.state == "HALF-OPEN":
-                        func.state = "CLOSED"
-                        func.failures = 0
+                    failures = 0 # Success resets
                     return result
                 except Exception as e:
-                    func.failures += 1
-                    func.last_failure_time = now
-                    logging.error(f"Circuit Breaker: Failure in {func.__name__} ({func.failures}/{failure_threshold})")
-
-                    if func.failures >= failure_threshold:
-                        func.state = "OPEN"
-                        logging.error(f"Circuit Breaker: Opening circuit for {func.__name__}")
-                    raise
-            return wrapper
-        return decorator
-
-    @staticmethod
-    def fallback(fallback_func):
-        """
-        Decorator to execute a fallback function on failure.
-        """
-        def decorator(func):
-            @functools.wraps(func)
-            def wrapper(*args, **kwargs):
-                try:
-                    return func(*args, **kwargs)
-                except Exception as e:
-                    logging.error(f"Primary function {func.__name__} failed: {e}. Executing fallback.")
-                    return fallback_func(*args, **kwargs)
+                    failures += 1
+                    last_failure_time = time.time()
+                    raise e
             return wrapper
         return decorator
