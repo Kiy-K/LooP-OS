@@ -30,6 +30,8 @@ class UserManager:
         Loads users from the database or creates default users (root, guest).
         """
         self.users = {}
+        # Pre-calculate a dummy hash for constant-time authentication failures
+        self._dummy_hash = self._hash("dummy_password_for_timing_mitigation")
         self._load()
 
         # Ensure default users exist
@@ -119,10 +121,14 @@ class UserManager:
         # Reload to ensure we have latest updates from CLI tools
         self._load()
         if user not in self.users:
+            # Perform a dummy verification to mitigate timing attacks (user enumeration)
+            self._verify(self._dummy_hash, pw)
             return False
         user_data = self.users[user]
         hash_val = user_data if isinstance(user_data, str) else user_data.get("password")
         if not hash_val:
+            # Even if password field is missing (corrupted?), we should probably delay
+            self._verify(self._dummy_hash, pw)
             return False
         return self._verify(hash_val, pw)
 

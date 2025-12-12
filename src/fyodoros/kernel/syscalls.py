@@ -810,3 +810,9 @@ class SyscallHandler:
         Alias for memory search (to match requirements).
         """
         return self.sys_memory_search(query, limit)
+
+    def sys_memory_delete(self, key_id=None, query=None):
+        """
+        Delete a memory by ID or query.
+        """
+        return self.memory_manager.delete(key_id, query)

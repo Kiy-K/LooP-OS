@@ -14,12 +14,14 @@ import "./App.css";
 function App() {
   const [status, setStatus] = useState("Idle");
   const [output, setOutput] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
   /**
    * Invokes the 'start_kernel' command in the Tauri backend.
    * Updates the status state with the result or error.
    */
   async function startKernel() {
+    setIsLoading(true);
     setStatus("Starting Kernel...");
     try {
         // We use the custom command defined in Rust to spawn the kernel
@@ -28,6 +30,8 @@ function App() {
         setStatus(msg);
     } catch (e) {
         setStatus("Error: " + e);
+    } finally {
+        setIsLoading(false);
     }
   }
 
@@ -36,9 +40,14 @@ function App() {
       <h1>FyodorOS Dashboard</h1>
 
       <div className="card">
-        <p>Status: {status}</p>
-        <button onClick={startKernel}>
-            Launch Kernel Subprocess
+        <p role="status" aria-live="polite">Status: {status}</p>
+        <button
+          onClick={startKernel}
+          disabled={isLoading}
+          aria-busy={isLoading}
+          className={isLoading ? "loading" : ""}
+        >
+            {isLoading ? "Starting Kernel..." : "Launch Kernel Subprocess"}
         </button>
       </div>
 

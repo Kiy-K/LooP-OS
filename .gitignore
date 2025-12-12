@@ -9,3 +9,8 @@ __pycache__/
 local_bin/
 
 # Tests
+tests/chaos/sandbox/
+
+# Node
+node_modules/
+gui/node_modules/
