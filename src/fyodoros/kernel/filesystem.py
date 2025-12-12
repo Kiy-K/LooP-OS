@@ -15,18 +15,27 @@ class Permissions:
 
     Attributes:
         owner (str): The user who owns the node.
-        mode (str): Permission mode (e.g., 'rw', 'r').
+        group (str): The group who owns the node.
+        mode (str): Owner permission mode (e.g., 'rw', 'r').
+        group_mode (str): Group permission mode.
+        world_mode (str): World permission mode.
     """
-    def __init__(self, owner="root", mode="rw"):
+    def __init__(self, owner="root", mode="rw", group="root", group_mode="r", world_mode="r"):
         """
         Initialize Permissions.
 
         Args:
             owner (str, optional): The owner's username. Defaults to "root".
-            mode (str, optional): Permission string. Defaults to "rw".
+            mode (str, optional): Owner permission string. Defaults to "rw".
+            group (str, optional): The owner's group. Defaults to "root".
+            group_mode (str, optional): Group permission string. Defaults to "r".
+            world_mode (str, optional): World permission string. Defaults to "r".
         """
         self.owner = owner
-        self.mode = mode  # rw, r, rwx (for future)
+        self.group = group
+        self.mode = mode  # Owner mode
+        self.group_mode = group_mode
+        self.world_mode = world_mode
 
 
 class FileNode:
@@ -38,7 +47,7 @@ class FileNode:
         data (str): The content of the file.
         permissions (Permissions): Access permissions.
     """
-    def __init__(self, name, data="", owner="root", mode="rw"):
+    def __init__(self, name, data="", owner="root", mode="rw", group="root", group_mode="r", world_mode="r"):
         """
         Initialize a FileNode.
 
@@ -46,11 +55,14 @@ class FileNode:
             name (str): File name.
             data (str, optional): Initial content. Defaults to "".
             owner (str, optional): Owner username. Defaults to "root".
-            mode (str, optional): Permission mode. Defaults to "rw".
+            mode (str, optional): Owner permission mode. Defaults to "rw".
+            group (str, optional): Group name. Defaults to "root".
+            group_mode (str, optional): Group permission mode. Defaults to "r".
+            world_mode (str, optional): World permission mode. Defaults to "r".
         """
         self.name = name
         self.data = data
-        self.permissions = Permissions(owner, mode)
+        self.permissions = Permissions(owner, mode, group, group_mode, world_mode)
 
     def __repr__(self):
         return f"<File {self.name} perm={self.permissions.mode}>"
@@ -65,18 +77,21 @@ class DirectoryNode:
         children (dict): A dictionary mapping names to child nodes (Files or Directories).
         permissions (Permissions): Access permissions.
     """
-    def __init__(self, name, owner="root", mode="rw"):
+    def __init__(self, name, owner="root", mode="rw", group="root", group_mode="r", world_mode="r"):
         """
         Initialize a DirectoryNode.
 
         Args:
             name (str): Directory name.
             owner (str, optional): Owner username. Defaults to "root".
-            mode (str, optional): Permission mode. Defaults to "rw".
+            mode (str, optional): Owner permission mode. Defaults to "rw".
+            group (str, optional): Group name. Defaults to "root".
+            group_mode (str, optional): Group permission mode. Defaults to "r".
+            world_mode (str, optional): World permission mode. Defaults to "r".
         """
         self.name = name
         self.children = {}
-        self.permissions = Permissions(owner, mode)
+        self.permissions = Permissions(owner, mode, group, group_mode, world_mode)
 
     def __repr__(self):
         return f"<Dir {self.name}>"
@@ -109,10 +124,10 @@ class FileSystem:
         self.mkdir("/var/log", "root")
         self.mkdir("/var/log/journal", "root")
         self.mkdir("/home")
-        self.mkdir("/home/guest", uid="root", owner="guest")
-        self.mkdir("/home/root", uid="root", owner="root")
+        self.mkdir("/home/guest", uid="root", owner="guest", group="guest")
+        self.mkdir("/home/root", uid="root", owner="root", group="root")
 
-    def _check_perm(self, node, uid, op):
+    def _check_perm(self, node, uid, op, groups=None):
         """
         Check if a user has permission to perform an operation on a node.
 
@@ -120,6 +135,7 @@ class FileSystem:
             node (FileNode or DirectoryNode): The target node.
             uid (str): The user ID attempting the operation.
             op (str): The operation ('r' for read, 'w' for write).
+            groups (list[str], optional): The groups the user belongs to.
 
         Returns:
             bool: True if permitted, False otherwise.
@@ -127,15 +143,26 @@ class FileSystem:
         if uid == "root":
             return True
 
-        # Simple ownership check for now
-        if node.permissions.owner == uid:
-            if op in node.permissions.mode:
-                return True
-            # Also handle 'rw' containing 'r' and 'w'
-            if 'rw' in node.permissions.mode:
-                return True
+        groups = groups or []
+        perm_str = ""
 
-        # TODO: Group/World permissions
+        # 1. Owner check
+        if node.permissions.owner == uid:
+            perm_str = node.permissions.mode
+        # 2. Group check
+        elif node.permissions.group in groups:
+            perm_str = node.permissions.group_mode
+        # 3. World check
+        else:
+            perm_str = node.permissions.world_mode
+
+        # Check operation in resolved permission string
+        if op in perm_str:
+            return True
+        # Also handle 'rw' containing 'r' and 'w'
+        if 'rw' in perm_str:
+            return True
+
         return False
 
     def get_node_type(self, path):
@@ -159,13 +186,14 @@ class FileSystem:
             pass
         return None
 
-    def list_dir(self, path="/", uid="root"):
+    def list_dir(self, path="/", uid="root", groups=None):
         """
         List the contents of a directory.
 
         Args:
             path (str): The directory path. Defaults to "/".
             uid (str): The requesting user ID.
+            groups (list[str], optional): The user's groups.
 
         Returns:
             list[str]: A list of filenames in the directory.
@@ -176,18 +204,19 @@ class FileSystem:
         """
         node = self._resolve(path)
         if isinstance(node, DirectoryNode):
-            if self._check_perm(node, uid, 'r'):
+            if self._check_perm(node, uid, 'r', groups):
                 return list(node.children.keys())
             raise PermissionError(f"Permission denied: {path}")
         raise ValueError("Not a directory")
 
-    def read_file(self, path, uid="root"):
+    def read_file(self, path, uid="root", groups=None):
         """
         Read the contents of a file.
 
         Args:
             path (str): The file path.
             uid (str): The requesting user ID.
+            groups (list[str], optional): The user's groups.
 
         Returns:
             str: The file content.
@@ -198,12 +227,12 @@ class FileSystem:
         """
         node = self._resolve(path)
         if isinstance(node, FileNode):
-            if self._check_perm(node, uid, 'r'):
+            if self._check_perm(node, uid, 'r', groups):
                 return node.data
             raise PermissionError(f"Permission denied: {path}")
         raise ValueError("Not a file")
 
-    def write_file(self, path, data, uid="root"):
+    def write_file(self, path, data, uid="root", groups=None):
         """
         Write data to a file. Overwrites existing content or creates a new file.
 
@@ -211,6 +240,7 @@ class FileSystem:
             path (str): The file path.
             data (str): The content to write.
             uid (str): The requesting user ID.
+            groups (list[str], optional): The user's groups.
 
         Raises:
             PermissionError: If write access is denied.
@@ -221,7 +251,7 @@ class FileSystem:
             node = self._resolve(path)
             # File exists, check write perm
             if isinstance(node, FileNode):
-                if self._check_perm(node, uid, 'w'):
+                if self._check_perm(node, uid, 'w', groups):
                     node.data = data
                     return
                 raise PermissionError(f"Permission denied: {path}")
@@ -230,12 +260,13 @@ class FileSystem:
         except KeyError:
             # File doesn't exist, check parent write perm to create
             parent, name = self._split(path)
-            if self._check_perm(parent, uid, 'w'):
-                parent.children[name] = FileNode(name, data, owner=uid)
+            if self._check_perm(parent, uid, 'w', groups):
+                group = groups[0] if groups else "root"
+                parent.children[name] = FileNode(name, data, owner=uid, group=group)
             else:
                 raise PermissionError(f"Permission denied: {path}")
 
-    def append_file(self, path, text, uid="root"):
+    def append_file(self, path, text, uid="root", groups=None):
         """
         Append text to a file. Creates the file if it doesn't exist.
 
@@ -243,6 +274,7 @@ class FileSystem:
             path (str): The file path.
             text (str): The text to append (a newline is added automatically).
             uid (str): The requesting user ID.
+            groups (list[str], optional): The user's groups.
 
         Raises:
             PermissionError: If write access is denied.
@@ -250,19 +282,20 @@ class FileSystem:
         try:
             node = self._resolve(path)
             if isinstance(node, FileNode):
-                if self._check_perm(node, uid, 'w'):
+                if self._check_perm(node, uid, 'w', groups):
                     node.data += text + "\n"
                     return
                 raise PermissionError(f"Permission denied: {path}")
         except KeyError:
             # Create new
             parent, name = self._split(path)
-            if self._check_perm(parent, uid, 'w'):
-                parent.children[name] = FileNode(name, text + "\n", owner=uid)
+            if self._check_perm(parent, uid, 'w', groups):
+                group = groups[0] if groups else "root"
+                parent.children[name] = FileNode(name, text + "\n", owner=uid, group=group)
             else:
                 raise PermissionError(f"Permission denied: {path}")
 
-    def mkdir(self, path, uid="root", owner=None):
+    def mkdir(self, path, uid="root", owner=None, group=None, groups=None):
         """
         Create a directory.
 
@@ -270,6 +303,8 @@ class FileSystem:
             path (str): The directory path to create.
             uid (str): The requesting user ID (must have write perm on parent).
             owner (str, optional): The owner of the new directory. Defaults to uid.
+            group (str, optional): The group of the new directory.
+            groups (list[str], optional): The requesting user's groups.
 
         Raises:
             PermissionError: If creation is not allowed.
@@ -283,19 +318,21 @@ class FileSystem:
             pass
 
         parent, name = self._split(path)
-        if self._check_perm(parent, uid, 'w'):
+        if self._check_perm(parent, uid, 'w', groups):
             new_owner = owner if owner else uid
-            parent.children[name] = DirectoryNode(name, owner=new_owner)
+            new_group = group if group else (groups[0] if groups else "root")
+            parent.children[name] = DirectoryNode(name, owner=new_owner, group=new_group)
         else:
             raise PermissionError(f"Permission denied: {path}")
 
-    def delete_file(self, path, uid="root"):
+    def delete_file(self, path, uid="root", groups=None):
         """
         Deletes a file or directory.
 
         Args:
             path (str): The path to delete.
             uid (str): The requesting user ID.
+            groups (list[str], optional): The user's groups.
 
         Raises:
             FileNotFoundError: If the path does not exist.
@@ -311,7 +348,7 @@ class FileSystem:
              raise FileNotFoundError(f"File not found: {path}")
 
         # Check permission on PARENT to delete child
-        if self._check_perm(parent, uid, 'w'):
+        if self._check_perm(parent, uid, 'w', groups):
              # If directory, ensure empty?
              # For simple implementation, recursive delete or strict empty check.
              # Strict empty check for safety.

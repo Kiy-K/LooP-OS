@@ -127,6 +127,15 @@ class SyscallHandler:
             return self.scheduler.current_process.uid
         return "root" # Kernel/System context
 
+    def _get_current_groups(self):
+        """
+        Get the groups (roles) of the currently running process.
+        """
+        uid = self._get_current_uid()
+        if uid == "root":
+            return ["root", "admin"]
+        return self.user_manager.get_roles(uid)
+
     # Filesystem Helpers
     def _resolve_sandbox_path(self, path):
         """
@@ -164,8 +173,9 @@ class SyscallHandler:
         uid = self._get_current_uid()
         node_type = self.fs.get_node_type(path)
 
+        groups = self._get_current_groups()
         if node_type == 'dir':
-            return self.fs.list_dir(path, uid)
+            return self.fs.list_dir(path, uid, groups)
         elif node_type == 'file':
             # Verify read permission by trying to read?
             # Or just assume ls permission implies seeing the name.
@@ -196,7 +206,8 @@ class SyscallHandler:
                 return f.read()
 
         uid = self._get_current_uid()
-        return self.fs.read_file(path, uid)
+        groups = self._get_current_groups()
+        return self.fs.read_file(path, uid, groups)
 
     def sys_write(self, path, data):
         """
@@ -221,7 +232,8 @@ class SyscallHandler:
             return True
 
         uid = self._get_current_uid()
-        self.fs.write_file(path, data, uid)
+        groups = self._get_current_groups()
+        self.fs.write_file(path, data, uid, groups)
         self.sys_log(f"[fs] write {path} by {uid}")
         return True
 
@@ -246,7 +258,8 @@ class SyscallHandler:
             return True
 
         uid = self._get_current_uid()
-        self.fs.append_file(path, text, uid)
+        groups = self._get_current_groups()
+        self.fs.append_file(path, text, uid, groups)
         return True
 
     def sys_delete(self, path):
@@ -272,8 +285,9 @@ class SyscallHandler:
                 return False
 
         uid = self._get_current_uid()
+        groups = self._get_current_groups()
         try:
-            self.fs.delete_file(path, uid)
+            self.fs.delete_file(path, uid, groups)
             self.sys_log(f"[fs] delete {path} by {uid}")
             return True
         except Exception as e:
