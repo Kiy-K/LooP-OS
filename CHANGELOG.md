@@ -1,5 +1,16 @@
 # Changelog
 
+## [0.7.0] - 2025-12-12
+### Added
+- **Persistent Memory System**: Integrated `ChromaDB` to provide semantic memory capabilities.
+    - **Syscalls**: `sys_memory_store`, `sys_memory_search`, `sys_memory_recall`, `sys_memory_delete`.
+    - **Agent Integration**: `ReActAgent` now auto-recalls relevant memories at the start of a task.
+    - **Persistence**: Memories are stored in `~/.fyodor/memory` and persist across reboots.
+- **Dependencies**: Added `chromadb` to `pyproject.toml` and `environment.yml`.
+
+### Performance
+- **Filesystem**: Optimized `sys_ls` to improve path resolution speed and error handling.
+
 ## [0.6.0] - 2025-12-09
 ### Verified
 - **System Stability**: Completed "Phase 2.3" destructive test sweep of core subsystems.
