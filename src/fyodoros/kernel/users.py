@@ -10,6 +10,8 @@ import hashlib
 from argon2 import PasswordHasher
 import json
 import os
+from pathlib import Path
+from fyodoros.kernel import rootfs
 
 
 class UserManager:
@@ -17,11 +19,14 @@ class UserManager:
     Manages user authentication and authorization.
 
     Attributes:
-        DB_FILE (str): The path to the JSON database file ("users.json").
+        DB_FILE (Path): The path to the JSON database file (~/.fyodor/etc/users.json).
         _ph (PasswordHasher): Argon2 password hasher instance.
         users (dict): In-memory cache of user data.
     """
-    DB_FILE = "users.json"
+    # Use absolute path resolved via rootfs logic (though manually constructed here for class attr)
+    # Ideally, we should not define this at class level if it depends on runtime env,
+    # but rootfs.FYODOR_ROOT is constant per run.
+    DB_FILE = rootfs.FYODOR_ROOT / "etc" / "users.json"
     _ph = PasswordHasher()
 
     def __init__(self):
@@ -32,6 +37,10 @@ class UserManager:
         self.users = {}
         # Pre-calculate a dummy hash for constant-time authentication failures
         self._dummy_hash = self._hash("dummy_password_for_timing_mitigation")
+
+        # Ensure the directory exists
+        self.DB_FILE.parent.mkdir(parents=True, exist_ok=True)
+
         self._load()
 
         # Ensure default users exist
@@ -82,7 +91,7 @@ class UserManager:
         Load users from the JSON database file.
         Handles migration from older formats if necessary.
         """
-        if os.path.exists(self.DB_FILE):
+        if self.DB_FILE.exists():
             try:
                 with open(self.DB_FILE, "r") as f:
                     data = json.load(f)
@@ -100,10 +109,17 @@ class UserManager:
     def _save(self):
         """
         Save the current user data to the JSON database file.
+        Restricts file permissions to 600 (read/write by owner only).
         """
         try:
+            # Ensure directory exists before saving (redundant but safe)
+            self.DB_FILE.parent.mkdir(parents=True, exist_ok=True)
+
             with open(self.DB_FILE, "w") as f:
                 json.dump(self.users, f, indent=2)
+
+            # Secure the file: Read/Write for owner only
+            os.chmod(self.DB_FILE, 0o600)
         except Exception as e:
             print(f"[UserManager] Error saving users: {e}")
 
