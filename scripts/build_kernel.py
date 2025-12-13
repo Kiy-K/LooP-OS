@@ -42,13 +42,18 @@ def build():
 
     target_triple = get_target_triple()
     extension = ".exe" if platform.system().lower() == "windows" else ""
-    final_binary_name = f"{binary_name}-{target_triple}{extension}"
+
+    # Generic name for CI (and initial build)
+    generic_binary_name = f"{binary_name}{extension}"
+
+    # Target triple name for Tauri (Local Dev)
+    triple_binary_name = f"{binary_name}-{target_triple}{extension}"
 
     # Ensure output directory exists
     output_dir.mkdir(parents=True, exist_ok=True)
 
     print(f"[Build] Target Triple: {target_triple}")
-    print(f"[Build] Output: {output_dir / final_binary_name}")
+    print(f"[Build] Generic Output: {output_dir / generic_binary_name}")
 
     # Nuitka Command
     cmd = [
@@ -57,15 +62,10 @@ def build():
         "--onefile",
         "--assume-yes-for-downloads",
         "--include-package=fyodoros",
-        # Include templates if they exist (using wildcard or specific path)
-        # Assuming fyodoros/templates exists inside the package
         "--include-package-data=fyodoros",
         "--output-dir=" + str(output_dir),
-        "--output-filename=" + final_binary_name,
-        "--enable-plugin=pylint-warnings", # Optional but good
-        # Critical for NASM/Subprocess
-        # Nuitka supports subprocess/ctypes out of the box usually,
-        # but we ensure standard modules are included.
+        "--output-filename=" + generic_binary_name,
+        "--enable-plugin=pylint-warnings",
         str(src_dir / "fyodoros" / "cli.py") # Entry point
     ]
 
@@ -77,6 +77,15 @@ def build():
     try:
         subprocess.run(cmd, env=env, check=True)
         print("[Build] Success!")
+
+        # Local Development Helper
+        # If not in CI, create the triple-suffixed copy so local 'tauri build' works
+        if not os.environ.get("CI"):
+            src = output_dir / generic_binary_name
+            dst = output_dir / triple_binary_name
+            print(f"[Build] Local Dev: Copying to {dst}")
+            shutil.copy2(src, dst)
+
     except subprocess.CalledProcessError as e:
         print(f"[Build] Failed: {e}")
         sys.exit(1)
