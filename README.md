@@ -1,5 +1,5 @@
 # FyodorOS
-[![PyPI version](https://badge.fury.io/py/fyodoros.svg)](https://badge.fury.io/py/fyodoros)
+[![Version](https://img.shields.io/badge/version-v0.8.0-blue.svg)](https://github.com/Kiy-K/FyodorOS/releases)
 [![Python 3.8+](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
@@ -13,7 +13,7 @@
           The Experimental AI Microkernel
 ```
 
-**FyodorOS** is a simulated operating system designed from the ground up for **Autonomous AI Agents**. Unlike traditional OSs designed for humans (GUI/CLI) or servers (API), FyodorOS exposes the entire system state as a **Document Object Model (DOM)**, allowing Agents to "perceive" and interact with the kernel natively.
+**FyodorOS** is a local-first AI Operating System that runs on your metal. Unlike traditional OSs designed for humans (GUI/CLI) or servers (API), FyodorOS exposes the entire system state as a **Document Object Model (DOM)**, allowing Agents to "perceive" and interact with the kernel natively.
 
 ## 🚀 Vision
 
@@ -24,44 +24,24 @@ We believe that for AI Agents to be truly useful and safe, they need an environm
 *   **Agent-Native Apps**: Standard tools (`browser`, `explorer`, `calc`) that return structured JSON/DOM instead of plain text, minimizing token usage and parsing errors.
 *   **Cloud Integration (v0.5.0)**: Native Docker and Kubernetes support.
 *   **Long-Term Memory (v0.7.0)**: Persistent semantic storage allowing agents to learn and recall information.
+*   **Desktop Interface (v0.8.0)**: A native desktop application bridging the Python kernel with a modern React UI.
 
-## 📝 What's New
+## 📦 Installation
 
-### [0.7.1] - Virtual RootFS & Unified CLI
+### Option A: User (Recommended)
+Download the installer for Windows, Mac, or Linux from the [Releases](https://github.com/Kiy-K/FyodorOS/releases) page.
 
-FyodorOS v0.7.1 introduces a standardized "Virtual RootFS" and a unified CLI.
-- **Unified CLI**: The `fyodor` command is now the single entry point.
-- **Virtual RootFS**: A strict directory structure rooted at `~/.fyodor/`.
-- **Enhanced Security**: All file operations are confined to the virtual root with path traversal protections.
+### Option B: Developer (Legacy/Headless)
+You can install FyodorOS as a Python package for headless or CLI-only usage.
 
-### [0.7.0] - Persistent Memory & Performance
+```bash
+pip install fyodoros
+playwright install chromium
+```
 
-FyodorOS v0.7.0 introduces a major capability for Autonomous Agents: **Memory**.
-- **Semantic Storage**: Agents can now store and recall information using `sys_memory_*` syscalls, backed by ChromaDB.
-- **Auto-Recall**: The Agent loop automatically searches for relevant past memories before starting a new task, enabling context-aware execution.
-- **Persistence**: Memory state is preserved in `~/.fyodor/var/memory` across system reboots.
-- **Optimization**: Significant performance improvements in filesystem path resolution (`sys_ls`).
+## 🛠️ Development
 
-## ✨ Key Features
-
-### 🧠 Kernel-Level Agent
-The OS integrates an LLM-powered agent directly into the shell.
-- **Command**: `fyodor agent "Research the latest news on AI"`
-- **Mechanism**: The agent perceives the system via `SystemDOM`, creates a To-Do list, and executes actions in a sandboxed loop.
-
-### 💾 Persistent Memory
-The Agent now remembers.
-- **Semantic Recall**: Uses vector embeddings (ChromaDB) to find relevant past interactions.
-- **Auto-Injection**: Relevant context is automatically injected into the Agent's prompt.
-- **Commands**: `sys_memory_store`, `sys_memory_search`, `sys_memory_delete`.
-
-### 🛡️ Safety Sandbox (Verified v0.6.0)
-Every action taken by the Agent is intercepted by the C++ reinforced `AgentSandbox`.
-- **Virtual Filesystem**: The agent is jailed in `~/.fyodor/sandbox`. All paths are virtualized.
-- **Path Traversal Protection**: C++ layer prevents escaping the sandbox.
-- **App Whitelisting**: Only authorized "Agent Apps" can be executed.
-
-## 📦 Installation & Usage
+To build the full Desktop experience from source, you need Node.js, Rust, and Python installed.
 
 1.  **Clone the Repository**
     ```bash
@@ -69,38 +49,32 @@ Every action taken by the Agent is intercepted by the C++ reinforced `AgentSandb
     cd fyodoros
     ```
 
-2.  **Install Package**
-    You can install FyodorOS as a Python package.
-
-    **Via pip (Recommended):**
+2.  **Install Frontend Dependencies**
     ```bash
-    pip install .
-    playwright install chromium
+    cd gui
+    npm install
     ```
 
-    **Via Conda:**
+3.  **Run in Development Mode**
     ```bash
-    conda env create -f environment.yml
-    conda activate fyodoros
-    playwright install chromium
+    npm run tauri dev
     ```
 
-3.  **Launch the OS**
+## 🏗️ Architecture
 
-    **First run:**
-    ```bash
-    fyodor init
-    ```
+FyodorOS v0.8.0 adopts a hybrid architecture to combine the flexibility of Python AI libraries with the performance and native capabilities of Rust.
 
-    **To start:**
-    ```bash
-    fyodor start
-    ```
+```mermaid
+graph LR
+    User[User] <--> React[React UI (Shadcn)]
+    React <--> Tauri[Tauri (Rust Sidecar)]
+    Tauri <--> Nuitka[Nuitka (Compiled Python Kernel)]
+    Nuitka <--> System[Host System (Sandboxed)]
+```
 
-    **Run Agent Task**
-    ```bash
-    fyodor agent "Create a file named hello.txt in /home"
-    ```
+*   **React UI**: A modern web-based interface for visualizing the OS state and Agent actions.
+*   **Tauri**: Handles window management and communicates with the Python kernel via a sidecar protocol.
+*   **Nuitka Kernel**: The Python core compiled into a standalone binary for performance and security, running the Agent loop and managing system resources.
 
 ## 🤝 Contributing
 

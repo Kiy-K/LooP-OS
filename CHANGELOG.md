@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.8.0] - 2025-12-13 "The Ironclad Update"
+### Architecture (Major Breaking Change)
+- Migrated from pure Python library to **Tauri + Nuitka** Hybrid Application.
+- Introduced **Sidecar Protocol**: Kernel runs as a compiled headless process controlled by React Frontend.
+- Implemented **Shadcn/UI** for a professional "IDE-like" interface.
+
+### Added
+- `fyodor doctor`: Self-diagnosis tool for frozen binaries.
+- `rootfs`: Strict virtualization of the file system (`~/.fyodor/`).
+- **CI/CD**: GitHub Actions for automated cross-platform compilation.
+
+### Security
+- **Frozen Code**: Kernel source is no longer exposed in plain text.
+
 ## [0.7.0] - 2025-12-12
 ### Added
 - **Persistent Memory System**: Integrated `ChromaDB` to provide semantic memory capabilities.
