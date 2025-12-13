@@ -36,22 +36,10 @@ def test_run_processes(scheduler):
 
     # Manually run loop logic or trust run()?
     # run() is a loop while self.running is True.
-    # To test it without infinite loop, we can make the process set running=False
+    # To test it without infinite loop, we can use max_steps
 
-    def stopper_process():
-        scheduler.running = False
-        yield
-
-    p_stop = Process("stopper", stopper_process(), "root")
-    scheduler.add(p_stop)
-
-    # Run scheduler
-    # tracker yields once (step 1). stopper sets running=False.
-    # Scheduler loop breaks?
-    # In one pass: tracker runs (yields), stopper runs (sets False).
-    # Next check `while self.running` is False.
-
-    scheduler.run()
+    # Run scheduler for 1 step
+    scheduler.run(max_steps=1)
 
     # Tracker should have run at least once
     assert steps_executed >= 1
@@ -65,13 +53,7 @@ def test_process_termination_signal(scheduler):
 
     # Scheduler loop should remove it
     # We need to run scheduler for one iteration
-    # Hack: Inject a stopper process
-    def stopper():
-        scheduler.running = False
-        yield
-
-    scheduler.add(Process("stopper", stopper(), "root"))
-    scheduler.run()
+    scheduler.run(max_steps=1)
 
     assert p not in scheduler.processes
     assert p.state == ProcessState.TERMINATED
@@ -82,10 +64,6 @@ def test_scheduler_signals_kill(scheduler):
     p.deliver_signal("SIGKILL")
 
     # Run one pass
-    def stopper():
-        scheduler.running = False
-        yield
-    scheduler.add(Process("stopper", stopper(), "root"))
-    scheduler.run()
+    scheduler.run(max_steps=1)
 
     assert p not in scheduler.processes

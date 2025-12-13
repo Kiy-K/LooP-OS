@@ -64,15 +64,24 @@ class Scheduler:
 
         self.processes.append(process)
 
-    def run(self):
+    def run(self, max_steps=None):
         """
         Start the scheduling loop.
 
         Iterates through the list of processes and calls `run_step()` on each
         active process. Handles process termination and signals (SIGKILL, SIGTERM).
+
+        Args:
+            max_steps (int, optional): Maximum number of loop iterations to run.
+                                       Useful for testing or limited execution.
         """
         self.running = True
+        steps = 0
         while self.running and self.processes:
+            if max_steps is not None and steps >= max_steps:
+                break
+            steps += 1
+
             # Create a copy to allow modification during iteration (e.g. kill)
             for proc in list(self.processes):
                 self.current_process = proc
