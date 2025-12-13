@@ -88,7 +88,7 @@ We welcome contributions in several areas:
 
 ```bash
 # Fork the repository on GitHub, then:
-git clone https://github.com/YOUR-USERNAME/FyodorOS.git
+git clone https://github.com/Kiy-K/FyodorOS.git
 cd FyodorOS
 
 # Add upstream remote
