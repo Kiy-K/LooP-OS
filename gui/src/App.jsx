@@ -107,6 +107,7 @@ function App() {
             onClick={startKernel}
             disabled={isLoading}
             className={isLoading ? "loading" : ""}
+            aria-busy={isLoading}
             >
                 {isLoading ? "Starting..." : "Launch Kernel"}
             </button>
@@ -114,7 +115,16 @@ function App() {
       </div>
 
       <div className="terminal">
-          <pre ref={outputRef} className="output">{output}</pre>
+          <pre
+            ref={outputRef}
+            className="output"
+            role="log"
+            aria-live="polite"
+            tabIndex={0}
+            aria-label="Terminal Output"
+          >
+            {output}
+          </pre>
           <form onSubmit={sendCommand} className="input-form">
               <span className="prompt">$</span>
               <input
@@ -123,6 +133,8 @@ function App() {
                 onChange={(e) => setCmd(e.target.value)}
                 disabled={!isConnected}
                 autoFocus
+                aria-label="Command Input"
+                placeholder="Enter command..."
               />
           </form>
       </div>
