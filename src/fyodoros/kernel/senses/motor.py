@@ -96,26 +96,41 @@ class Motor:
             SafetyInterruption: If Kill Switch is active.
             ValueError: If action is unknown.
         """
-        if self._emergency_stop:
-            raise SafetyInterruption("Action blocked by Emergency Kill Switch.")
+        try:
+            if self._emergency_stop:
+                raise SafetyInterruption("Action blocked by Emergency Kill Switch.")
 
-        if not self.pyautogui:
-            return False
+            if not self.pyautogui:
+                return False
 
-        element = ElementRegistry.get(uid)
-        if not element:
-            raise StaleElementException(f"Element with UID {uid} not found. Re-scan required.")
+            element = ElementRegistry.get(uid)
+            if not element:
+                raise StaleElementException(f"Element with UID {uid} not found. Re-scan required.")
 
-        if action_type == "click":
-            self._click(element)
-        elif action_type == "type":
-            self._type(element, payload)
-        elif action_type == "scroll":
-            self._scroll(element, payload)
-        else:
-            raise ValueError(f"Unknown action: {action_type}")
+            if action_type == "click":
+                self._click(element)
+            elif action_type == "type":
+                self._type(element, payload)
+            elif action_type == "scroll":
+                self._scroll(element, payload)
+            else:
+                raise ValueError(f"Unknown action: {action_type}")
 
-        return True
+            return True
+        finally:
+            self._release_modifiers()
+
+    def _release_modifiers(self):
+        """
+        Explicitly releases modifier keys to prevent 'stuck key' syndrome.
+        """
+        modifiers = ['ctrl', 'shift', 'alt', 'win', 'command', 'option', 'fn']
+        for key in modifiers:
+            try:
+                # Some keys might not exist on all platforms, pyautogui handles it or we ignore
+                self.pyautogui.keyUp(key)
+            except Exception:
+                pass
 
     def _click(self, element):
         # Must resolve element to coordinates

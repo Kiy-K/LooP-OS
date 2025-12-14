@@ -10,6 +10,7 @@ It handles permission checking and dispatches requests to the appropriate subsys
 import time
 import json
 import os
+import psutil
 from fyodoros.kernel import rootfs
 from fyodoros.kernel.users import UserManager
 from fyodoros.kernel.network import NetworkManager
@@ -18,6 +19,7 @@ from fyodoros.kernel.cloud.k8s_interface import KubernetesInterface
 from fyodoros.kernel.memory import MemoryManager
 from fyodoros.kernel.senses.ui_driver import UIDriver
 from fyodoros.kernel.senses.motor import Motor, StaleElementException
+from fyodoros.kernel.shell.launcher import AppLauncher
 
 
 class SyscallHandler:
@@ -50,6 +52,7 @@ class SyscallHandler:
         self.last_ui_scan = None
         self.motor = Motor()
         self.motor.start_kill_switch()
+        self.launcher = AppLauncher()
         self.sandbox = None
 
     def set_scheduler(self, scheduler):
@@ -306,7 +309,7 @@ class SyscallHandler:
 
     def sys_proc_list(self):
         """
-        List all running processes.
+        List all running processes (Microkernel).
 
         Returns:
             list[dict]: A list of process details.
@@ -325,6 +328,47 @@ class SyscallHandler:
                 }
             )
         return out
+
+    def sys_host_proc_list(self):
+        """
+        List processes running on the Host OS.
+        Uses psutil.
+        """
+        procs = []
+        try:
+            for p in psutil.process_iter(['pid', 'name', 'username']):
+                try:
+                    procs.append(p.info)
+                except (psutil.NoSuchProcess, psutil.AccessDenied):
+                    pass
+        except Exception as e:
+            return {"error": str(e)}
+        return procs
+
+    def sys_host_proc_kill(self, pid):
+        """
+        Kill a Host OS process by PID.
+        """
+        try:
+            p = psutil.Process(pid)
+            p.terminate()
+            return {"success": True, "message": f"Terminated PID {pid}"}
+        except psutil.NoSuchProcess:
+            return {"success": False, "error": "Process not found"}
+        except psutil.AccessDenied:
+            return {"success": False, "error": "Permission Denied"}
+        except Exception as e:
+            return {"success": False, "error": str(e)}
+
+    def sys_app_launch(self, app_name):
+        """
+        Launch a host application by name.
+        """
+        path = self.launcher.find_app(app_name)
+        if not path:
+             return {"success": False, "error": f"App '{app_name}' not found."}
+
+        return self.launcher.launch(path)
 
     # Network Control
     def sys_net_status(self):

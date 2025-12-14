@@ -219,4 +219,12 @@ class AgentSandbox:
                     return {"error": str(e)}
             return {"error": "Sandbox Core not available"}
 
+        elif action == "launch_app":
+            app_name = args[0]
+            try:
+                # Map to sys_app_launch
+                return self.sys.sys_app_launch(app_name)
+            except Exception as e:
+                return f"Error launching app: {e}"
+
         return f"Unknown or disallowed action: {action}"

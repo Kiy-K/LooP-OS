@@ -115,7 +115,11 @@ class UIDriver:
                 return {"error": f"Unsupported OS: {self.os_type}"}
         except Exception as e:
             logger.error(f"UI Scan failed: {e}")
-            return {"error": str(e)}
+            return {
+                "window": "Unknown",
+                "error": "Cannot read accessibility tree",
+                "children": []
+            }
 
     def _scan_windows(self):
         """

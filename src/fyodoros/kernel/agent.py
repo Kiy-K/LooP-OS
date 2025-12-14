@@ -160,7 +160,8 @@ class ReActAgent:
                 # Log Action
                 self.action_logger.log_action(task_id, loop_count, thought, action, args, result, duration, input_tokens+output_tokens)
 
-                print(f"[Agent] Execution Result: {result}")
+                display_result = str(result)[:500] + "... [Truncated]" if len(str(result)) > 500 else str(result)
+                print(f"[Agent] Execution Result: {display_result}")
                 self.history.append(f"Turn {loop_count} Result: {result}")
             else:
                 self.history.append(f"Turn {loop_count} Result: No action parsed.")
@@ -233,6 +234,7 @@ AVAILABLE ACTIONS:
 - sys_k8s_scale(name, replicas, namespace="default")
 - sys_k8s_delete(name, namespace="default")
 - sys_k8s_logs(pod_name, namespace="default")
+- launch_app(app_name) <-- Launch a host application by name (e.g., 'Launch Chrome').
 - done()  <-- Call this when the task is complete.
 
 Do not interact with system files (/kernel, /bin, /etc).
