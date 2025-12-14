@@ -92,7 +92,7 @@ def serve(args):
         print("          The Agent may crash or fail to execute tasks.")
         print("          Please pass keys via -e OPENAI_API_KEY=... or .env file.\n")
     else:
-        print("[Info] Required LLM API Keys detected.")
+        print(f"[Info] Detected API Keys: {', '.join(found_keys)}")
 
     print(f"Starting FyodorOS Server on {args.host}:{args.port}...")
     print(f"PORT: {args.port}")

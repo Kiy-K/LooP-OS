@@ -17,7 +17,7 @@ WORKDIR /app
 COPY . .
 
 # Install dependencies from requirements.txt
-RUN pip install -r requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt && pip install --no-cache-dir pybind11 nuitka
 
 # Step A: Compile C++ Extensions
 RUN python setup_extensions.py build_ext --inplace
