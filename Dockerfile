@@ -13,10 +13,12 @@ WORKDIR /app
 # Copy the entire repository
 COPY . .
 
-# Install dependencies
-RUN pip install -r requirements.txt
+# Install dependencies AND build tools explicitely
+# We chain commands to ensure pybind11 exists before the next step runs
+RUN pip install --no-cache-dir -r requirements.txt && \
+    pip install --no-cache-dir pybind11 nuitka
 
-# Step A: Compile C++ Extensions (CRITICAL: Must be before Nuitka)
+# Step A: Compile C++ Extensions (This failed before because pybind11 was missing)
 RUN python setup_extensions.py build_ext --inplace
 
 # Step B: Build the kernel (Nuitka)
@@ -35,8 +37,8 @@ WORKDIR /app
 RUN mkdir -p /home/fyodor/.fyodor && \
     chown -R fyodor:fyodor /home/fyodor
 
-# Copy the compiled binary (FIXED PATH)
-# removed "gui/" prefix
+# Copy the compiled binary
+# Note: Ensure scripts/build_kernel.py actually outputs to src-tauri/bin
 COPY --from=builder --chown=fyodor:fyodor /app/src-tauri/bin/fyodor-kernel /app/fyodor-kernel
 
 # Switch to non-root user
@@ -46,5 +48,4 @@ USER fyodor
 EXPOSE 8000
 
 # Entrypoint configuration
-# Uses JSON syntax to handle SIGTERM correctly
 ENTRYPOINT ["/app/fyodor-kernel", "serve", "--host", "0.0.0.0", "--port", "8000"]
