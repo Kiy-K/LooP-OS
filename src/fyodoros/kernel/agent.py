@@ -60,6 +60,14 @@ class ReActAgent:
         self.history = []
         self.todo_list = []
 
+    def inject_context(self, message: str):
+        """
+        Injects a context message into the agent's short-term memory (history).
+        Used when the environment changes asynchronously (e.g., wake signal).
+        """
+        print(f"[Agent] Context Injected: {message[:100]}...")
+        self.history.append(f"System Note: {message}")
+
     def run(self, task):
         """
         Executes the ReAct loop for a given task.
@@ -211,6 +219,8 @@ AVAILABLE ACTIONS:
 - write_file(path, content)
 - append_file(path, content)
 - run_process(app_name, args) <-- Use this to run apps: 'browser', 'calc', 'explorer', 'system', 'user'.
+- read_screen() <-- Scans the active window for UI elements. Returns a JSON DOM. Use this BEFORE interacting.
+- interact(uid, action, payload=None) <-- Interact with a UI element using its UID. Params: uid, action (click/type), payload.
 - sys_memory_store(content, metadata) <-- Store useful facts for later.
 - sys_memory_search(query) <-- Search for past information.
 - sys_memory_recall(query) <-- Same as search.

@@ -92,6 +92,9 @@ class Kernel:
         # Background Listener (Senses)
         self.listener = BackgroundListener(self.sys, self.io)
 
+        # Agent (Optional, persistent)
+        self.agent = None
+
         # Shell (initialized later)
         self.shell = None
 

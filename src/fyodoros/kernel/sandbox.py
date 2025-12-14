@@ -183,6 +183,28 @@ class AgentSandbox:
             else:
                 return f"Permission Denied: Agent cannot run '{prog}'. Allowed: {allowed_apps}"
 
+        elif action == "read_screen":
+            try:
+                # Maps to sys_ui_scan
+                return self.sys.sys_ui_scan()
+            except Exception as e:
+                return f"Error scanning screen: {e}"
+
+        elif action == "interact":
+            # Maps to sys_ui_act
+            # args: [uid, action, payload=None]
+            if len(args) < 2:
+                return "Error: interact requires uid and action type (e.g., 'click')"
+
+            uid = args[0]
+            act_type = args[1]
+            payload = args[2] if len(args) > 2 else None
+
+            try:
+                return self.sys.sys_ui_act(uid, act_type, payload)
+            except Exception as e:
+                return f"Error interacting: {e}"
+
         elif action == "run_nasm":
             # args[0] = source code
             # args[1] = optional output name (default: "nasm_prog")
