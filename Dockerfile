@@ -38,11 +38,8 @@ WORKDIR /app
 RUN mkdir -p /home/fyodor/.fyodor && \
     chown -R fyodor:fyodor /home/fyodor
 
-# Copy the compiled binary from the builder stage
-COPY --from=builder /app/gui/src-tauri/bin/fyodor-kernel /app/fyodor-kernel
-
-# Set ownership of the app directory
-RUN chown fyodor:fyodor /app/fyodor-kernel
+# Copy the compiled binary from the builder stage with correct ownership
+COPY --from=builder --chown=fyodor:fyodor /app/gui/src-tauri/bin/fyodor-kernel /app/fyodor-kernel
 
 # Switch to non-root user
 USER fyodor

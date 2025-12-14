@@ -83,6 +83,17 @@ def serve(args):
     """
     Start the FyodorOS API Server.
     """
+    # Pre-Flight Check for API Keys
+    api_keys = ["OPENAI_API_KEY", "ANTHROPIC_API_KEY", "GEMINI_API_KEY"]
+    found_keys = [key for key in api_keys if os.environ.get(key)]
+
+    if not found_keys:
+        print("\n[WARNING] No LLM API Keys detected (OPENAI_API_KEY, etc).")
+        print("          The Agent may crash or fail to execute tasks.")
+        print("          Please pass keys via -e OPENAI_API_KEY=... or .env file.\n")
+    else:
+        print(f"[Info] Detected API Keys: {', '.join(found_keys)}")
+
     print(f"Starting FyodorOS Server on {args.host}:{args.port}...")
     print(f"PORT: {args.port}")
     try:
