@@ -22,21 +22,25 @@ COPY . .
 RUN pip install --no-cache-dir pybind11 nuitka scons && \
     pip install --no-cache-dir -r requirements.txt
 
-# 4. CI/CD OPTIMIZATION: "Dumb Terminal" Mode
+# 4. CI/CD OPTIMIZATION: "Turbo Mode" 🚀
 # NUITKA_PROGRESS_BAR=0: Disables the interactive UI (Prevents log buffering hangs)
 # NUITKA_QUIET=0: Ensures errors are printed immediately
-# PYTHONUNBUFFERED=1: Forces Python to flush stdout immediately (No waiting for buffer)
+# PYTHONUNBUFFERED=1: Forces Python to flush stdout immediately
 ENV NUITKA_PROGRESS_BAR=0
 ENV NUITKA_QUIET=0
 ENV PYTHONUNBUFFERED=1
-# Limit to 2 jobs to prevent OOM on GitHub Runners (7GB RAM limit)
-ENV NUITKA_JOBS=2
+
+# UNLEASH THE HARDWARE: Use all 4 Cores
+ENV NUITKA_JOBS=4
+
+# VISUAL FEEDBACK: Show the C compiler working (No more silent hangs!)
+ENV NUITKA_SHOW_SCONS=1
 
 # Step A: Compile C++ Extensions
 RUN python setup_extensions.py build_ext --inplace
 
 # Step B: Build the kernel (Nuitka)
-# We use 'python -u' (unbuffered) as a second layer of defense to force logs
+# We use 'python -u' (unbuffered) as a second layer of defense
 RUN python -u scripts/build_kernel.py
 
 # Stage 2: Runtime
