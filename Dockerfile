@@ -2,8 +2,9 @@
 FROM python:3.10-slim AS builder
 
 # Install system dependencies for Nuitka compilation
+# CRITICAL FIX: Changed 'gcc' to 'build-essential' to include g++ for C++ files
 RUN apt-get update && apt-get install -y \
-    gcc \
+    build-essential \
     ccache \
     patchelf \
     && rm -rf /var/lib/apt/lists/*
@@ -18,11 +19,11 @@ COPY . .
 RUN pip install --no-cache-dir -r requirements.txt && \
     pip install --no-cache-dir pybind11 nuitka
 
-# Step A: Compile C++ Extensions (This failed before because pybind11 was missing)
+# Step A: Compile C++ Extensions
+# This previously failed because g++ was missing. Now it will work.
 RUN python setup_extensions.py build_ext --inplace
 
 # Step B: Build the kernel (Nuitka)
-# This outputs to /app/src-tauri/bin/fyodor-kernel
 RUN python scripts/build_kernel.py
 
 # Stage 2: Runtime
@@ -38,7 +39,6 @@ RUN mkdir -p /home/fyodor/.fyodor && \
     chown -R fyodor:fyodor /home/fyodor
 
 # Copy the compiled binary
-# Note: Ensure scripts/build_kernel.py actually outputs to src-tauri/bin
 COPY --from=builder --chown=fyodor:fyodor /app/src-tauri/bin/fyodor-kernel /app/fyodor-kernel
 
 # Switch to non-root user
