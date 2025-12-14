@@ -15,9 +15,10 @@ WORKDIR /app
 # Copy the entire repository
 COPY . .
 
-# Install dependencies AND build tools (pybind11 + Nuitka) in one go
-RUN pip install --no-cache-dir -r requirements.txt && \
-    pip install --no-cache-dir pybind11 nuitka
+# Install dependencies AND build tools (pybind11 + Nuitka)
+# CRITICAL: Install build tools FIRST to prime environment for extensions
+RUN pip install --no-cache-dir pybind11 nuitka && \
+    pip install --no-cache-dir -r requirements.txt
 
 # Step A: Compile C++ Extensions
 RUN python setup_extensions.py build_ext --inplace
