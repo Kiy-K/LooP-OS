@@ -83,12 +83,23 @@ def serve(args):
     """
     Start the FyodorOS API Server.
     """
-    print(f"Starting FyodorOS Server on port {args.port}...")
+    # Pre-Flight Check for API Keys
+    api_keys = ["OPENAI_API_KEY", "ANTHROPIC_API_KEY", "GEMINI_API_KEY"]
+    found_keys = [key for key in api_keys if os.environ.get(key)]
+
+    if not found_keys:
+        print("\n[WARNING] No LLM API Keys detected (OPENAI_API_KEY, etc).")
+        print("          The Agent may crash or fail to execute tasks.")
+        print("          Please pass keys via -e OPENAI_API_KEY=... or .env file.\n")
+    else:
+        print("[Info] Required LLM API Keys detected.")
+
+    print(f"Starting FyodorOS Server on {args.host}:{args.port}...")
     print(f"PORT: {args.port}")
     try:
         import uvicorn
         # We run the app defined in fyodoros.server.main
-        uvicorn.run("fyodoros.server.main:app", host="0.0.0.0", port=args.port, reload=False)
+        uvicorn.run("fyodoros.server.main:app", host=args.host, port=args.port, reload=False)
     except ImportError:
         print("Error: uvicorn is not installed. Please install it to use server mode.")
         sys.exit(1)
@@ -185,6 +196,7 @@ def main():
 
     # serve
     parser_serve = subparsers.add_parser("serve", help="Start the API server")
+    parser_serve.add_argument("--host", type=str, default="127.0.0.1", help="Host to bind server to")
     parser_serve.add_argument("--port", type=int, default=8000, help="Port to run server on")
     parser_serve.set_defaults(func=serve)
 

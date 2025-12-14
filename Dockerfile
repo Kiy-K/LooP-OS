@@ -16,11 +16,13 @@ WORKDIR /app
 # Copy the entire repository
 COPY . .
 
-# Install dependencies from pyproject.toml (including nuitka, ordered-set)
-# This ensures the environment matches the project definition
-RUN pip install .
+# Install dependencies from requirements.txt
+RUN pip install -r requirements.txt
 
-# Build the kernel
+# Step A: Compile C++ Extensions
+RUN python setup_extensions.py build_ext --inplace
+
+# Step B: Build the kernel (Nuitka)
 # The script outputs to gui/src-tauri/bin/fyodor-kernel
 RUN python scripts/build_kernel.py
 
@@ -36,11 +38,8 @@ WORKDIR /app
 RUN mkdir -p /home/fyodor/.fyodor && \
     chown -R fyodor:fyodor /home/fyodor
 
-# Copy the compiled binary from the builder stage
-COPY --from=builder /app/gui/src-tauri/bin/fyodor-kernel /app/fyodor-kernel
-
-# Set ownership of the app directory
-RUN chown fyodor:fyodor /app/fyodor-kernel
+# Copy the compiled binary from the builder stage with correct ownership
+COPY --from=builder --chown=fyodor:fyodor /app/gui/src-tauri/bin/fyodor-kernel /app/fyodor-kernel
 
 # Switch to non-root user
 USER fyodor
