@@ -36,28 +36,38 @@ class BackgroundListener:
         if self._running:
             return
 
+        self._running = True
+        self.thread = threading.Thread(target=self._run_loop, daemon=True)
+        self.thread.start()
+        logger.info("Background Listener started (Hotkeys: Alt+Space, Cmd+Space)")
+
+    def _run_loop(self):
+        """
+        Internal loop to run pynput listener.
+        """
+        import time
         try:
             from pynput import keyboard
         except ImportError:
             logger.warning("pynput not installed. Background Listener disabled.")
+            self._running = False
             return
 
-        self._running = True
-
         # Define hotkeys
-        # We use a string format compatible with pynput
         hotkeys = {
             '<alt>+<space>': self._on_wake,
             '<cmd>+<space>': self._on_wake # Mac friendly
         }
 
-        try:
-            self.listener = keyboard.GlobalHotKeys(hotkeys)
-            self.listener.start()
-            logger.info("Background Listener started (Hotkeys: Alt+Space, Cmd+Space)")
-        except Exception as e:
-            logger.error(f"Failed to start Background Listener: {e}")
-            self._running = False
+        while self._running:
+            try:
+                # pynput Listener blocks when using join(), so we run it here.
+                with keyboard.GlobalHotKeys(hotkeys) as h:
+                    self.listener = h
+                    h.join()
+            except Exception as e:
+                logger.error(f"Listener thread crashed: {e}. Restarting in 2s...")
+                time.sleep(2)
 
     def stop(self):
         """

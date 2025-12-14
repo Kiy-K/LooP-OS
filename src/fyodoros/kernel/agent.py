@@ -160,7 +160,8 @@ class ReActAgent:
                 # Log Action
                 self.action_logger.log_action(task_id, loop_count, thought, action, args, result, duration, input_tokens+output_tokens)
 
-                print(f"[Agent] Execution Result: {result}")
+                display_result = str(result)[:500] + "... [Truncated]" if len(str(result)) > 500 else str(result)
+                print(f"[Agent] Execution Result: {display_result}")
                 self.history.append(f"Turn {loop_count} Result: {result}")
             else:
                 self.history.append(f"Turn {loop_count} Result: No action parsed.")
