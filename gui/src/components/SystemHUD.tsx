@@ -35,30 +35,49 @@ export const SystemHUD: React.FC<SystemHUDProps> = ({
   }, [isConnected, ws]);
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 h-6 bg-background border-t border-border flex items-center justify-between px-2 text-[10px] font-mono select-none z-50">
+    <footer
+      className="fixed bottom-0 left-0 right-0 h-6 bg-background border-t border-border flex items-center justify-between px-2 text-[10px] font-mono z-50"
+      role="status"
+      aria-label="System Status"
+    >
       {/* Left: Version */}
-      <div className="flex items-center space-x-4 text-muted">
+      <div className="flex items-center space-x-4 text-muted" title={`Version ${version}`}>
         <span className="font-bold text-primary">{version}</span>
         {isConnected ? (
-           <span className="text-green-500">● CONNECTED</span>
+           <span className="text-green-500" title="System Connected" aria-label="System Connected">
+             <span aria-hidden="true">●</span> CONNECTED
+           </span>
         ) : (
-           <span className="text-red-500">○ DISCONNECTED</span>
+           <span className="text-red-500" title="System Disconnected" aria-label="System Disconnected">
+             <span aria-hidden="true">○</span> DISCONNECTED
+           </span>
         )}
       </div>
 
       {/* Center: Agent State */}
-      <div className="absolute left-1/2 transform -translate-x-1/2 font-medium tracking-widest uppercase text-primary">
+      <div
+        className="absolute left-1/2 transform -translate-x-1/2 font-medium tracking-widest uppercase text-primary"
+        aria-live="polite"
+        title="Current Agent Activity"
+        aria-label={`Agent status: ${agentState}`}
+      >
         [{agentState}]
       </div>
 
       {/* Right: System Stats */}
-      <div className="flex items-center space-x-3 text-muted">
-        <span>CPU: <span className="text-primary">{stats.cpu}%</span></span>
-        <span className="text-border">|</span>
-        <span>MEM: <span className="text-primary">{stats.memory}</span></span>
-        <span className="text-border">|</span>
-        <span>KERNEL: <span className={stats.kernel === 'ONLINE' ? 'text-green-500' : 'text-red-500'}>{stats.kernel}</span></span>
+      <div className="flex items-center space-x-3 text-muted" aria-label="System Resources">
+        <span title="CPU Usage">
+          CPU: <span className="text-primary">{stats.cpu}%</span>
+        </span>
+        <span className="text-border" aria-hidden="true">|</span>
+        <span title="Memory Usage">
+          MEM: <span className="text-primary">{stats.memory}</span>
+        </span>
+        <span className="text-border" aria-hidden="true">|</span>
+        <span title="Kernel Status">
+          KERNEL: <span className={stats.kernel === 'ONLINE' ? 'text-green-500' : 'text-red-500'}>{stats.kernel}</span>
+        </span>
       </div>
-    </div>
+    </footer>
   );
 };
