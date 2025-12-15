@@ -5,6 +5,7 @@ Virtual Root Filesystem.
 
 import os
 from pathlib import Path
+from functools import lru_cache
 
 # 1. FYODOR_ROOT constant
 FYODOR_ROOT = Path.home() / ".fyodor"
@@ -44,9 +45,22 @@ def get_resolved_root() -> Path:
     return _RESOLVED_ROOT
 
 
+@lru_cache(maxsize=1024)
 def resolve(virtual_path: str) -> Path:
     """
     Resolves a virtual path to a safe absolute path within FYODOR_ROOT.
+
+    PERFORMANCE: This function is cached to avoid repeated disk hits (stat/readlink)
+    for path resolution.
+
+    SECURITY NOTE:
+    Caching 'resolve' implies we assume the symlink topology of the resolved path
+    does not change frequently. In a single-agent environment where the agent
+    cannot create symlinks (no sys_symlink), this is generally safe.
+    However, if an external process modifies symlinks inside ~/.fyodor while
+    the agent is running, this cache might return a path that was safe
+    but is now unsafe (TOCTOU). Given the threat model (Agent inside sandbox),
+    this optimization is acceptable.
 
     Args:
         virtual_path (str): The virtual path (e.g., "/home/notes.txt").
