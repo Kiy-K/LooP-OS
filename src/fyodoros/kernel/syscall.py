@@ -20,6 +20,8 @@ from fyodoros.kernel.memory import MemoryManager
 from fyodoros.kernel.senses.ui_driver import UIDriver
 from fyodoros.kernel.senses.motor import Motor, StaleElementException
 from fyodoros.kernel.shell.launcher import AppLauncher
+from fyodoros.kernel.shell.supervisor import Supervisor
+from fyodoros.kernel.shell.window_manager import WindowManager
 
 
 class SyscallHandler:
@@ -52,7 +54,12 @@ class SyscallHandler:
         self.last_ui_scan = None
         self.motor = Motor()
         self.motor.start_kill_switch()
+
+        # Shell Capabilities
         self.launcher = AppLauncher()
+        self.supervisor = Supervisor()
+        self.window_manager = WindowManager()
+
         self.sandbox = None
 
     def set_scheduler(self, scheduler):
@@ -332,43 +339,38 @@ class SyscallHandler:
     def sys_host_proc_list(self):
         """
         List processes running on the Host OS.
-        Uses psutil.
+        Delegates to Supervisor.
         """
-        procs = []
-        try:
-            for p in psutil.process_iter(['pid', 'name', 'username']):
-                try:
-                    procs.append(p.info)
-                except (psutil.NoSuchProcess, psutil.AccessDenied):
-                    pass
-        except Exception as e:
-            return {"error": str(e)}
-        return procs
+        return self.supervisor.get_process_list()
 
     def sys_host_proc_kill(self, pid):
         """
         Kill a Host OS process by PID.
+        Delegates to Supervisor.
         """
-        try:
-            p = psutil.Process(pid)
-            p.terminate()
-            return {"success": True, "message": f"Terminated PID {pid}"}
-        except psutil.NoSuchProcess:
-            return {"success": False, "error": "Process not found"}
-        except psutil.AccessDenied:
-            return {"success": False, "error": "Permission Denied"}
-        except Exception as e:
-            return {"success": False, "error": str(e)}
+        return self.supervisor.kill_process(pid)
 
-    def sys_app_launch(self, app_name):
+    def sys_host_app_launch(self, app_name):
         """
         Launch a host application by name.
+        Delegates to AppLauncher.
         """
         path = self.launcher.find_app(app_name)
         if not path:
              return {"success": False, "error": f"App '{app_name}' not found."}
 
         return self.launcher.launch(path)
+
+    # Legacy alias, kept for compatibility if needed, but updated to use host syscall logic
+    def sys_app_launch(self, app_name):
+        return self.sys_host_app_launch(app_name)
+
+    def sys_host_win_focus(self, query):
+        """
+        Focus a host window by title or PID.
+        Delegates to WindowManager.
+        """
+        return self.window_manager.focus_window(query)
 
     # Network Control
     def sys_net_status(self):
