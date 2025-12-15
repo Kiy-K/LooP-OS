@@ -8,6 +8,7 @@ import os
 import subprocess
 import shutil
 import argparse
+import socket
 from pathlib import Path
 from fyodoros.kernel import boot, rootfs
 from fyodoros.shell.shell import Shell
@@ -94,12 +95,21 @@ def serve(args):
     else:
         print("[Info] At least one LLM API key detected.")
 
-    print(f"Starting FyodorOS Server on {args.host}:{args.port}...")
-    print(f"PORT: {args.port}")
+    # Dynamic Port Selection
+    port = args.port
+    if port == 0:
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+            s.bind((args.host, 0))
+            port = s.getsockname()[1]
+            # Socket is closed here, freeing the port
+
+    print(f"Starting FyodorOS Server on {args.host}:{port}...")
+    print(f"[Server] Listening on port: {port}")
+    print(f"PORT: {port}")
     try:
         import uvicorn
         # We run the app defined in fyodoros.server.main
-        uvicorn.run("fyodoros.server.main:app", host=args.host, port=args.port, reload=False)
+        uvicorn.run("fyodoros.server.main:app", host=args.host, port=port, reload=False)
     except ImportError:
         print("Error: uvicorn is not installed. Please install it to use server mode.")
         sys.exit(1)
