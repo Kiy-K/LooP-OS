@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FyodorOS Architecture v0.9.0</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%);
+            color: #e0e0e0;
+            padding: 40px 20px;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+        
+        h1 {
+            text-align: center;
+            color: #ffffff;
+            margin-bottom: 10px;
+            font-size: 2.5em;
+            text-shadow: 0 0 20px rgba(255, 255, 255, 0.3);
+        }
+        
+        .version {
+            text-align: center;
+            color: #888;
+            margin-bottom: 40px;
+            font-size: 1.1em;
+        }
+        
+        .architecture {
+            display: grid;
+            gap: 30px;
+        }
+        
+        .layer {
+            background: rgba(20, 20, 20, 0.6);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            border-radius: 12px;
+            padding: 25px;
+            backdrop-filter: blur(10px);
+        }
+        
+        .layer-title {
+            font-size: 1.4em;
+            color: #ffffff;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .layer-title::before {
+            content: '';
+            width: 4px;
+            height: 24px;
+            background: linear-gradient(180deg, #ffffff, #aaaaaa);
+            border-radius: 2px;
+        }
+        
+        .components {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 15px;
+        }
+        
+        .component {
+            background: rgba(10, 10, 10, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 8px;
+            padding: 18px;
+            transition: all 0.3s ease;
+        }
+        
+        .component:hover {
+            border-color: #ffffff;
+            box-shadow: 0 0 20px rgba(255, 255, 255, 0.2);
+            transform: translateY(-2px);
+        }
+        
+        .component-name {
+            font-weight: bold;
+            color: #ffffff;
+            margin-bottom: 8px;
+            font-size: 1.1em;
+        }
+        
+        .component-desc {
+            color: #b0b0b0;
+            font-size: 0.9em;
+            line-height: 1.5;
+        }
+        
+        .tech-stack {
+            display: inline-block;
+            background: rgba(255, 255, 255, 0.1);
+            color: #cccccc;
+            padding: 3px 10px;
+            border-radius: 12px;
+            font-size: 0.8em;
+            margin-top: 8px;
+            margin-right: 5px;
+        }
+        
+        .flow-arrows {
+            text-align: center;
+            padding: 15px 0;
+            color: #ffffff;
+            font-size: 2em;
+        }
+        
+        .highlight-new {
+            border-color: #888888;
+            background: rgba(255, 255, 255, 0.05);
+        }
+        
+        .highlight-new .component-name::after {
+            content: ' 🚀 NEW';
+            font-size: 0.7em;
+            color: #ffffff;
+        }
+        
+        .data-flow {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+        
+        .flow-item {
+            background: rgba(10, 10, 10, 0.6);
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #ffffff;
+        }
+        
+        .flow-label {
+            font-weight: bold;
+            color: #ffffff;
+            margin-bottom: 5px;
+        }
+        
+        .subsystem {
+            margin-top: 15px;
+            padding: 12px;
+            background: rgba(20, 20, 20, 0.5);
+            border-radius: 6px;
+            border-left: 3px solid #ffffff;
+        }
+        
+        .subsystem-title {
+            color: #ffffff;
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+        
+        ul {
+            list-style: none;
+            padding-left: 15px;
+        }
+        
+        ul li::before {
+            content: '→ ';
+            color: #ffffff;
+        }
+        
+        ul li {
+            color: #b0b0b0;
+            margin: 5px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>⚡ FyodorOS Architecture</h1>
+        <div class="version">Version 0.9.0 - The Sensory Update</div>
+        
+        <div class="architecture">
+            
+            <!-- User Interface Layer -->
+            <div class="layer">
+                <div class="layer-title">🖥️ User Interface Layer</div>
+                <div class="components">
+                    <div class="component">
+                        <div class="component-name">React Frontend (Shadcn/UI)</div>
+                        <div class="component-desc">
+                            Modern IDE-like interface for visualizing OS state, Agent actions, and system monitoring
+                        </div>
+                        <span class="tech-stack">TypeScript</span>
+                        <span class="tech-stack">React</span>
+                        <span class="tech-stack">Shadcn</span>
+                    </div>
+                    <div class="component">
+                        <div class="component-name">CLI Interface</div>
+                        <div class="component-desc">
+                            Command-line tools for headless operation, debugging, and automation
+                        </div>
+                        <span class="tech-stack">Typer</span>
+                        <span class="tech-stack">Rich</span>
+                    </div>
+                    <div class="component">
+                        <div class="component-name">Usage Dashboard (TUI)</div>
+                        <div class="component-desc">
+                            Real-time system monitoring with terminal-based visualization
+                        </div>
+                        <span class="tech-stack">Plugin</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="flow-arrows">↓</div>
+            
+            <!-- Application Layer -->
+            <div class="layer">
+                <div class="layer-title">🔌 Application & Runtime Layer</div>
+                <div class="components">
+                    <div class="component">
+                        <div class="component-name">Tauri Sidecar Manager</div>
+                        <div class="component-desc">
+                            Rust-based window management and IPC bridge between React UI and Python kernel
+                        </div>
+                        <span class="tech-stack">Rust</span>
+                        <span class="tech-stack">Tauri</span>
+                    </div>
+                    <div class="component">
+                        <div class="component-name">Plugin System</div>
+                        <div class="component-desc">
+                            Multi-language plugin support (Python, C++, Node.js) with auto-compilation and dependency management
+                        </div>
+                        <span class="tech-stack">C++ Registry</span>
+                        <span class="tech-stack">CMake</span>
+                        <div class="subsystem">
+                            <div class="subsystem-title">Built-in Plugins:</div>
+                            <ul>
+                                <li>GitHub Integration</li>
+                                <li>Slack Notifier</li>
+                                <li>Team Collaboration (RBAC)</li>
+                                <li>Usage Dashboard</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="component">
+                        <div class="component-name">NASM Runtime</div>
+                        <div class="component-desc">
+                            C++ FFI sandbox extension for native assembly execution
+                        </div>
+                        <span class="tech-stack">C++</span>
+                        <span class="tech-stack">NASM</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="flow-arrows">↓</div>
+            
+            <!-- Kernel Layer -->
+            <div class="layer">
+                <div class="layer-title">🧠 Kernel Layer (Nuitka Compiled)</div>
+                <div class="components">
+                    <div class="component">
+                        <div class="component-name">ReAct Agent Engine</div>
+                        <div class="component-desc">
+                            Built-in Reasoning + Acting cognitive loop with semantic memory integration
+                        </div>
+                        <span class="tech-stack">OpenAI</span>
+                        <span class="tech-stack">Anthropic</span>
+                        <span class="tech-stack">Gemini</span>
+                    </div>
+                    <div class="component">
+                        <div class="component-name">Service Manager</div>
+                        <div class="component-desc">
+                            DAG-based dependency management with 3-phase shutdown (Warning → Graceful → Force)
+                        </div>
+                        <span class="tech-stack">Topological Sort</span>
+                    </div>
+                    <div class="component">
+                        <div class="component-name">Syscall Handler</div>
+                        <div class="component-desc">
+                            Bridges in-memory and real filesystem, enforces sandbox boundaries
+                        </div>
+                        <div class="subsystem">
+                            <div class="subsystem-title">Core Syscalls:</div>
+                            <ul>
+                                <li>sys_ls, sys_delete, sys_mkdir</li>
+                                <li>sys_exec_nasm</li>
+                                <li>sys_docker_*, sys_k8s_*</li>
+                                <li>sys_memory_* (store/search/recall)</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="component">
+                        <div class="component-name">User Manager & RBAC</div>
+                        <div class="component-desc">
+                            Role-based access control with permission checking (admin/user roles)
+                        </div>
+                        <span class="tech-stack">Argon2</span>
+                    </div>
+                    <div class="component">
+                        <div class="component-name">Persistent Memory (ChromaDB)</div>
+                        <div class="component-desc">
+                            Semantic vector database for long-term agent memory and learning
+                        </div>
+                        <span class="tech-stack">ChromaDB</span>
+                        <span class="tech-stack">Vector Search</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="flow-arrows">↓</div>
+            
+            <!-- Sandbox & Security Layer -->
+            <div class="layer">
+                <div class="layer-title">🔒 Sandbox & Security Layer</div>
+                <div class="components">
+                    <div class="component">
+                        <div class="component-name">C++ Sandbox Core</div>
+                        <div class="component-desc">
+                            Native isolation layer enforcing virtual filesystem boundaries and preventing path traversal attacks
+                        </div>
+                        <span class="tech-stack">C++</span>
+                        <span class="tech-stack">FFI</span>
+                    </div>
+                    <div class="component">
+                        <div class="component-name">Network Layer</div>
+                        <div class="component-desc">
+                            Global network control with socket enforcement and RBAC integration
+                        </div>
+                        <span class="tech-stack">Monkeypatch</span>
+                    </div>
+                    <div class="component">
+                        <div class="component-name">RootFS Virtualization</div>
+                        <div class="component-desc">
+                            Strict virtualization of filesystem to ~/.fyodor/ with secure path resolution
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="flow-arrows">↓</div>
+            
+            <!-- Cloud & Integration Layer -->
+            <div class="layer">
+                <div class="layer-title">☁️ Cloud & Integration Layer</div>
+                <div class="components">
+                    <div class="component">
+                        <div class="component-name">Docker Interface</div>
+                        <div class="component-desc">
+                            Container management with syscall integration and Agent action support
+                        </div>
+                        <span class="tech-stack">Docker SDK</span>
+                    </div>
+                    <div class="component">
+                        <div class="component-name">Kubernetes Interface</div>
+                        <div class="component-desc">
+                            Orchestration control with cluster management capabilities
+                        </div>
+                        <span class="tech-stack">K8s Client</span>
+                    </div>
+                    <div class="component">
+                        <div class="component-name">Web Browser (Playwright)</div>
+                        <div class="component-desc">
+                            Agent-native browser returning structured JSON/DOM instead of plain text
+                        </div>
+                        <span class="tech-stack">Playwright</span>
+                    </div>
+                    <div class="component highlight-new">
+                        <div class="component-name">Vision & Motor Control</div>
+                        <div class="component-desc">
+                            Sensory input processing and physical control systems (v0.9.0 roadmap)
+                        </div>
+                        <span class="tech-stack">Coming Soon</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="flow-arrows">↓</div>
+            
+            <!-- System Layer -->
+            <div class="layer">
+                <div class="layer-title">💻 Host System Layer</div>
+                <div class="components">
+                    <div class="component">
+                        <div class="component-name">File System</div>
+                        <div class="component-desc">
+                            Sandboxed access to host filesystem with security boundaries
+                        </div>
+                    </div>
+                    <div class="component">
+                        <div class="component-name">Process Management</div>
+                        <div class="component-desc">
+                            Isolated process execution with sanitized environment variables
+                        </div>
+                        <span class="tech-stack">psutil</span>
+                    </div>
+                    <div class="component">
+                        <div class="component-name">Native Binaries</div>
+                        <div class="component-desc">
+                            Cross-platform compiled extensions (.so, .dll, .dylib)
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Data Flow -->
+            <div class="layer">
+                <div class="layer-title">📊 Key Data Flows</div>
+                <div class="data-flow">
+                    <div class="flow-item">
+                        <div class="flow-label">User → Agent</div>
+                        React UI → Tauri IPC → Nuitka Kernel → ReAct Engine
+                    </div>
+                    <div class="flow-item">
+                        <div class="flow-label">Agent → Action</div>
+                        ReAct Decision → Syscall Handler → Sandbox Verification → Execution
+                    </div>
+                    <div class="flow-item">
+                        <div class="flow-label">Memory Recall</div>
+                        Agent Task Start → ChromaDB Query → Semantic Search → Context Injection
+                    </div>
+                    <div class="flow-item">
+                        <div class="flow-label">Security Check</div>
+                        Syscall → RBAC Verify → Sandbox Core → Path Resolution → Execute/Deny
+                    </div>
+                    <div class="flow-item">
+                        <div class="flow-label">Service Lifecycle</div>
+                        Boot → DAG Sort → Startup → Runtime → 3-Phase Shutdown → LIFO Teardown
+                    </div>
+                    <div class="flow-item">
+                        <div class="flow-label">Plugin Execution</div>
+                        Load → Auto-Compile (C++/Node) → Register → Hook Events → Runtime
+                    </div>
+                </div>
+            </div>
+            
+        </div>
+    </div>
+</body>
+</html>
