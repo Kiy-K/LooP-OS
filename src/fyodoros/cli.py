@@ -99,7 +99,7 @@ def serve(args):
     port = args.port
     if port == 0:
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-            s.bind(('', 0))
+            s.bind((args.host, 0))
             port = s.getsockname()[1]
             # Socket is closed here, freeing the port
 
