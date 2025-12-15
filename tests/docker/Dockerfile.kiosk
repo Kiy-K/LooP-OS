@@ -1,0 +1,41 @@
+# Base image providing Web-accessible Ubuntu XFCE desktop
+FROM linuxserver/webtop:ubuntu-xfce
+
+# Prevent interactive prompts
+ENV DEBIAN_FRONTEND=noninteractive
+
+# 1. Install Dependencies
+# python3.10 is usually default in ubuntu 22.04 (jammy), checking/updating just in case
+RUN apt-get update && apt-get install -y \
+    python3 \
+    python3-pip \
+    python3-venv \
+    python3-tk \
+    libatk1.0-0 \
+    git \
+    build-essential \
+    && rm -rf /var/lib/apt/lists/*
+
+# 2. Copy Source Code
+WORKDIR /app/fyodoros
+COPY pyproject.toml .
+COPY src/ src/
+
+# 3. Install FyodorOS
+# We install in editable mode or standard mode. Standard is fine.
+RUN pip install .
+
+# 4. Copy Takeover Script
+COPY tests/docker/simulate_takeover.sh /usr/local/bin/simulate_takeover.sh
+RUN chmod +x /usr/local/bin/simulate_takeover.sh
+
+# 5. Environment Setup
+# Set DISPLAY for GUI apps (Webtop uses :1 usually)
+ENV DISPLAY=:1
+
+# 6. Execute Takeover Logic during build (so it starts immediately on run)
+# We run the script to setup the autostart entries
+RUN /usr/local/bin/simulate_takeover.sh
+
+# The base image ENTRYPOINT handles the s6-overlay and startup.
+# Our autostart script configured in step 6 will trigger 'fyodor start' when XFCE loads.

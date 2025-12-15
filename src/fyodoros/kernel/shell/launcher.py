@@ -8,7 +8,6 @@ Uses fuzzy matching to resolve user queries like "open code" to "code.exe".
 import os
 import sys
 import platform
-import shutil
 import subprocess
 import difflib
 import logging
@@ -32,7 +31,7 @@ class AppLauncher:
         """
         self.apps_cache = {}
 
-        # 1. Scan PATH
+        # 1. Scan PATH (Basic CLI tools)
         path_dirs = os.environ.get("PATH", "").split(os.pathsep)
         for d in path_dirs:
             if not os.path.exists(d):
@@ -62,7 +61,9 @@ class AppLauncher:
         """
         Scans Start Menu folders.
         """
+        # Common Start Menu (All Users)
         common_start = Path(os.environ.get("ProgramData", "C:\\ProgramData")) / "Microsoft/Windows/Start Menu/Programs"
+        # User Start Menu
         user_start = Path(os.environ.get("APPDATA", "")) / "Microsoft/Windows/Start Menu/Programs"
 
         for root_dir in [common_start, user_start]:
@@ -72,14 +73,14 @@ class AppLauncher:
                 for f in files:
                     if f.lower().endswith(".lnk"):
                         name = f[:-4].lower() # Remove .lnk
-                        # We store the LNK path, letting Windows shell execute it
+                        # Store the LNK path, letting Windows shell execute it
                         self.apps_cache[name] = os.path.join(root, f)
 
     def _scan_macos_apps(self):
         """
-        Scans /Applications.
+        Scans /Applications and /System/Applications.
         """
-        app_dirs = ["/Applications", os.path.expanduser("~/Applications")]
+        app_dirs = ["/Applications", "/System/Applications", os.path.expanduser("~/Applications")]
         for d in app_dirs:
             if not os.path.exists(d):
                 continue
@@ -102,14 +103,9 @@ class AppLauncher:
             try:
                 for f in os.listdir(d):
                     if f.endswith(".desktop"):
-                        name = f[:-8].lower()
-                        # Parsing .desktop files to get true Exec is better,
-                        # but for now we might rely on `gtk-launch` or simply matching the name
-                        # and assuming `gtk-launch name` works.
-                        # Or we store the full path to .desktop and use `gtk-launch` on it?
-                        # `dex` or `gtk-launch` takes the desktop ID (filename without extension).
-
-                        # Simplified: Store just the name as the "path" to be used with gtk-launch
+                        name = f[:-8].lower() # Remove .desktop
+                        # For Linux, we store just the name (desktop ID)
+                        # to be used with `gtk-launch`
                         self.apps_cache[name] = name
             except Exception:
                 pass
@@ -141,16 +137,18 @@ class AppLauncher:
         """
         try:
             if self.os_type == "Windows":
-                # os.startfile is best for .lnk and general execution on Windows
+                # os.startfile is the correct way to launch .lnk files on Windows
                 os.startfile(app_path)
             elif self.os_type == "Darwin":
+                # open -a might be better if it's just a name, but for paths "open" works
                 subprocess.Popen(["open", app_path])
             elif self.os_type == "Linux":
-                # Check if it's a .desktop ID (no slashes) or a path
+                # If it's a path (contains /), run it. If not, assume it's a desktop ID for gtk-launch
                 if "/" not in app_path:
                      subprocess.Popen(["gtk-launch", app_path])
                 else:
                     subprocess.Popen([app_path], start_new_session=True)
+
             return {"success": True, "message": f"Launched {app_path}"}
         except Exception as e:
             logger.error(f"Failed to launch {app_path}: {e}")
