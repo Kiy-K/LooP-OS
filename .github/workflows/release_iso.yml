@@ -1,0 +1,55 @@
+name: Release ISO
+
+on:
+  release:
+    types: [created]
+
+jobs:
+  build-iso:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      packages: read
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Free Disk Space
+        run: |
+          echo "Freeing disk space..."
+          sudo rm -rf /usr/local/lib/android
+          sudo rm -rf /usr/share/dotnet
+          sudo rm -rf /usr/share/swift
+          sudo rm -rf /opt/ghc
+          echo "Disk space status:"
+          df -h
+
+      - name: Build Docker Builder Image
+        run: |
+          docker build -t fyodor-builder tools/iso
+
+      - name: Build ISO
+        run: |
+          # Define output filename based on tag
+          ISO_NAME="fyodoros-${{ github.ref_name }}.iso"
+          echo "Building $ISO_NAME..."
+
+          # Create output directory
+          mkdir -p output
+
+          # Run the builder container
+          # We mount the workspace to /input (read-only theoretically, but copying from it)
+          # We mount the output directory to /output
+          docker run --privileged \
+            -v ${{ github.workspace }}:/input \
+            -v ${{ github.workspace }}/output:/output \
+            fyodor-builder \
+            /input \
+            /output/$ISO_NAME
+
+      - name: Upload ISO to Release
+        uses: softprops/action-gh-release@v1
+        if: startsWith(github.ref, 'refs/tags/')
+        with:
+          files: output/fyodoros-${{ github.ref_name }}.iso
