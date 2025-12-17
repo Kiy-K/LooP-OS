@@ -25,9 +25,33 @@ echo "Configuring live-build..."
 lb config \
     --distribution bookworm \
     --architectures amd64 \
+    --linux-flavours amd64 \
     --archive-areas "main contrib non-free-firmware" \
     --bootappend-live "boot=live components quiet splash" \
-    --debian-installer live
+    --binary-images iso-hybrid \
+    --bootloader syslinux
+
+# Prepare package lists
+echo "Creating package list..."
+cat <<EOF > config/package-lists/fyodor.list.chroot
+live-boot
+live-config
+live-config-systemd
+syslinux
+syslinux-utils
+isolinux
+python3-pip
+python3-full
+build-essential
+python3-dev
+git
+patchelf
+scons
+curl
+wget
+xorg
+openbox
+EOF
 
 # Prepare directory structure for chroot inclusions
 echo "Preparing chroot includes..."
@@ -52,21 +76,7 @@ echo "FyodorOS Installation Hook: Starting..."
 # 1. Update package lists
 apt-get update
 
-# 2. Install Python and build dependencies
-# We need these to compile extensions and run pip
-# We also include standard system utilities that might be useful
-apt-get install -y \
-    python3-pip \
-    python3-full \
-    build-essential \
-    python3-dev \
-    git \
-    patchelf \
-    scons \
-    curl \
-    wget
-
-# 3. Install FyodorOS
+# 2. Install FyodorOS
 echo "Installing FyodorOS package..."
 cd /opt/fyodoros
 
@@ -77,7 +87,7 @@ pip install pybind11 nuitka scons --break-system-packages
 # Install the package itself
 pip install . --break-system-packages
 
-# 4. Cleanup to reduce ISO size
+# 3. Cleanup to reduce ISO size
 apt-get clean
 
 echo "FyodorOS Installation Hook: Complete."
@@ -85,12 +95,41 @@ EOF
 
 chmod +x "$HOOK_FILE"
 
+# Configure Openbox Kiosk Mode
+echo "Configuring Kiosk Autostart..."
+mkdir -p config/includes.chroot/etc/xdg/openbox
+
+cat <<EOF > config/includes.chroot/etc/xdg/openbox/autostart
+# Disable power management
+xset -dpms
+xset s off
+xset s noblank
+
+# Launch FyodorOS in a loop (Crash Recovery)
+while true; do
+    /usr/local/bin/fyodor start
+    sleep 1
+done &
+EOF
+
+chmod +x config/includes.chroot/etc/xdg/openbox/autostart
+
 # Build the ISO
 echo "Building ISO image... This may take a while."
 lb build
 
-# Verify and move the artifact
+# Post-process verification
+echo "Post-processing ISO..."
 if [ -f "live-image-amd64.hybrid.iso" ]; then
+    echo "Running isohybrid utility..."
+    if command -v isohybrid >/dev/null 2>&1; then
+        isohybrid --partok live-image-amd64.hybrid.iso
+        echo "Hybrid MBR written successfully."
+    else
+        echo "ERROR: 'isohybrid' command not found! ISO will not be bootable."
+        exit 1
+    fi
+
     echo "Build successful. Moving artifact to $OUTPUT_FILE..."
     # Ensure output directory exists (it should, as it's a mount)
     mkdir -p "$(dirname "$OUTPUT_FILE")"

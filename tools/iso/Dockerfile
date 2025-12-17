@@ -9,6 +9,11 @@ RUN apt-get update && apt-get install -y \
     xorriso \
     isolinux \
     syslinux-common \
+    syslinux-utils \
+    grub-pc-bin \
+    grub-efi-amd64-bin \
+    mtools \
+    dosfstools \
     git \
     && rm -rf /var/lib/apt/lists/*
 
