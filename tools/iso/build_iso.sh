@@ -95,6 +95,25 @@ EOF
 
 chmod +x "$HOOK_FILE"
 
+# Configure Openbox Kiosk Mode
+echo "Configuring Kiosk Autostart..."
+mkdir -p config/includes.chroot/etc/xdg/openbox
+
+cat <<EOF > config/includes.chroot/etc/xdg/openbox/autostart
+# Disable power management
+xset -dpms
+xset s off
+xset s noblank
+
+# Launch FyodorOS in a loop (Crash Recovery)
+while true; do
+    /usr/local/bin/fyodor start
+    sleep 1
+done &
+EOF
+
+chmod +x config/includes.chroot/etc/xdg/openbox/autostart
+
 # Build the ISO
 echo "Building ISO image... This may take a while."
 lb build
@@ -102,8 +121,14 @@ lb build
 # Post-process verification
 echo "Post-processing ISO..."
 if [ -f "live-image-amd64.hybrid.iso" ]; then
-    echo "Running isohybrid..."
-    isohybrid live-image-amd64.hybrid.iso
+    echo "Running isohybrid utility..."
+    if command -v isohybrid >/dev/null 2>&1; then
+        isohybrid --partok live-image-amd64.hybrid.iso
+        echo "Hybrid MBR written successfully."
+    else
+        echo "ERROR: 'isohybrid' command not found! ISO will not be bootable."
+        exit 1
+    fi
 
     echo "Build successful. Moving artifact to $OUTPUT_FILE..."
     # Ensure output directory exists (it should, as it's a mount)
