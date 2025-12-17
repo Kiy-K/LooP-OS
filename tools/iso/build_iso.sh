@@ -38,6 +38,7 @@ live-boot
 live-config
 live-config-systemd
 syslinux
+syslinux-utils
 isolinux
 python3-pip
 python3-full
