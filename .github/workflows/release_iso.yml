@@ -1,52 +1,47 @@
-name: Release ISO
+name: Build FyodorOS ISO
 
 on:
   release:
-    types: [created]
+    types: [published]
+  workflow_dispatch: # Adds a "Run Workflow" button for manual testing
 
 jobs:
-  build-iso:
+  build_iso:
+    name: Build Live ISO
     runs-on: ubuntu-latest
     permissions:
-      contents: write
-      packages: read
+      contents: write # Critical for uploading the ISO back to the release
 
     steps:
-      - name: Checkout repository
+      - name: Checkout Code
         uses: actions/checkout@v4
 
+      # CRITICAL: Free up disk space. Live-build needs ~15GB+. 
+      # Standard runners only have ~14GB free. This action clears ~30GB.
       - name: Free Disk Space
-        run: |
-          echo "Freeing disk space..."
-          sudo rm -rf /usr/local/lib/android
-          sudo rm -rf /usr/share/dotnet
-          sudo rm -rf /usr/share/swift
-          sudo rm -rf /opt/ghc
-          echo "Disk space status:"
-          df -h
+        uses: jlumbroso/free-disk-space@main
+        with:
+          tool-cache: true
+          android: true
+          dotnet: true
+          haskell: true
+          large-packages: true
+          docker-images: false # Keep Docker, we need it!
+          swap-storage: true
 
-      - name: Build Docker Builder Image
+      - name: Build Builder Container
         run: |
-          docker build -t fyodor-builder tools/iso
+          docker build -t fyodor-builder tools/iso/
 
-      - name: Build ISO
+      - name: Run Build (Privileged)
         run: |
-          # Define output filename based on tag
-          ISO_NAME="fyodoros-${{ github.ref_name }}.iso"
-          echo "Building $ISO_NAME..."
-
-          # Create output directory
           mkdir -p output
-
-          # Run the builder container
-          # We mount the workspace to /input (read-only theoretically, but copying from it)
-          # We mount the output directory to /output
+          # We run --privileged so the container can mount loopback devices for ISO creation
           docker run --privileged \
             -v ${{ github.workspace }}:/input \
             -v ${{ github.workspace }}/output:/output \
             fyodor-builder \
-            /input \
-            /output/$ISO_NAME
+            /input /output/fyodoros-${{ github.ref_name }}.iso
 
       - name: Upload ISO to Release
         uses: softprops/action-gh-release@v1
