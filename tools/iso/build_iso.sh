@@ -49,6 +49,11 @@ patchelf
 scons
 curl
 wget
+python3-tk
+libwebkit2gtk-4.0-37
+libwebkit2gtk-4.1-0
+xterm
+htop
 xorg
 openbox
 lightdm
@@ -104,11 +109,8 @@ xset -dpms
 xset s off
 xset s noblank
 
-# Launch FyodorOS in a loop (Crash Recovery)
-while true; do
-    /usr/local/bin/fyodor start
-    sleep 1
-done &
+# Launch FyodorOS in a debug terminal (Alpha/Debug Mode)
+xterm -maximized -e "/usr/local/bin/fyodor start; bash" &
 EOF
 
 chmod +x config/includes.chroot/etc/xdg/openbox/autostart
