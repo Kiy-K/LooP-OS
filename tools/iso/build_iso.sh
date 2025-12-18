@@ -52,7 +52,8 @@ wget
 python3-tk
 libwebkit2gtk-4.0-37
 libwebkit2gtk-4.1-0
-xterm
+rxvt-unicode
+x11-utils
 htop
 xorg
 openbox
@@ -109,8 +110,9 @@ xset -dpms
 xset s off
 xset s noblank
 
-# Launch FyodorOS in a debug terminal (Alpha/Debug Mode)
-xterm -maximized -e "/usr/local/bin/fyodor start; bash" &
+# Launch FyodorOS in urxvt debug terminal
+# -e runs the command. sh -c allows us to chain commands.
+urxvt -geometry 120x40 -e sh -c "/usr/local/bin/fyodor start; bash" &
 EOF
 
 chmod +x config/includes.chroot/etc/xdg/openbox/autostart
