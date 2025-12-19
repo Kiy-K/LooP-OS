@@ -92,6 +92,10 @@ cd /opt/fyodoros
 # Install build dependencies
 pip install pybind11 nuitka scons --break-system-packages
 
+# CRITICAL FIX: Force compatible urllib3 for kubernetes client
+# The python-kubernetes library often lags behind urllib3 updates
+pip install "urllib3<2.4.0" --break-system-packages
+
 # Hack: Remove EXTERNALLY-MANAGED to allow legacy setup.py install
 # Debian Bookworm prevents direct setup.py install without this or --break-system-packages (which setup.py doesn't support)
 rm -f /usr/lib/python*/EXTERNALLY-MANAGED
