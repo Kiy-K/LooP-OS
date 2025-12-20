@@ -63,6 +63,13 @@ class ReActAgent:
         self.todo_list = []
         self.extra_tools = {}
 
+        # Initialize Plugins (if available)
+        if hasattr(self.sys, 'plugin_loader') and self.sys.plugin_loader:
+             try:
+                 self.sys.plugin_loader.load_all_plugins(self)
+             except Exception as e:
+                 print(f"[Agent] Failed to load plugins: {e}")
+
     def register_tool(self, func, description_override=None):
         """
         Registers a new tool for the agent to use.

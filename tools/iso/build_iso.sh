@@ -21,6 +21,7 @@ echo "Cleaning previous builds..."
 lb clean
 
 # Configure the live system for Ubuntu 22.04 (Jammy)
+# UPDATED: Using GRUB-EFI as bootloader
 echo "Configuring live-build..."
 lb config \
     --mode ubuntu \
@@ -32,8 +33,7 @@ lb config \
     --mirror-binary "http://archive.ubuntu.com/ubuntu" \
     --bootappend-live "boot=live components quiet splash" \
     --binary-images iso-hybrid \
-    --bootloader syslinux \
-    --syslinux-theme ubuntu
+    --bootloader grub-efi
 
 # Prepare package lists
 echo "Creating package list..."
@@ -42,11 +42,12 @@ cat <<EOF > config/package-lists/fyodor.list.chroot
 live-boot
 live-config
 live-config-systemd
-syslinux
-syslinux-utils
-syslinux-themes-ubuntu
-syslinux-themes-debian
-isolinux
+# GRUB / EFI Support
+grub-efi-amd64-bin
+grub-pc-bin
+mtools
+dosfstools
+# Python / Build
 python3-pip
 python3-full
 build-essential
@@ -59,6 +60,7 @@ patchelf
 scons
 curl
 wget
+# GUI / X11
 python3-tk
 libwebkit2gtk-4.0-37
 libwebkit2gtk-4.1-0
@@ -105,15 +107,10 @@ pip install pybind11 nuitka scons --break-system-packages
 pip install "urllib3<2.4.0" --break-system-packages
 
 # Hack: Remove EXTERNALLY-MANAGED to allow legacy setup.py install
-# Debian Bookworm prevents direct setup.py install without this or --break-system-packages (which setup.py doesn't support)
-# Ubuntu 23.04+ enforces this strictly, 22.04 (Jammy) is transitional but good to check.
 rm -f /usr/lib/python*/EXTERNALLY-MANAGED
 
-# 2a. Force C++ Compilation (Critical Fix)
+# 2a. Force C++ Compilation
 echo "Building and installing C++ extensions..."
-# We explicitly run the extension setup script first
-# NOTE: Removed --break-system-packages because setup.py does not support it.
-# The 'rm EXTERNALLY-MANAGED' hack above allows this to run correctly.
 if [ -f "setup_extensions.py" ]; then
     echo "Found setup_extensions.py, executing..."
     python3 setup_extensions.py install
@@ -130,15 +127,13 @@ echo "Verifying C++ extensions..."
 python3 -c "import sandbox_core; print(f'sandbox_core found: {sandbox_core}')" || echo "WARNING: sandbox_core import failed!"
 python3 -c "import registry_core; print(f'registry_core found: {registry_core}')" || echo "WARNING: registry_core import failed!"
 
-# 3. Seed Default Configurations (Critical Fix for Live User)
+# 3. Seed Default Configurations
 echo "Seeding default configurations..."
-# Run init to generate the config structure in a temporary location
 export HOME=/tmp/seed_home
 mkdir -p \$HOME
 /usr/local/bin/fyodor init
 
 # Move the generated .fyodor folder to /etc/skel
-# This ensures every new user (including the Live User) gets it on login
 mkdir -p /etc/skel
 cp -r /tmp/seed_home/.fyodor /etc/skel/
 
@@ -164,7 +159,6 @@ xset s off
 xset s noblank
 
 # Launch FyodorOS in urxvt debug terminal
-# -e runs the command. sh -c allows us to chain commands.
 urxvt -geometry 120x40 -e sh -c "/usr/local/bin/fyodor start; bash" &
 EOF
 
@@ -175,23 +169,17 @@ echo "Building ISO image... This may take a while."
 lb build
 
 # Post-process verification
+# Note: lb build with iso-hybrid + grub-efi usually handles generation properly.
+# We just check existence and move.
 echo "Post-processing ISO..."
-if [ -f "live-image-amd64.hybrid.iso" ]; then
-    echo "Running isohybrid utility..."
-    # --partok is safer for USB booting compatibility
-    if command -v isohybrid >/dev/null 2>&1; then
-        isohybrid --partok live-image-amd64.hybrid.iso
-        echo "Hybrid MBR written successfully."
-    else
-        echo "ERROR: 'isohybrid' command not found! ISO will not be bootable."
-        exit 1
-    fi
-    
-    echo "Build successful. Moving artifact to $OUTPUT_FILE..."
-    mkdir -p "$(dirname "$OUTPUT_FILE")"
-    cp live-image-amd64.hybrid.iso "$OUTPUT_FILE"
-    echo "ISO created successfully at: $OUTPUT_FILE"
+# live-build output name might vary, check common patterns
+ISO_NAME=$(ls live-image-*.iso 2>/dev/null | head -n 1)
 
+if [ -n "$ISO_NAME" ] && [ -f "$ISO_NAME" ]; then
+    echo "Build successful. Moving artifact $ISO_NAME to $OUTPUT_FILE..."
+    mkdir -p "$(dirname "$OUTPUT_FILE")"
+    cp "$ISO_NAME" "$OUTPUT_FILE"
+    echo "ISO created successfully at: $OUTPUT_FILE"
     ls -lh "$OUTPUT_FILE"
 else
     echo "Error: ISO file was not generated!"
