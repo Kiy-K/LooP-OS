@@ -32,7 +32,8 @@ lb config \
     --mirror-binary "http://archive.ubuntu.com/ubuntu" \
     --bootappend-live "boot=live components quiet splash" \
     --binary-images iso-hybrid \
-    --bootloader syslinux
+    --bootloader syslinux \
+    --syslinux-theme ubuntu
 
 # Prepare package lists
 echo "Creating package list..."
@@ -43,6 +44,8 @@ live-config
 live-config-systemd
 syslinux
 syslinux-utils
+syslinux-themes-ubuntu
+syslinux-themes-debian
 isolinux
 python3-pip
 python3-full
