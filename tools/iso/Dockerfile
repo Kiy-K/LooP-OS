@@ -1,7 +1,9 @@
-FROM debian:bookworm
+FROM ubuntu:jammy
 
 ENV DEBIAN_FRONTEND=noninteractive
 
+# Install build dependencies
+# We switched to Ubuntu base to ensure ubuntu-keyring is present natively
 RUN apt-get update && apt-get install -y \
     live-build \
     debootstrap \
@@ -15,6 +17,10 @@ RUN apt-get update && apt-get install -y \
     mtools \
     dosfstools \
     git \
+    curl \
+    ubuntu-keyring \
+    gnupg \
+    ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /build
