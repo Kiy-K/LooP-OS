@@ -2,6 +2,7 @@ FROM ubuntu:jammy
 
 ENV DEBIAN_FRONTEND=noninteractive
 
+# Last Updated: 2025-05-24 (Cache Buster)
 # Install build dependencies
 # We switched to Ubuntu base to ensure ubuntu-keyring is present natively
 RUN apt-get update && apt-get install -y \

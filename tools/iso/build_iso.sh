@@ -1,6 +1,18 @@
 #!/bin/bash
 set -e
 
+# FORCE PATH EXPORT
+export PATH=$PATH:/usr/bin:/usr/sbin
+
+echo "=== PRE-FLIGHT CHECK ==="
+echo "PATH is: $PATH"
+echo "Checking for isohybrid..."
+which isohybrid || echo "CRITICAL: isohybrid not found in PATH!"
+ls -l /usr/bin/isohybrid || echo "CRITICAL: isohybrid binary missing!"
+echo "Checking for xorriso..."
+which xorriso || echo "WARNING: xorriso not found!"
+echo "========================"
+
 INPUT_DIR="$1"
 OUTPUT_FILE="$2"
 
@@ -47,6 +59,7 @@ grub-efi-amd64-bin
 grub-pc-bin
 mtools
 dosfstools
+syslinux-utils
 # Python / Build
 python3-pip
 python3-full
