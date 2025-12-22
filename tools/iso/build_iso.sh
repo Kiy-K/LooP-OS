@@ -10,11 +10,6 @@ echo "===================================="
 # FORCE PATH EXPORT
 export PATH=$PATH:/usr/bin:/usr/sbin
 
-echo "=== PRE-FLIGHT CHECK ==="
-echo "Checking for xorriso..."
-which xorriso || echo "WARNING: xorriso not found (Required for GRUB ISO)!"
-echo "========================"
-
 INPUT_DIR="$1"
 OUTPUT_FILE="$2"
 
@@ -35,7 +30,9 @@ echo "Cleaning previous builds..."
 lb clean
 
 # Configure the live system
-# CRITICAL: Using GRUB-EFI. Ubuntu 22.04 handles hybrid ISOs via xorriso natively.
+# CRITICAL CHANGE: Changed --binary-images iso-hybrid to --binary-images iso
+# With grub-efi, xorriso handles the hybrid boot structures natively.
+# Passing iso-hybrid forces live-build to look for the 'isohybrid' utility, which is causing failures.
 echo "Configuring live-build..."
 lb config \
     --mode ubuntu \
@@ -46,7 +43,7 @@ lb config \
     --mirror-bootstrap "http://archive.ubuntu.com/ubuntu" \
     --mirror-binary "http://archive.ubuntu.com/ubuntu" \
     --bootappend-live "boot=live components quiet splash" \
-    --binary-images iso-hybrid \
+    --binary-images iso \
     --bootloader grub-efi
 
 # Prepare package lists
@@ -183,8 +180,7 @@ lb build
 
 # Post-process verification
 echo "Post-processing ISO..."
-# Note: We rely on lb build (using xorriso) to handle the hybrid boot record.
-# We do NOT run 'isohybrid' manually for GRUB images.
+# live-build output name might vary, check common patterns
 ISO_NAME=$(ls live-image-*.iso 2>/dev/null | head -n 1)
 
 if [ -n "$ISO_NAME" ] && [ -f "$ISO_NAME" ]; then
