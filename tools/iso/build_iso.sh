@@ -1,6 +1,12 @@
 #!/bin/bash
 set -e
 
+echo "=== FORCING RUNTIME DEPENDENCIES ==="
+# GitHub Actions cache might be stale. We force install critical tools here.
+apt-get update
+apt-get install -y syslinux-utils xorriso grub-pc-bin grub-efi-amd64-bin mtools dosfstools
+echo "===================================="
+
 # FORCE PATH EXPORT
 export PATH=$PATH:/usr/bin:/usr/sbin
 
