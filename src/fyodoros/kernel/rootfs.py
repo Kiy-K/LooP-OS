@@ -8,7 +8,8 @@ from pathlib import Path
 from functools import lru_cache
 
 # 1. FYODOR_ROOT constant
-FYODOR_ROOT = Path.home() / ".fyodor"
+# Renamed to .loop as part of Project Phoenix (LooP OS)
+FYODOR_ROOT = Path.home() / ".loop"
 # Cache the resolved root path to avoid repeated syscalls
 _RESOLVED_ROOT = None
 

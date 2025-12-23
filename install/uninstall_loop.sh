@@ -2,8 +2,8 @@
 set -e
 
 # ----------------------------------------------------------------------
-# FYODOROS KIOSK UNINSTALLER
-# Reverts changes made by setup_kiosk.sh
+# LOOP OS UNINSTALLER
+# Reverts changes made by setup_loop.sh
 # ----------------------------------------------------------------------
 
 if [ "$EUID" -ne 0 ]; then
@@ -11,14 +11,14 @@ if [ "$EUID" -ne 0 ]; then
   exit 1
 fi
 
-echo "🗑️  Uninstalling FyodorOS Kiosk..."
+echo "🗑️  Uninstalling LooP OS..."
 
 # 1. REMOVE ARTIFACTS
-echo "   Removing /opt/fyodoros..."
-rm -rf /opt/fyodoros
+echo "   Removing /opt/loop..."
+rm -rf /opt/loop
 
-echo "   Removing /usr/local/bin/fyodor..."
-rm -f /usr/local/bin/fyodor
+echo "   Removing /usr/local/bin/loop..."
+rm -f /usr/local/bin/loop
 
 # 2. RESTORE OPENBOX CONFIG
 OPENBOX_AUTOSTART="/etc/xdg/openbox/autostart"
@@ -32,22 +32,27 @@ fi
 
 # 3. RESTORE LIGHTDM CONFIG
 echo "   Removing LightDM configuration..."
-rm -f /etc/lightdm/lightdm.conf.d/50-fyodor.conf
+rm -f /etc/lightdm/lightdm.conf.d/50-loop.conf
 
 # 4. REVERT DISPLAY MANAGER
 # Check if GDM3 is available (common Ubuntu default)
 if [ -f "/usr/sbin/gdm3" ]; then
     echo "   Reverting to GDM3..."
     echo "/usr/sbin/gdm3" > /etc/X11/default-display-manager
-    systemctl disable lightdm
-    systemctl enable gdm3
+
+    # Attempt to use systemctl only if running
+    if systemctl is-system-running 2>/dev/null; then
+        systemctl disable lightdm
+        systemctl enable gdm3
+    else
+         # Fallback for chroot/offline
+         ln -sf /lib/systemd/system/gdm3.service /etc/systemd/system/display-manager.service
+    fi
 else
     echo "⚠️  GDM3 not found. Leaving LightDM enabled but unconfigured."
-    echo "   You may be presented with a login screen on reboot."
 fi
 
-# NOTE: We intentionally DO NOT remove the 'fyodor' user or their home directory
+# NOTE: We intentionally DO NOT remove the 'loop' user or their home directory
 # to preserve user data and avoid accidental deletion of important files.
 
 echo "✅ Uninstall Complete."
-echo "   Please reboot to restore your session."
