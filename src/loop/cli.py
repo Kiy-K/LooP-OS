@@ -117,6 +117,33 @@ def serve(args):
         print(f"Server failed: {e}")
         sys.exit(1)
 
+def kernel_command(args):
+    """
+    Subcommand handler for 'loop kernel'.
+    """
+    if args.kernel_command == "start":
+        # 'loop kernel start' maps to headless serve logic.
+        # We respect --daemon flag (mostly for future use or logging setup),
+        # but systemd services run in foreground (Type=simple/exec) so no forking needed.
+
+        # Override host/port defaults if needed, or stick to serve defaults
+        # We didn't add host/port to kernel parser, so we use defaults:
+        # Host: 127.0.0.1 (or 0.0.0.0 for service?)
+        # Port: 8000
+
+        # We'll create a dummy args object or reuse 'args' but ensure attributes exist
+        # Since 'kernel start' might not have --host/--port, we set them manually.
+        # Ideally, we should add those args to the kernel parser too.
+
+        # For 'loop-brain.service', we want it accessible?
+        # Usually user services are local.
+        args.host = "127.0.0.1"
+        args.port = 8000
+        serve(args)
+    else:
+        print(f"Unknown kernel command: {args.kernel_command}")
+        sys.exit(1)
+
 def agent(args):
     """
     Run the AI Agent with a specific task.
@@ -209,6 +236,15 @@ def main():
     parser_serve.add_argument("--host", type=str, default="127.0.0.1", help="Host to bind server to")
     parser_serve.add_argument("--port", type=int, default=8000, help="Port to run server on")
     parser_serve.set_defaults(func=serve)
+
+    # kernel (New Subcommand)
+    parser_kernel = subparsers.add_parser("kernel", help="Manage the LoopKernel")
+    kernel_subparsers = parser_kernel.add_subparsers(dest="kernel_command", help="Kernel commands")
+
+    # loop kernel start
+    parser_kernel_start = kernel_subparsers.add_parser("start", help="Start the kernel service")
+    parser_kernel_start.add_argument("--daemon", action="store_true", help="Run in daemon mode (background)")
+    parser_kernel.set_defaults(func=kernel_command)
 
     # agent
     parser_agent = subparsers.add_parser("agent", help="Run the AI Agent")

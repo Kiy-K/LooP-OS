@@ -4,17 +4,15 @@ Virtual Root Filesystem.
 """
 
 import os
-import shutil
 import platformdirs
 from pathlib import Path
 from functools import lru_cache
 
-# 1. LOOP_ROOT constant
-# Using platformdirs for future-proofing, but sticking to ~/.loop for v0.1.0 simplicity
-# as requested.
-# Ideally this would be: LOOP_ROOT = Path(platformdirs.user_data_dir("loop", "loop-os"))
-LOOP_ROOT = Path.home() / ".loop"
-LEGACY_ROOT = Path.home() / ".fyodor"
+# XDG Base Directory Specification
+# Data: ~/.local/share/loop
+# Config: ~/.config/loop
+LOOP_ROOT = Path(platformdirs.user_data_dir("loop", "loop-os"))
+LOOP_CONFIG_DIR = Path(platformdirs.user_config_dir("loop", "loop-os"))
 
 # Cache the resolved root path to avoid repeated syscalls
 _RESOLVED_ROOT = None
@@ -24,28 +22,13 @@ class SecurityError(Exception):
     """Raised when a path traversal attempt is detected."""
     pass
 
-def check_migration():
-    """
-    Checks for legacy ~/.fyodor directory and renames it to ~/.loop if needed.
-    """
-    if LEGACY_ROOT.exists() and not LOOP_ROOT.exists():
-        print(f"Migrating legacy data: {LEGACY_ROOT} -> {LOOP_ROOT}")
-        try:
-            shutil.move(str(LEGACY_ROOT), str(LOOP_ROOT))
-        except Exception as e:
-            print(f"Error migrating legacy data: {e}")
-            # Fallback: Create new root if move fails
-            LOOP_ROOT.mkdir(parents=True, exist_ok=True)
-    elif LEGACY_ROOT.exists() and LOOP_ROOT.exists():
-        print(f"Found both {LEGACY_ROOT} and {LOOP_ROOT}. Keeping {LOOP_ROOT}.")
-        # Optional: Rename legacy to .bak?
-        # For now, just leaving it alone to avoid data loss.
-
 def init_structure():
     """
-    Creates the required directory structure on the disk.
+    Creates the required directory structure on the disk following XDG standards.
     """
-    check_migration()
+    # Create Root
+    LOOP_ROOT.mkdir(parents=True, exist_ok=True)
+    LOOP_CONFIG_DIR.mkdir(parents=True, exist_ok=True)
 
     directories = [
         LOOP_ROOT / "bin",

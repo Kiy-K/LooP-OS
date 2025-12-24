@@ -17,7 +17,7 @@ EOF
 
 # 2. Autostart Injection (The "Soft" Takeover)
 # Since we are already logged into an XFCE session in Webtop,
-# we add Fyodor to the autostart list.
+# we add LooP to the autostart list.
 echo "[LooP] Injecting Autostart..."
 mkdir -p ~/.config/autostart
 cat <<EOF > ~/.config/autostart/loop.desktop
@@ -29,7 +29,7 @@ Terminal=true
 EOF
 
 # 3. Suppress XFCE Panel
-# Remove the panel from the session so Fyodor is the primary UI.
+# Remove the panel from the session so LooP is the primary UI.
 # Note: This might fail if xfconfd is not running, so we wrap it.
 echo "[LooP] Suppressing XFCE Panel..."
 if pgrep -x "xfce4-session" > /dev/null; then

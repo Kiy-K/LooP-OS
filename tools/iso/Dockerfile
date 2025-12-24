@@ -19,10 +19,27 @@ RUN apt-get update && apt-get install -y \
     dosfstools \
     git \
     curl \
-    ubuntu-keyring \
+    wget \
     gnupg \
+    file \
+    build-essential \
+    libssl-dev \
+    libgtk-3-dev \
+    libayatana-appindicator3-dev \
+    librsvg2-dev \
+    libwebkit2gtk-4.0-dev \
+    ubuntu-keyring \
     ca-certificates \
     && rm -rf /var/lib/apt/lists/*
+
+# Install Node.js 18
+RUN curl -fsSL https://deb.nodesource.com/setup_18.x | bash - && \
+    apt-get install -y nodejs && \
+    npm install -g pnpm
+
+# Install Rust
+RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+ENV PATH="/root/.cargo/bin:${PATH}"
 
 WORKDIR /build
 

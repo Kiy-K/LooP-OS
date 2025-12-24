@@ -3,15 +3,12 @@ set -e
 
 echo "=== FORCING RUNTIME DEPENDENCIES ==="
 # GitHub Actions cache might be stale. We force install critical tools here.
-# syslinux-utils: Contains isohybrid (though we rely on xorriso for GRUB, it's safe to have)
-# xorriso: The actual engine for creating modern Hybrid ISOs
-# grub-*: Required for the bootloader
 apt-get update
 apt-get install -y syslinux-utils xorriso grub-pc-bin grub-efi-amd64-bin mtools dosfstools
 echo "===================================="
 
 # FORCE PATH EXPORT
-export PATH=$PATH:/usr/bin:/usr/sbin
+export PATH=$PATH:/usr/bin:/usr/sbin:/root/.cargo/bin
 
 INPUT_DIR="$1"
 OUTPUT_FILE="$2"
@@ -25,7 +22,49 @@ echo "Starting LooP ISO build (Ubuntu 22.04 / GRUB)..."
 echo "Input Directory: $INPUT_DIR"
 echo "Output File: $OUTPUT_FILE"
 
-# Ensure we are in the build directory
+# === PHASE 1: COMPILE GUI ===
+echo "Phase 1: Compiling Frontend (React + Tauri)..."
+
+# Create a temporary workspace for compilation
+# We copy input files to avoid modifying the mounted source volume
+COMPILE_DIR="/tmp/compile_gui"
+mkdir -p "$COMPILE_DIR"
+cp -r "$INPUT_DIR"/gui "$COMPILE_DIR"/
+cp -r "$INPUT_DIR"/src "$COMPILE_DIR"/  # Tauri needs python source for sidecar? Or maybe not.
+# Actually Tauri build uses 'gui' directory.
+
+cd "$COMPILE_DIR/gui"
+
+# Install Dependencies
+echo "Installing Node dependencies..."
+pnpm install || npm install
+
+# Build Frontend
+echo "Building React Frontend..."
+npm run build
+
+# Build Tauri App
+echo "Building Tauri Application..."
+# We need to ensure the binary name matches. Assuming "loop-desktop" from instructions.
+# If tauri.conf.json identifier is different, this might output elsewhere.
+npm run tauri build
+
+# Verify artifact
+TAURI_BIN="$COMPILE_DIR/gui/src-tauri/target/release/loop-desktop"
+if [ ! -f "$TAURI_BIN" ]; then
+    # Fallback check for default 'app' or other name if instruction was slightly off config
+    TAURI_BIN=$(find "$COMPILE_DIR/gui/src-tauri/target/release" -maxdepth 1 -type f -executable | head -n 1)
+fi
+
+if [ -f "$TAURI_BIN" ]; then
+    echo "Tauri binary built successfully: $TAURI_BIN"
+else
+    echo "Error: Tauri compilation failed. Binary not found."
+    ls -R src-tauri/target/release
+    exit 1
+fi
+
+# === PHASE 2: BUILD ISO ===
 cd /build
 
 # Clean up any previous builds
@@ -33,11 +72,6 @@ echo "Cleaning previous builds..."
 lb clean
 
 # Configure the live system
-# CRITICAL CONFIGURATION:
-# 1. --mode ubuntu / --distribution jammy: Targets Ubuntu 22.04 LTS.
-# 2. --bootloader grub-efi: Modern bootloader that works on BIOS and UEFI.
-# 3. --binary-images iso: We REMOVED 'iso-hybrid' to stop live-build from running
-#    the incompatible 'isohybrid' tool on our GRUB image. Xorriso handles this natively.
 echo "Configuring live-build..."
 lb config \
     --mode ubuntu \
@@ -87,13 +121,21 @@ htop
 xorg
 openbox
 lightdm
+policykit-1
+dbus-user-session
 EOF
 
 # Prepare directory structure for chroot inclusions
 echo "Preparing chroot includes..."
 mkdir -p config/includes.chroot/opt/loop
+mkdir -p config/includes.chroot/usr/local/bin
 
-# Copy source code to the build environment
+# Copy compiled GUI binary
+echo "Injecting Loop Desktop Binary..."
+cp "$TAURI_BIN" config/includes.chroot/usr/local/bin/loop-desktop
+chmod +x config/includes.chroot/usr/local/bin/loop-desktop
+
+# Copy source code to the build environment (for kernel/scripts)
 echo "Copying source code to /opt/loop..."
 cp -a "$INPUT_DIR"/. config/includes.chroot/opt/loop/
 
@@ -119,47 +161,38 @@ cd /opt/loop
 pip install pybind11 nuitka scons --break-system-packages
 
 # CRITICAL FIX: Force compatible urllib3
-# Keeps the python-kubernetes client happy
 pip install "urllib3<2.4.0" --break-system-packages
 
 # Hack: Remove EXTERNALLY-MANAGED
-# Allows pip to install system-wide packages in this disposable environment
 rm -f /usr/lib/python*/EXTERNALLY-MANAGED
 
 # 2a. Force C++ Compilation
 echo "Building and installing C++ extensions..."
 if [ -f "setup_extensions.py" ]; then
-    echo "Found setup_extensions.py, executing..."
-    # Removed --break-system-packages because setup.py does not accept it
     python3 setup_extensions.py install
-else
-    echo "WARNING: setup_extensions.py not found, skipping C++ compilation..."
 fi
 
 # 2b. Install the package itself
 echo "Installing main package..."
 pip install . --break-system-packages
 
-# 2c. Verify C++ Artifacts
-echo "Verifying C++ extensions..."
-python3 -c "import sandbox_core; print(f'sandbox_core found: {sandbox_core}')" || echo "WARNING: sandbox_core import failed!"
-python3 -c "import registry_core; print(f'registry_core found: {registry_core}')" || echo "WARNING: registry_core import failed!"
+# 2c. Run the Installer Script
+# This sets up the Session, Systemd, Polkit, etc.
+if [ -f "install/setup_loop.sh" ]; then
+    echo "Running setup_loop.sh..."
+    bash install/setup_loop.sh
+else
+    echo "Error: setup_loop.sh not found!"
+    exit 1
+fi
 
-# 3. Seed Default Configurations
-echo "Seeding default configurations..."
-export HOME=/tmp/seed_home
-mkdir -p \$HOME
-/usr/local/bin/loop init
+# 4. Plymouth Theme
+echo "Setting Boot Splash..."
+if [ -f /usr/share/plymouth/themes/ubuntu-text/ubuntu-text.plymouth ]; then
+    sed -i 's/Ubuntu/LooP OS/g' /usr/share/plymouth/themes/ubuntu-text/ubuntu-text.plymouth
+fi
 
-# Move the generated .loop folder to /etc/skel
-# This ensures every new user (including the Live User) gets the config on login
-mkdir -p /etc/skel
-cp -r /tmp/seed_home/.loop /etc/skel/
-
-# Cleanup
-rm -rf /tmp/seed_home
-
-# 4. Cleanup
+# 5. Cleanup
 apt-get clean
 
 echo "LooP Installation Hook: Complete."
@@ -171,15 +204,26 @@ chmod +x "$HOOK_FILE"
 echo "Configuring Kiosk Autostart..."
 mkdir -p config/includes.chroot/etc/xdg/openbox
 
+# Inject Custom rc.xml
+if [ -f "$INPUT_DIR/install/resources/etc/xdg/openbox/rc.xml" ]; then
+    echo "Injecting custom rc.xml..."
+    cp "$INPUT_DIR/install/resources/etc/xdg/openbox/rc.xml" config/includes.chroot/etc/xdg/openbox/rc.xml
+else
+    echo "Warning: Custom rc.xml not found!"
+fi
+
 cat <<EOF > config/includes.chroot/etc/xdg/openbox/autostart
 # Disable power management
 xset -dpms
 xset s off
 xset s noblank
 
-# Launch LooP in urxvt debug terminal
-# Provides a fallback shell if the app crashes
-urxvt -geometry 120x40 -e sh -c "/usr/local/bin/loop start; bash" &
+# Set background to black
+xsetroot -solid "#000000"
+
+# Launch LooP UI Wrapper
+# This script handles the delay and launches loop-desktop
+/usr/local/bin/loop-ui &
 EOF
 
 chmod +x config/includes.chroot/etc/xdg/openbox/autostart
@@ -190,7 +234,6 @@ lb build
 
 # Post-process verification
 echo "Post-processing ISO..."
-# We search for any iso generated by live-build
 ISO_NAME=$(ls live-image-*.iso 2>/dev/null | head -n 1)
 
 if [ -n "$ISO_NAME" ] && [ -f "$ISO_NAME" ]; then

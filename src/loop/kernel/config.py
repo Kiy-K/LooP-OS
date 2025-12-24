@@ -8,6 +8,7 @@ Handles parsing of 'loop.conf' and provides safe defaults.
 import configparser
 import os
 from typing import Dict, Any
+from loop.kernel import rootfs
 
 DEFAULT_CONFIG = {
     "kernel": {
@@ -29,8 +30,12 @@ class ConfigLoader:
     Loads and parses system configuration.
     """
 
-    def __init__(self, config_path: str = "loop.conf"):
-        self.config_path = config_path
+    def __init__(self, config_path: str = None):
+        if config_path:
+            self.config_path = config_path
+        else:
+            self.config_path = str(rootfs.LOOP_CONFIG_DIR / "loop.conf")
+
         self._config = configparser.ConfigParser()
         self._loaded = False
 

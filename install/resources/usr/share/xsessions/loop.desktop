@@ -1,0 +1,5 @@
+[Desktop Entry]
+Name=LooP OS
+Comment=The Recursive Cognitive Operating System
+Exec=/usr/local/bin/loop-session
+Type=Application

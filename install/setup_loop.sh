@@ -61,6 +61,14 @@ else
     fi
 fi
 
+# Create loop group if not exists for Polkit rules
+if ! getent group loop >/dev/null; then
+    groupadd loop
+fi
+# Add target user to loop group
+usermod -aG loop "$TARGET_USER" || echo "Warning: Could not add user to loop group in chroot."
+
+
 # 3. DEPENDENCIES
 echo "📦 Installing system dependencies..."
 apt-get update
@@ -79,7 +87,9 @@ apt-get install -y \
     ccache \
     casper \
     discover \
-    laptop-detect
+    laptop-detect \
+    policykit-1 \
+    dbus-user-session
 
 # 4. CORE INSTALL
 echo "🚀 Installing LooP OS..."
@@ -105,50 +115,76 @@ python3 setup_extensions.py install
 echo "   Installing Python package..."
 pip install .
 
-# 5. USER CONFIGURATION
-# In Chroot, we cannot run user commands easily for a user that might be created by casper at boot.
-# We will skip 'loop init' here and rely on the agent creating structure on first run or a boot script.
+# 5. LINUX SESSION ARCHITECTURE DEPLOYMENT
+
+echo "🖥️  Deploying Session Artifacts..."
+
+# 5.1 Binaries & Scripts
+echo "   Installing scripts..."
+cp src/loop/scripts/loop-session.sh /usr/local/bin/loop-session
+cp src/loop/scripts/loop-ui /usr/local/bin/loop-ui
+chmod +x /usr/local/bin/loop-session
+chmod +x /usr/local/bin/loop-ui
+
+# 5.2 Session Definition (LightDM)
+echo "   Installing Desktop Entry..."
+mkdir -p /usr/share/xsessions
+cp install/resources/usr/share/xsessions/loop.desktop /usr/share/xsessions/
+
+# 5.3 Systemd Brain Service
+echo "   Installing Systemd User Unit..."
+mkdir -p /usr/lib/systemd/user
+cp install/resources/usr/lib/systemd/user/loop-brain.service /usr/lib/systemd/user/
+# Note: User services are enabled per-user or globally via --global.
+# We enable it globally for all users.
+# if [ "$IS_CHROOT" = false ]; then
+#     systemctl --global enable loop-brain.service || true
+# fi
+
+# 5.4 Polkit Rules
+echo "   Installing Polkit Rules..."
+mkdir -p /etc/polkit-1/rules.d
+cp install/resources/etc/polkit-1/rules.d/50-loop-agent.rules /etc/polkit-1/rules.d/
+chmod 644 /etc/polkit-1/rules.d/50-loop-agent.rules
+
+# 5.5 Openbox Config
+# Ensure configuration exists for the session script to load
+echo "   Configuring Openbox..."
+mkdir -p /etc/xdg/loop
+# Create a default rc.xml if not provided (placeholder for now)
+if [ ! -f /etc/xdg/loop/openbox_rc.xml ]; then
+    if [ -f /etc/xdg/openbox/rc.xml ]; then
+        cp /etc/xdg/openbox/rc.xml /etc/xdg/loop/openbox_rc.xml
+    else
+        # Fallback empty config or rely on openbox defaults
+        touch /etc/xdg/loop/openbox_rc.xml
+    fi
+fi
+
+# 6. USER CONFIGURATION
 if [ "$IS_CHROOT" = false ]; then
     TARGET_HOME=$(getent passwd "$TARGET_USER" | cut -d: -f6)
     echo "👤 Initializing user configuration..."
-    if [ -d "$TARGET_HOME/.loop" ]; then
-        echo "   ~/.loop exists, skipping initialization."
+    if [ -d "$TARGET_HOME/.loop" ] || [ -d "$TARGET_HOME/.local/share/loop" ]; then
+        echo "   LooP config exists, skipping initialization."
     else
         # Run loop init as target user
         sudo -u "$TARGET_USER" bash -c "export PATH=\$PATH:/usr/local/bin; loop init"
     fi
 fi
 
-# 6. KIOSK CONFIGURATION (OPENBOX)
-echo "🖥️  Configuring Openbox Kiosk..."
-OPENBOX_AUTOSTART="/etc/xdg/openbox/autostart"
-
-# Backup existing autostart
-if [ -f "$OPENBOX_AUTOSTART" ] && [ ! -f "$OPENBOX_AUTOSTART.bak" ]; then
-    cp "$OPENBOX_AUTOSTART" "$OPENBOX_AUTOSTART.bak"
-fi
-
-cat > "$OPENBOX_AUTOSTART" <<EOF
-# LooP OS Kiosk Autostart
-xset -dpms
-xset s off
-# Launch LooP inside URXVT for visibility/debugging, then drop to bash if it crashes
-urxvt -geometry 120x40 -e sh -c "/usr/local/bin/loop start; bash" &
-EOF
-
-# 7. SESSION MANAGER (LIGHTDM)
+# 7. SESSION MANAGER CONFIGURATION (LIGHTDM)
 echo "💡 Configuring LightDM..."
 
 # Ensure LightDM config directory exists
 mkdir -p /etc/lightdm/lightdm.conf.d
 
-# Configure Autologin
-# If in Chroot/Live mode, we might want to target 'ubuntu' or 'user' generically.
-# But for now, we use the determined target.
+# Configure Autologin to use 'loop' session
 cat > /etc/lightdm/lightdm.conf.d/50-loop.conf <<EOF
 [Seat:*]
 autologin-user=$TARGET_USER
-autologin-session=openbox
+autologin-session=loop
+user-session=loop
 EOF
 
 # Force LightDM as default

@@ -282,7 +282,7 @@ private:
     }
 };
 
-PYBIND11_MODULE(sandbox_core, m) {
+PYBIND11_MODULE(loop_sandbox, m) {
     py::class_<SandboxCore>(m, "SandboxCore")
         .def(py::init<const std::string&>())
         .def("resolve_path", &SandboxCore::resolve_path)

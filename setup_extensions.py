@@ -13,14 +13,14 @@ import pybind11
 
 ext_modules = [
     Extension(
-        "registry_core",
+        "loop_registry",
         ["src/loop/plugins/core/registry.cpp"],
         include_dirs=[pybind11.get_include()],
         language="c++",
         extra_compile_args=["-std=c++17"],
     ),
     Extension(
-        "sandbox_core",
+        "loop_sandbox",
         ["src/loop/kernel/core/sandbox.cpp"],
         include_dirs=[pybind11.get_include()],
         language="c++",

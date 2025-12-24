@@ -3,7 +3,7 @@
 Plugin Registry Management.
 
 This module manages the configuration, activation, and deactivation of plugins.
-It interfaces with the C++ `registry_core` extension (if available) for
+It interfaces with the C++ `loop_registry` extension (if available) for
 high-performance state management, while falling back to Python sets and
 dictionaries if the extension is missing. State is persisted to `~/.loop/plugins/config.json`.
 """
@@ -18,10 +18,10 @@ core_path = Path(__file__).parent / "core"
 sys.path.append(str(core_path))
 
 try:
-    import registry_core
+    import loop_registry
 except ImportError:
     print("Warning: C++ Registry Core not found. Compilation needed?")
-    registry_core = None
+    loop_registry = None
 
 
 class PluginRegistry:
@@ -46,8 +46,8 @@ class PluginRegistry:
         self.config_file = self.config_dir / "config.json"
 
         # Initialize C++ Core
-        if registry_core:
-            self.core = registry_core.RegistryCore()
+        if loop_registry:
+            self.core = loop_registry.RegistryCore()
         else:
             self.core = None
 

@@ -18,9 +18,9 @@ from loop.kernel.plugins.loader import PluginLoader
 from loop.kernel.senses.listener import BackgroundListener
 
 
-class Kernel:
+class LoopKernel:
     """
-    The central Kernel class.
+    The central LoopKernel class.
 
     Initializes and manages the lifecycle of core OS components.
 
@@ -49,7 +49,7 @@ class Kernel:
         io_adapter: Optional[IOAdapter] = None,
     ):
         """
-        Initialize the Kernel and all its subsystems.
+        Initialize the LoopKernel and all its subsystems.
 
         Supports dependency injection. If components are not provided,
         they are initialized with defaults (Legacy Mode).
@@ -113,7 +113,7 @@ class Kernel:
 
     def start(self):
         """
-        Start the Kernel.
+        Start the LoopKernel.
 
         Initializes the Shell (if not already present), registers plugin commands, and begins execution.
         Note: This method is blocking.

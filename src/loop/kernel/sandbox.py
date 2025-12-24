@@ -3,7 +3,7 @@
 Agent Sandbox Enforcement.
 
 This module restricts the AI Agent's actions to a safe, confined environment.
-It leverages a C++ extension (`sandbox_core`) for robust path resolution and
+It leverages a C++ extension (`loop_sandbox`) for robust path resolution and
 process isolation, ensuring the agent cannot break out of its designated workspace.
 """
 
@@ -17,10 +17,10 @@ core_path = Path(__file__).parent / "core"
 sys.path.append(str(core_path))
 
 try:
-    import sandbox_core
+    import loop_sandbox
 except ImportError:
     print("Warning: C++ Sandbox Core not found. Compilation needed?")
-    sandbox_core = None
+    loop_sandbox = None
 
 
 class AgentSandbox:
@@ -44,8 +44,8 @@ class AgentSandbox:
         self.root_path = str(Path.home() / ".loop" / "sandbox")
         self.confirmation = ConfirmationManager()
 
-        if sandbox_core:
-            self.core = sandbox_core.SandboxCore(self.root_path)
+        if loop_sandbox:
+            self.core = loop_sandbox.SandboxCore(self.root_path)
         else:
             self.core = None
 

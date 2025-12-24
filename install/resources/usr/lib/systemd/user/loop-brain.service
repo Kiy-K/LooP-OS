@@ -1,0 +1,11 @@
+[Unit]
+Description=LooP Cognitive Engine
+PartOf=graphical-session.target
+
+[Service]
+ExecStart=/usr/local/bin/loop kernel start
+Restart=on-failure
+StandardOutput=journal
+
+[Install]
+WantedBy=graphical-session.target

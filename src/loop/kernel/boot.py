@@ -11,7 +11,7 @@ import traceback
 from typing import Optional
 
 from loop.kernel.config import ConfigLoader
-from loop.kernel.kernel import Kernel
+from loop.kernel.kernel import LoopKernel
 from loop.kernel.filesystem import FileSystem
 from loop.kernel.users import UserManager
 from loop.kernel.syscall import SyscallHandler
@@ -19,7 +19,7 @@ from loop.kernel.sandbox import AgentSandbox
 from loop.kernel.scheduler import Scheduler
 from loop.kernel.network import NetworkManager, NetworkGuard
 from loop.servicemanager.servicemanager import ServiceManager
-from loop.kernel.plugin_loader import PluginLoader
+from loop.kernel.plugins.loader import PluginLoader
 from loop.shell.shell import Shell
 from loop.kernel.process import Process
 
@@ -27,12 +27,12 @@ def log(step: str, status: str = "OK"):
     """Simple boot logger."""
     print(f"[Boot] {step:<50} [{status}]")
 
-def boot() -> Kernel:
+def boot() -> LoopKernel:
     """
     Execute the boot sequence.
 
     Returns:
-        Kernel: The fully initialized kernel instance.
+        LoopKernel: The fully initialized kernel instance.
 
     Raises:
         SystemError: If a critical subsystem fails to initialize.
@@ -122,9 +122,9 @@ def boot() -> Kernel:
         log("Initializing Plugin System...")
         # plugin_loader = PluginLoader(kernel=None) # Will set kernel later
 
-        # 7. Initialize Kernel
-        log("Assembling Kernel...")
-        kernel = Kernel(
+        # 7. Initialize LoopKernel
+        log("Assembling LoopKernel...")
+        kernel = LoopKernel(
             scheduler=scheduler,
             user_manager=user_manager,
             network_manager=network_manager,

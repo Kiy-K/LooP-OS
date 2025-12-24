@@ -20,21 +20,28 @@ rm -rf /opt/loop
 echo "   Removing /usr/local/bin/loop..."
 rm -f /usr/local/bin/loop
 
-# 2. RESTORE OPENBOX CONFIG
-OPENBOX_AUTOSTART="/etc/xdg/openbox/autostart"
-if [ -f "$OPENBOX_AUTOSTART.bak" ]; then
-    echo "   Restoring Openbox autostart backup..."
-    mv "$OPENBOX_AUTOSTART.bak" "$OPENBOX_AUTOSTART"
-else
-    echo "   Removing Openbox autostart (no backup found)..."
-    rm -f "$OPENBOX_AUTOSTART"
-fi
+# New artifacts
+echo "   Removing session scripts..."
+rm -f /usr/local/bin/loop-session
+rm -f /usr/local/bin/loop-ui
 
-# 3. RESTORE LIGHTDM CONFIG
+echo "   Removing Desktop Entry..."
+rm -f /usr/share/xsessions/loop.desktop
+
+echo "   Removing Systemd Units..."
+rm -f /usr/lib/systemd/user/loop-brain.service
+
+echo "   Removing Polkit Rules..."
+rm -f /etc/polkit-1/rules.d/50-loop-agent.rules
+
+echo "   Removing Loop Configs..."
+rm -rf /etc/xdg/loop
+
+# 2. RESTORE LIGHTDM CONFIG
 echo "   Removing LightDM configuration..."
 rm -f /etc/lightdm/lightdm.conf.d/50-loop.conf
 
-# 4. REVERT DISPLAY MANAGER
+# 3. REVERT DISPLAY MANAGER
 # Check if GDM3 is available (common Ubuntu default)
 if [ -f "/usr/sbin/gdm3" ]; then
     echo "   Reverting to GDM3..."

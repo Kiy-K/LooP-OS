@@ -5,7 +5,7 @@ import threading
 import time
 import asyncio
 import json
-from loop.kernel.kernel import Kernel
+from loop.kernel.kernel import LoopKernel
 from loop.kernel.io import APIAdapter
 from loop.kernel.agent import ReActAgent
 
@@ -36,9 +36,9 @@ def startup_event():
     # 1. Initialize API Adapter
     io_adapter = APIAdapter()
 
-    # 2. Initialize Kernel with this adapter
-    print("[Server] Booting Kernel...")
-    kernel = Kernel(io_adapter=io_adapter)
+    # 2. Initialize LoopKernel with this adapter
+    print("[Server] Booting LoopKernel...")
+    kernel = LoopKernel(io_adapter=io_adapter)
 
     # 3. Initialize Persistent Agent
     # We attach an agent to the kernel so we can inject context.

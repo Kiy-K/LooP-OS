@@ -129,7 +129,7 @@ private:
     std::map<std::string, PluginInfo> plugins;
 };
 
-PYBIND11_MODULE(registry_core, m) {
+PYBIND11_MODULE(loop_registry, m) {
     py::class_<RegistryCore>(m, "RegistryCore")
         .def(py::init<>())
         .def("add_plugin", &RegistryCore::add_plugin)

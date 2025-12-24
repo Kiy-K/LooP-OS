@@ -1,4 +1,4 @@
-name: Build FyodorOS ISO
+name: Build LooP ISO
 
 on:
   release:
@@ -31,7 +31,7 @@ jobs:
 
       - name: Build Builder Container
         run: |
-          docker build -t fyodor-builder tools/iso/
+          docker build -t loop-builder tools/iso/
 
       - name: Run Build (Privileged)
         run: |
@@ -40,11 +40,11 @@ jobs:
           docker run --privileged \
             -v ${{ github.workspace }}:/input \
             -v ${{ github.workspace }}/output:/output \
-            fyodor-builder \
-            /input /output/fyodoros-${{ github.ref_name }}.iso
+            loop-builder \
+            /input /output/loop-os-${{ github.ref_name }}.iso
 
       - name: Upload ISO to Release
         uses: softprops/action-gh-release@v1
         if: startsWith(github.ref, 'refs/tags/')
         with:
-          files: output/fyodoros-${{ github.ref_name }}.iso
+          files: output/loop-os-${{ github.ref_name }}.iso

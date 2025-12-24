@@ -1,0 +1,18 @@
+#!/bin/bash
+# src/loop/scripts/loop-ui
+# The LooP Interface Wrapper
+# Waits for the Cognitive Engine (Brain) to start, then launches the Visual Layer (Face).
+
+echo "[LooP UI] Waiting for Brain..."
+
+# Wait for the Brain to be ready
+# We check the systemd user service status
+until systemctl --user is-active --quiet loop-brain.service; do
+    echo "[LooP UI] Brain loading..."
+    sleep 0.5
+done
+
+echo "[LooP UI] Brain is Active. Launching Face..."
+
+# Launch the HUD
+exec /usr/local/bin/loop-desktop

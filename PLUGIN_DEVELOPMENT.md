@@ -72,7 +72,7 @@ class HelloPlugin(Plugin):
 ## 3. Installing & Activating
 
 1.  Ensure your plugin file is in the Python path (or installed via pip).
-2.  Use the Fyodor CLI to activate it by its module name.
+2.  Use the LooP CLI to activate it by its module name.
 
 ```bash
 # If your file is my_hello_plugin.py in the current directory:
@@ -90,8 +90,8 @@ loop plugin list
 ```bash
 loop start
 # Login as guest...
-guest@loop:/> hello Fyodor
-Hello, Fyodor from Plugin!
+guest@loop:/> hello LooP
+Hello, LooP from Plugin!
 ```
 
 ## 4. Best Practices
