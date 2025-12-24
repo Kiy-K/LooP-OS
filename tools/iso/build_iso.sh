@@ -54,6 +54,20 @@ mkdir -p gui/src-tauri/bin
 # Assuming building on x86_64 linux
 cp loop-kernel.bin gui/src-tauri/bin/loop-kernel-x86_64-unknown-linux-gnu
 
+# Generate Dummy Icons
+echo "Generating dummy icons..."
+mkdir -p gui/src-tauri/icons
+
+# 1x1 Transparent PNG Base64
+ICON_B64="iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+P+/HgAFhAJ/wlseKgAAAABJRU5ErkJggg=="
+
+echo "$ICON_B64" | base64 -d > gui/src-tauri/icons/32x32.png
+echo "$ICON_B64" | base64 -d > gui/src-tauri/icons/128x128.png
+echo "$ICON_B64" | base64 -d > gui/src-tauri/icons/icon.png
+# Copy png to ico/icns just to satisfy file existence checks (Tauri might warn but proceed)
+cp gui/src-tauri/icons/icon.png gui/src-tauri/icons/icon.ico
+cp gui/src-tauri/icons/icon.png gui/src-tauri/icons/icon.icns
+
 # Return to GUI directory
 cd "$COMPILE_DIR/gui"
 
