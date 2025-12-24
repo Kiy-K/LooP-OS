@@ -4,7 +4,8 @@ set -e
 echo "=== FORCING RUNTIME DEPENDENCIES ==="
 # GitHub Actions cache might be stale. We force install critical tools here.
 apt-get update
-apt-get install -y syslinux-utils xorriso grub-pc-bin grub-efi-amd64-bin mtools dosfstools
+apt-get install -y syslinux-utils xorriso grub-pc-bin grub-efi-amd64-bin mtools dosfstools python3-pip python3-venv patchelf
+pip install nuitka
 echo "===================================="
 
 # FORCE PATH EXPORT
@@ -33,11 +34,28 @@ cp -r "$INPUT_DIR"/gui "$COMPILE_DIR"/
 cp -r "$INPUT_DIR"/src "$COMPILE_DIR"/  # Tauri needs python source for sidecar? Or maybe not.
 # Actually Tauri build uses 'gui' directory.
 
-cd "$COMPILE_DIR/gui"
-
 # Install Dependencies
+cd "$COMPILE_DIR/gui"
 echo "Installing Node dependencies..."
 pnpm install || npm install
+
+# Compile LooP Kernel (Sidecar)
+echo "Compiling LooP Kernel for Sidecar..."
+cd "$COMPILE_DIR"
+# The source files are in $COMPILE_DIR/src
+# Compile cli.py to a standalone binary
+python3 -m nuitka --standalone --onefile --output-filename=loop-kernel.bin src/loop/cli.py
+
+# Place Sidecar
+echo "Placing Sidecar binary..."
+# Create target directory in the gui build tree
+mkdir -p gui/src-tauri/bin
+# Move and Rename with the Target Triple (Critical for Tauri)
+# Assuming building on x86_64 linux
+cp loop-kernel.bin gui/src-tauri/bin/loop-kernel-x86_64-unknown-linux-gnu
+
+# Return to GUI directory
+cd "$COMPILE_DIR/gui"
 
 # Build Frontend
 echo "Building React Frontend..."
