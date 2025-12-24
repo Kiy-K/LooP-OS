@@ -70,7 +70,7 @@ export const CortexView: React.FC<CortexViewProps> = ({
         {/* File System View */}
         {activeTab === 'fs' && (
           <div className="font-mono text-xs">
-            <div className="text-muted mb-2 uppercase tracking-widest text-[10px]">~/fyodor/home</div>
+            <div className="text-muted mb-2 uppercase tracking-widest text-[10px]">~/loop/home</div>
             <FileTree nodes={displayFiles} level={0} />
           </div>
         )}

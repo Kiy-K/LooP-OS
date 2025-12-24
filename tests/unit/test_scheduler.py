@@ -1,7 +1,7 @@
 import pytest
 from unittest.mock import MagicMock
-from fyodoros.kernel.scheduler import Scheduler
-from fyodoros.kernel.process import Process, ProcessState
+from loop.kernel.scheduler import Scheduler
+from loop.kernel.process import Process, ProcessState
 
 @pytest.fixture
 def scheduler():

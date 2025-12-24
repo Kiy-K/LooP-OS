@@ -1,7 +1,7 @@
 import pytest
 from unittest.mock import Mock, patch
-from fyodoros.kernel.scheduler import Scheduler
-from fyodoros.kernel.process import Process, ProcessState
+from loop.kernel.scheduler import Scheduler
+from loop.kernel.process import Process, ProcessState
 
 # Helper generator for processes
 def dummy_process_target():

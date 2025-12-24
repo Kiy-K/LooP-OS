@@ -7,7 +7,7 @@
     "withGlobalTauri": false
   },
   "package": {
-    "productName": "fyodor-gui",
+    "productName": "loop-gui",
     "version": "0.1.0"
   },
   "tauri": {
@@ -20,7 +20,7 @@
         "sidecar": true,
         "scope": [
           {
-            "name": "fyodor-kernel",
+            "name": "loop-kernel",
             "sidecar": true,
             "args": ["serve", "--port", "0"]
           }
@@ -29,11 +29,11 @@
     },
     "bundle": {
       "externalBin": [
-        "bin/fyodor-kernel"
+        "bin/loop-kernel"
       ],
       "active": true,
       "targets": "all",
-      "identifier": "com.fyodoros.gui",
+      "identifier": "com.loop.gui",
       "icon": [
         "icons/32x32.png",
         "icons/128x128.png",
@@ -49,7 +49,7 @@
       {
         "fullscreen": false,
         "resizable": true,
-        "title": "FyodorOS",
+        "title": "LooP",
         "width": 800,
         "height": 600
       }

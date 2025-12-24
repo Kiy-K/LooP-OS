@@ -14,10 +14,10 @@ def verify_monochrome(page):
         page.screenshot(path="/home/jules/verification/monochrome_verify.png")
 
         # Check for specific text
-        if page.get_by_text("FyodorOS").count() > 0:
-            print("Found 'FyodorOS' text.")
+        if page.get_by_text("LooP").count() > 0:
+            print("Found 'LooP' text.")
         else:
-            print("'FyodorOS' text NOT found.")
+            print("'LooP' text NOT found.")
 
     except Exception as e:
         print(f"Script Error: {e}")

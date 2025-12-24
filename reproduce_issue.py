@@ -1,4 +1,4 @@
-from fyodoros.kernel.filesystem import FileSystem
+from loop.kernel.filesystem import FileSystem
 
 fs = FileSystem()
 # Setup: Create a file owned by root

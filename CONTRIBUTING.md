@@ -1,8 +1,8 @@
-# Contributing to FyodorOS
+# Contributing to LooP
 
-First off, thank you for considering contributing to FyodorOS! 🎉
+First off, thank you for considering contributing to LooP! 🎉
 
-FyodorOS is an experimental AI microkernel, and we welcome contributions from developers interested in operating systems, AI agents, and low-level programming.
+LooP is an experimental AI microkernel, and we welcome contributions from developers interested in operating systems, AI agents, and low-level programming.
 
 ## 📋 Table of Contents
 
@@ -23,19 +23,19 @@ This project adheres to the [Contributor Covenant Code of Conduct](CODE_OF_CONDU
 
 ### Reporting Bugs
 
-Found a bug? Help us improve FyodorOS:
+Found a bug? Help us improve LooP:
 
 1. **Check existing issues** to avoid duplicates
 2. **Create a new issue** with:
    - Clear title and description
    - Steps to reproduce
    - Expected vs actual behavior
-   - Your environment (OS, Python version, FyodorOS version)
+   - Your environment (OS, Python version, LooP version)
    - Relevant logs or error messages
 
 ### Suggesting Enhancements
 
-Have an idea for FyodorOS? We'd love to hear it!
+Have an idea for LooP? We'd love to hear it!
 
 1. **Check existing issues/discussions** first
 2. **Open an issue** with:
@@ -88,11 +88,11 @@ We welcome contributions in several areas:
 
 ```bash
 # Fork the repository on GitHub, then:
-git clone https://github.com/Kiy-K/FyodorOS.git
-cd FyodorOS
+git clone https://github.com/Kiy-K/LooP.git
+cd LooP
 
 # Add upstream remote
-git remote add upstream https://github.com/Kiy-K/FyodorOS.git
+git remote add upstream https://github.com/Kiy-K/LooP.git
 ```
 
 ### Install Development Dependencies
@@ -121,17 +121,17 @@ python setup_core.py build_ext --inplace
 ### Verify Installation
 
 ```bash
-# Run FyodorOS
-fyodor start
+# Run LooP
+loop start
 
-# You should see the FyodorOS shell
+# You should see the LooP shell
 ```
 
 ## 📁 Project Structure
 
 ```
-FyodorOS/
-├── src/fyodoros/
+LooP/
+├── src/loop/
 │   ├── kernel/          # Core kernel components
 │   │   ├── agent.py     # Agent ReAct loop
 │   │   ├── dom.py       # SystemDOM implementation
@@ -277,14 +277,14 @@ Update agent ReAct loop for better reasoning
 ## Changes
 - Added network syscall layer with socket enforcement
 - Implemented RBAC permissions for network access
-- Added `fyodor network` CLI command
+- Added `loop network` CLI command
 
 ## Why
 Agents need controlled network access without compromising security.
 
 ## Testing
-1. Install updated FyodorOS
-2. Run `fyodor network on`
+1. Install updated LooP
+2. Run `loop network on`
 3. Create agent with network permission
 4. Verify socket operations are intercepted
 
@@ -304,7 +304,7 @@ pytest
 pytest tests/test_kernel.py
 
 # Run with coverage
-pytest --cov=src/fyodoros tests/
+pytest --cov=src/loop tests/
 ```
 
 ### Writing Tests
@@ -312,7 +312,7 @@ pytest --cov=src/fyodoros tests/
 ```python
 # tests/test_syscall.py
 import pytest
-from fyodoros.kernel.syscall_handler import SyscallHandler
+from loop.kernel.syscall_handler import SyscallHandler
 
 def test_create_file():
     """Test file creation syscall"""
@@ -331,11 +331,11 @@ def test_sandbox_protection():
 ### Manual Testing
 
 ```bash
-# Start FyodorOS in test mode
-fyodor start --test
+# Start LooP in test mode
+loop start --test
 
 # Try your changes
-guest@fyodoros:/> your-command-here
+guest@loop:/> your-command-here
 ```
 
 ## 📖 Documentation
@@ -402,7 +402,7 @@ When adding new features:
 
 ### Advanced Contributions
 - [ ] Multi-agent orchestration
-- [ ] Distributed FyodorOS nodes
+- [ ] Distributed LooP nodes
 - [ ] Additional runtime languages (Rust, Go)
 - [ ] Advanced scheduling algorithms
 - [ ] GPU acceleration for agents
@@ -422,10 +422,10 @@ Contributors will be:
 
 ## 📄 License
 
-By contributing to FyodorOS, you agree that your contributions will be licensed under the MIT License.
+By contributing to LooP, you agree that your contributions will be licensed under the MIT License.
 
 ---
 
-**Thank you for contributing to FyodorOS!** 
+**Thank you for contributing to LooP!**
 
 Together, we're building the future of autonomous computing. 🚀

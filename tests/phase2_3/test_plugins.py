@@ -1,7 +1,7 @@
 import pytest
 from unittest.mock import MagicMock, patch
-from fyodoros.kernel.plugin_loader import PluginLoader
-from fyodoros.plugins.registry import PluginRegistry
+from loop.kernel.plugin_loader import PluginLoader
+from loop.plugins.registry import PluginRegistry
 
 class MockPlugin:
     def setup(self, kernel):
@@ -27,7 +27,7 @@ def kernel_mock():
 @pytest.fixture
 def loader(kernel_mock):
     # Mock registry to avoid file I/O
-    with patch("fyodoros.kernel.plugin_loader.PluginRegistry") as MockReg:
+    with patch("loop.kernel.plugin_loader.PluginRegistry") as MockReg:
         reg_instance = MockReg.return_value
         reg_instance.list_plugins.return_value = ["mock_plugin"]
         pl = PluginLoader(kernel_mock)

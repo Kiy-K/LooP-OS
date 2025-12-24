@@ -1,6 +1,6 @@
 import pytest
 from unittest.mock import MagicMock, patch
-from fyodoros.kernel.plugin_loader import PluginLoader
+from loop.kernel.plugin_loader import PluginLoader
 
 @pytest.fixture
 def plugin_loader():

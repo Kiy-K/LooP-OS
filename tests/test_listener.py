@@ -15,8 +15,8 @@ sys.modules["pynput"] = mock_pynput
 sys.modules["pynput.keyboard"] = mock_keyboard
 sys.modules["pyautogui"] = MagicMock()
 
-from fyodoros.kernel.io import APIAdapter
-from fyodoros.kernel.senses.listener import BackgroundListener
+from loop.kernel.io import APIAdapter
+from loop.kernel.senses.listener import BackgroundListener
 
 class TestListener:
     def setup_method(self):

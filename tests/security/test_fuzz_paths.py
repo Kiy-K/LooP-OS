@@ -1,5 +1,5 @@
 import pytest
-from fyodoros.kernel.sandbox import AgentSandbox
+from loop.kernel.sandbox import AgentSandbox
 from unittest.mock import MagicMock
 import os
 
@@ -11,14 +11,14 @@ def test_fuzz_paths_blocked():
     # We want to verify that paths attempting to escape are blocked.
     # Note: pathlib / operator discards left side if right side is absolute.
     # So sandbox._resolve("/etc/passwd") -> target="/etc/passwd".
-    # commonpath([~/.fyodor/sandbox, /etc/passwd]) -> /
-    # / != ~/.fyodor/sandbox. So it should raise PermissionError.
+    # commonpath([~/.loop/sandbox, /etc/passwd]) -> /
+    # / != ~/.loop/sandbox. So it should raise PermissionError.
 
     fuzz_vectors = [
         "../etc/passwd",
         "/etc/passwd",
         ".../shadow", # This is treated as relative, might be allowed if ... dir exists? No, it's relative.
-                      # But if it resolves to ~/.fyodor/sandbox/.../shadow, it's valid.
+                      # But if it resolves to ~/.loop/sandbox/.../shadow, it's valid.
                       # Wait, ... is just a name.
         "~/..",       # Expands to home, but pathlib doesn't expand ~. sandbox._resolve doesn't expand ~ for input?
                       # sandbox._resolve uses (base / path).resolve().

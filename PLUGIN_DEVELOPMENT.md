@@ -1,19 +1,19 @@
 # Plugin Development Guide
 
-FyodorOS allows developers to extend its functionality using Plugins. A Plugin is a Python package or module that implements the `fyodoros.plugins.Plugin` interface.
+LooP allows developers to extend its functionality using Plugins. A Plugin is a Python package or module that implements the `loop.plugins.Plugin` interface.
 
 ## 1. The Plugin Interface
 
-All plugins must inherit from `fyodoros.plugins.Plugin`.
+All plugins must inherit from `loop.plugins.Plugin`.
 
 ### API Reference
 
 ```python
-from fyodoros.plugins import Plugin
+from loop.plugins import Plugin
 
 class MyPlugin(Plugin):
     """
-    Base class for FyodorOS plugins.
+    Base class for LooP plugins.
     """
 
     def setup(self, kernel):
@@ -52,7 +52,7 @@ class MyPlugin(Plugin):
 Create a new Python file (e.g., `my_hello_plugin.py`):
 
 ```python
-from fyodoros.plugins import Plugin
+from loop.plugins import Plugin
 
 class HelloPlugin(Plugin):
     def setup(self, kernel):
@@ -79,23 +79,23 @@ class HelloPlugin(Plugin):
 export PYTHONPATH=$PYTHONPATH:.
 
 # Activate
-fyodor plugin activate my_hello_plugin
+loop plugin activate my_hello_plugin
 
 # Verify
-fyodor plugin list
+loop plugin list
 ```
 
 3.  Start the OS and test:
 
 ```bash
-fyodor start
+loop start
 # Login as guest...
-guest@fyodoros:/> hello Fyodor
+guest@loop:/> hello Fyodor
 Hello, Fyodor from Plugin!
 ```
 
 ## 4. Best Practices
 
-*   **Namespace**: If distributing on PyPI, prefix your package with `fyodor-plugin-` (e.g., `fyodor-plugin-git`).
+*   **Namespace**: If distributing on PyPI, prefix your package with `loop-plugin-` (e.g., `loop-plugin-git`).
 *   **State**: Store plugin state in `self`.
 *   **Security**: Remember that plugins run with Kernel privileges in this simulation.

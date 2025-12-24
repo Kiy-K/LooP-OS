@@ -1,7 +1,7 @@
 
 import pytest
-from fyodoros.kernel.scheduler import Scheduler
-from fyodoros.kernel.process import Process
+from loop.kernel.scheduler import Scheduler
+from loop.kernel.process import Process
 
 class TestSchedulerShutdown:
 

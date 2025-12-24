@@ -2,7 +2,7 @@
 """
 GUI Setup Script.
 
-This script automates the installation and compilation of the FyodorOS Desktop GUI.
+This script automates the installation and compilation of the LooP Desktop GUI.
 It checks for necessary dependencies (Node.js/npm, Rust/Cargo), installs NPM packages,
 and builds the Tauri application in release mode.
 """
@@ -18,7 +18,7 @@ def main():
     Main entry point for the GUI setup script.
     """
     gui_dir = Path(__file__).parent.resolve()
-    print(f"Installing FyodorOS GUI in {gui_dir}...")
+    print(f"Installing LooP GUI in {gui_dir}...")
 
     # Check for npm
     try:

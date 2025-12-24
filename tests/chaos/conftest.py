@@ -10,13 +10,13 @@ from unittest.mock import MagicMock
 # Add src to path
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../../src')))
 
-from fyodoros.kernel.kernel import Kernel
-from fyodoros.kernel.users import UserManager
-from fyodoros.kernel.scheduler import Scheduler
-from fyodoros.kernel.network import NetworkManager
-from fyodoros.kernel.syscalls import SyscallHandler
-from fyodoros.kernel.sandbox import AgentSandbox
-from fyodoros.servicemanager.servicemanager import ServiceManager
+from loop.kernel.kernel import Kernel
+from loop.kernel.users import UserManager
+from loop.kernel.scheduler import Scheduler
+from loop.kernel.network import NetworkManager
+from loop.kernel.syscalls import SyscallHandler
+from loop.kernel.sandbox import AgentSandbox
+from loop.servicemanager.servicemanager import ServiceManager
 
 # Constants
 SANDBOX_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), 'sandbox'))
@@ -107,7 +107,7 @@ class ChaosReport:
             "test_run_id": str(uuid.uuid4()),
             "timestamp": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
             "environment": {
-                "os": "FyodorOS (Simulated)",
+                "os": "LooP (Simulated)",
                 "python_version": sys.version.split()[0],
             },
             "results": {
@@ -150,7 +150,7 @@ class ChaosReport:
         <!DOCTYPE html>
         <html>
         <head>
-            <title>FyodorOS Chaos Test Report</title>
+            <title>LooP Chaos Test Report</title>
             <style>
                 body {{ font-family: sans-serif; margin: 20px; }}
                 .summary {{ background: #f0f0f0; padding: 10px; border-radius: 5px; }}
@@ -160,7 +160,7 @@ class ChaosReport:
             </style>
         </head>
         <body>
-            <h1>FyodorOS Chaos Test Report</h1>
+            <h1>LooP Chaos Test Report</h1>
             <div class="summary">
                 <p><strong>Run ID:</strong> {self.data['test_run_id']}</p>
                 <p><strong>Timestamp:</strong> {self.data['timestamp']}</p>

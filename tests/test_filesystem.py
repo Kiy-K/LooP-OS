@@ -1,5 +1,5 @@
 import pytest
-from fyodoros.kernel.filesystem import FileSystem, FileNode, DirectoryNode
+from loop.kernel.filesystem import FileSystem, FileNode, DirectoryNode
 
 @pytest.fixture
 def fs():

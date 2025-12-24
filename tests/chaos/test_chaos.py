@@ -20,7 +20,7 @@ class TestChaos:
         Test: Random Process Termination
         """
         # Seed with some processes
-        from fyodoros.kernel.process import Process
+        from loop.kernel.process import Process
         for i in range(20):
             kernel.scheduler.add(Process(name=f"service_{i}", target=dummy_process(), uid="root"))
 

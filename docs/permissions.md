@@ -1,10 +1,10 @@
 # Permissions Guide
 
-FyodorOS "Ghost Mode" requires specific permissions to listen for Global Hotkeys and inspect other windows.
+LooP "Ghost Mode" requires specific permissions to listen for Global Hotkeys and inspect other windows.
 
 ## macOS
 
-On macOS, you must grant **Accessibility** permissions to the terminal or application running FyodorOS.
+On macOS, you must grant **Accessibility** permissions to the terminal or application running LooP.
 
 1.  Open **System Settings**.
 2.  Go to **Privacy & Security** > **Accessibility**.

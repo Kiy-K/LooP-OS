@@ -21,7 +21,7 @@ if [ -z "$INPUT_DIR" ] || [ -z "$OUTPUT_FILE" ]; then
     exit 1
 fi
 
-echo "Starting FyodorOS ISO build (Ubuntu 22.04 / GRUB)..."
+echo "Starting LooP ISO build (Ubuntu 22.04 / GRUB)..."
 echo "Input Directory: $INPUT_DIR"
 echo "Output File: $OUTPUT_FILE"
 
@@ -54,7 +54,7 @@ lb config \
 # Prepare package lists
 echo "Creating package list..."
 mkdir -p config/package-lists
-cat <<EOF > config/package-lists/fyodor.list.chroot
+cat <<EOF > config/package-lists/loop.list.chroot
 live-boot
 live-config
 live-config-systemd
@@ -91,29 +91,29 @@ EOF
 
 # Prepare directory structure for chroot inclusions
 echo "Preparing chroot includes..."
-mkdir -p config/includes.chroot/opt/fyodoros
+mkdir -p config/includes.chroot/opt/loop
 
 # Copy source code to the build environment
-echo "Copying source code to /opt/fyodoros..."
-cp -a "$INPUT_DIR"/. config/includes.chroot/opt/fyodoros/
+echo "Copying source code to /opt/loop..."
+cp -a "$INPUT_DIR"/. config/includes.chroot/opt/loop/
 
 # Create the installation hook
 echo "Creating installation hook..."
 mkdir -p config/hooks/normal
-HOOK_FILE="config/hooks/normal/050-install-fyodor.chroot"
+HOOK_FILE="config/hooks/normal/050-install-loop.chroot"
 
 cat <<EOF > "$HOOK_FILE"
 #!/bin/sh
 set -e
 
-echo "FyodorOS Installation Hook: Starting..."
+echo "LooP Installation Hook: Starting..."
 
 # 1. Update package lists
 apt-get update
 
-# 2. Install FyodorOS
-echo "Installing FyodorOS package..."
-cd /opt/fyodoros
+# 2. Install LooP
+echo "Installing LooP package..."
+cd /opt/loop
 
 # Install build dependencies
 pip install pybind11 nuitka scons --break-system-packages
@@ -149,12 +149,12 @@ python3 -c "import registry_core; print(f'registry_core found: {registry_core}')
 echo "Seeding default configurations..."
 export HOME=/tmp/seed_home
 mkdir -p \$HOME
-/usr/local/bin/fyodor init
+/usr/local/bin/loop init
 
-# Move the generated .fyodor folder to /etc/skel
+# Move the generated .loop folder to /etc/skel
 # This ensures every new user (including the Live User) gets the config on login
 mkdir -p /etc/skel
-cp -r /tmp/seed_home/.fyodor /etc/skel/
+cp -r /tmp/seed_home/.loop /etc/skel/
 
 # Cleanup
 rm -rf /tmp/seed_home
@@ -162,7 +162,7 @@ rm -rf /tmp/seed_home
 # 4. Cleanup
 apt-get clean
 
-echo "FyodorOS Installation Hook: Complete."
+echo "LooP Installation Hook: Complete."
 EOF
 
 chmod +x "$HOOK_FILE"
@@ -177,9 +177,9 @@ xset -dpms
 xset s off
 xset s noblank
 
-# Launch FyodorOS in urxvt debug terminal
+# Launch LooP in urxvt debug terminal
 # Provides a fallback shell if the app crashes
-urxvt -geometry 120x40 -e sh -c "/usr/local/bin/fyodor start; bash" &
+urxvt -geometry 120x40 -e sh -c "/usr/local/bin/loop start; bash" &
 EOF
 
 chmod +x config/includes.chroot/etc/xdg/openbox/autostart

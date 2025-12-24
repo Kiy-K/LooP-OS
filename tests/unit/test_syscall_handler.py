@@ -1,6 +1,6 @@
 import pytest
 from unittest.mock import MagicMock
-from fyodoros.kernel.syscalls import SyscallHandler
+from loop.kernel.syscalls import SyscallHandler
 
 @pytest.fixture
 def syscall_handler():

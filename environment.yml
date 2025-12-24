@@ -1,4 +1,4 @@
-name: fyodoros
+name: loop
 channels:
   - defaults
 dependencies:

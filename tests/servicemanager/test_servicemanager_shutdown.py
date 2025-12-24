@@ -1,9 +1,9 @@
 
 import pytest
 from unittest.mock import MagicMock
-from fyodoros.servicemanager.servicemanager import ServiceManager
-from fyodoros.kernel.process import Process
-from fyodoros.kernel.scheduler import Scheduler
+from loop.servicemanager.servicemanager import ServiceManager
+from loop.kernel.process import Process
+from loop.kernel.scheduler import Scheduler
 
 # Mock generator function for services
 def mock_service_gen():

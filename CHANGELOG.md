@@ -7,8 +7,8 @@
 - Implemented **Shadcn/UI** for a professional "IDE-like" interface.
 
 ### Added
-- `fyodor doctor`: Self-diagnosis tool for frozen binaries.
-- `rootfs`: Strict virtualization of the file system (`~/.fyodor/`).
+- `loop doctor`: Self-diagnosis tool for frozen binaries.
+- `rootfs`: Strict virtualization of the file system (`~/.loop/`).
 - **CI/CD**: GitHub Actions for automated cross-platform compilation.
 
 ### Security
@@ -19,7 +19,7 @@
 - **Persistent Memory System**: Integrated `ChromaDB` to provide semantic memory capabilities.
     - **Syscalls**: `sys_memory_store`, `sys_memory_search`, `sys_memory_recall`, `sys_memory_delete`.
     - **Agent Integration**: `ReActAgent` now auto-recalls relevant memories at the start of a task.
-    - **Persistence**: Memories are stored in `~/.fyodor/memory` and persist across reboots.
+    - **Persistence**: Memories are stored in `~/.loop/memory` and persist across reboots.
 - **Dependencies**: Added `chromadb` to `pyproject.toml` and `environment.yml`.
 
 ### Performance
@@ -68,7 +68,7 @@
 ### Added
 
 #### Kernel Networking Layer
-- **Global On/Off Switch**: Network functionality can now be controlled via `fyodor network` command
+- **Global On/Off Switch**: Network functionality can now be controlled via `loop network` command
 - **Strict Socket Enforcement**: Monkeypatching implementation ensures all socket operations go through the kernel layer
 - **RBAC Integration**: Network access control through `manage_network` and `use_network` permissions
 
@@ -81,8 +81,8 @@
 #### CLI Network Management
 ```bash
 # Enable/disable network globally
-fyodor network on
-fyodor network off
+loop network on
+loop network off
 ```
 
 #### Python Agent Running NASM
@@ -99,12 +99,12 @@ result = sys_exec_nasm("""
 ## [0.3.5] - 2025-12-06
 ### Added
 - **Plugin System Enhancements**:
-  - Added support for plugin configuration via `fyodor plugin settings`.
-  - Added persistent configuration storage in `~/.fyodor/plugins/config.json`.
+  - Added support for plugin configuration via `loop plugin settings`.
+  - Added persistent configuration storage in `~/.loop/plugins/config.json`.
 - **New Plugins**:
   - `github`: Integration with GitHub for listing repos, creating issues, and viewing PRs.
   - `slack_notifier`: Send notifications to Slack webhooks.
-  - `usage_dashboard`: Background system usage monitoring with TUI (`fyodor dashboard`).
+  - `usage_dashboard`: Background system usage monitoring with TUI (`loop dashboard`).
   - `team_collaboration`: Role-Based Access Control (RBAC) extending the user management system.
 - **User Management**:
   - Added role support to users (admin/user).
@@ -116,7 +116,7 @@ result = sys_exec_nasm("""
 
 ### Plugin System
 - Added **C++ Registry Core** (`registry_core` extension) for high-performance plugin management.
-- Added **Plugin Manager** CLI (`fyodor plugin install/build/create`).
+- Added **Plugin Manager** CLI (`loop plugin install/build/create`).
 - Added Multi-language Support:
   - **Python**: Standard support.
   - **C++**: Auto-compilation via `cmake`.

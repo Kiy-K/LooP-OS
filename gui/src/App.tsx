@@ -136,7 +136,7 @@ function App() {
 
           {/* Header Area (Optional, or just part of stream) */}
           <div className="h-12 border-b border-border flex items-center px-4 bg-surface z-10">
-              <div className="font-mono font-bold text-lg tracking-tight">FYODOR<span className="text-zinc-500">OS</span></div>
+              <div className="font-mono font-bold text-lg tracking-tight">LOOP<span className="text-zinc-500">OS</span></div>
               <div className="ml-auto text-xs text-muted font-mono bg-zinc-900 px-2 py-1 rounded">
                   WS: {isConnected ? "CONNECTED" : "WAITING"}
               </div>

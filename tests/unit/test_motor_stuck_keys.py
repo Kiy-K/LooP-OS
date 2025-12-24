@@ -1,6 +1,6 @@
 import unittest
 from unittest.mock import MagicMock, call
-from fyodoros.kernel.senses.motor import Motor, StaleElementException, ElementRegistry
+from loop.kernel.senses.motor import Motor, StaleElementException, ElementRegistry
 
 class TestMotor(unittest.TestCase):
     def setUp(self):

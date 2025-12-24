@@ -24,7 +24,7 @@ def test_sidecar():
         sys.exit(1)
 
     # Find the kernel binary
-    exes = list(bin_dir.glob("fyodor-kernel-*"))
+    exes = list(bin_dir.glob("loop-kernel-*"))
     if not exes:
          print(f"No binary found in {bin_dir}")
          sys.exit(1)

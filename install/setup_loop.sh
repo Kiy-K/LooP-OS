@@ -2,7 +2,7 @@
 set -e
 
 # ----------------------------------------------------------------------
-# LOOP OS INSTALLER (Formerly FyodorOS)
+# LOOP OS INSTALLER (Formerly LooP)
 # Transforms a standard Linux install into LooP OS.
 # Supports Interactive (sudo), Unattended (Cloud-Init), and Chroot (Remaster).
 # ----------------------------------------------------------------------

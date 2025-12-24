@@ -101,7 +101,7 @@ def test_processes():
 @pytest.fixture(scope="function")
 def test_user():
     """Creates temporary user, removes on teardown"""
-    from fyodoros.kernel.users import UserManager
+    from loop.kernel.users import UserManager
 
     username = f"test_user_{uuid.uuid4().hex[:8]}"
     um = UserManager()

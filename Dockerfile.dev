@@ -14,7 +14,7 @@ RUN apk add --no-cache \
     chromium \
     chromium-chromedriver
 
-WORKDIR /fyodoros
+WORKDIR /loop
 
 # Install Python dev dependencies
 RUN pip install --no-cache-dir \
@@ -26,9 +26,9 @@ RUN pip install --no-cache-dir \
 
 # Set environment for development
 ENV PYTHONUNBUFFERED=1 \
-    FYODOR_DEBUG=1 \
-    FYODOR_HOME=/root/.fyodor \
-    FYODOR_INTERACTIVE=true
+    LOOP_DEBUG=1 \
+    LOOP_HOME=/root/.loop \
+    LOOP_INTERACTIVE=true
 
 # Copy source (will be overridden by volume mount)
 COPY . .
@@ -40,7 +40,7 @@ RUN pip install -e .
 RUN playwright install chromium --with-deps || true
 
 # Create directories
-RUN mkdir -p /root/.fyodor /var/log/fyodoros /tmp/fyodoros
+RUN mkdir -p /root/.loop /var/log/loop /tmp/loop
 
 # Default to bash for development
 ENTRYPOINT ["/bin/bash"]

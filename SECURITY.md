@@ -2,7 +2,7 @@
 
 ## Supported Versions
 
-FyodorOS is an experimental AI microkernel. We take security seriously, especially given the sandboxed execution environment for autonomous agents.
+LooP is an experimental AI microkernel. We take security seriously, especially given the sandboxed execution environment for autonomous agents.
 
 | Version | Supported          |
 | ------- | ------------------ |
@@ -11,24 +11,24 @@ FyodorOS is an experimental AI microkernel. We take security seriously, especial
 
 ## Security Considerations
 
-FyodorOS implements multiple security layers:
+LooP implements multiple security layers:
 
 - **C++ Reinforced Sandbox**: Path traversal protection and virtual filesystem jail
 - **RBAC Integration**: Role-based access control for network and system operations
 - **Process Isolation**: Commands run with cleared environments and restricted paths
 - **App Whitelisting**: Only authorized "Agent Apps" can be executed
 
-However, as an **experimental project**, FyodorOS should not be used in production environments or with untrusted agents without additional security hardening.
+However, as an **experimental project**, LooP should not be used in production environments or with untrusted agents without additional security hardening.
 
 ## Reporting a Vulnerability
 
-If you discover a security vulnerability in FyodorOS, please help us by reporting it responsibly.
+If you discover a security vulnerability in LooP, please help us by reporting it responsibly.
 
 ### Where to Report
 
 **Email**: khoitruong071510@gmail.com
 
-**Subject**: `[SECURITY] FyodorOS - Brief Description`
+**Subject**: `[SECURITY] LooP - Brief Description`
 
 ### What to Include
 
@@ -62,17 +62,17 @@ Please provide:
 
 ## Security Best Practices for Users
 
-When using FyodorOS:
+When using LooP:
 
-1. **Sandbox Isolation**: Always run agents in the provided sandbox (`~/.fyodor/sandbox`)
+1. **Sandbox Isolation**: Always run agents in the provided sandbox (`~/.loop/sandbox`)
 2. **Network Controls**: Use RBAC permissions to limit network access (`manage_network`, `use_network`)
-3. **API Key Security**: Never commit API keys; use `fyodor setup` to configure securely
+3. **API Key Security**: Never commit API keys; use `loop setup` to configure securely
 4. **Plugin Vetting**: Only install plugins from trusted sources
-5. **Stay Updated**: Keep FyodorOS updated to the latest supported version
+5. **Stay Updated**: Keep LooP updated to the latest supported version
 
 ## Known Security Limitations
 
-As an experimental OS, FyodorOS has known limitations:
+As an experimental OS, LooP has known limitations:
 
 - **Not Production-Ready**: This is a research/educational project
 - **Agent Trust Model**: Assumes LLM agents may be unpredictable
@@ -89,4 +89,4 @@ Subscribe to releases on GitHub to stay notified.
 
 ---
 
-**Note**: FyodorOS is an experimental project. Use at your own risk in controlled environments only.
+**Note**: LooP is an experimental project. Use at your own risk in controlled environments only.

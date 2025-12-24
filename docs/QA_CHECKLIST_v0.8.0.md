@@ -33,5 +33,5 @@ This document serves as the final "Go/No-Go" gauge before tagging the release.
 
 Detailed instructions on where to find logs if the app crashes silently:
 
-*   **Windows:** `%APPDATA%\fyodor\var\logs\kernel.log`
-*   **Mac/Linux:** `~/.fyodor/var/logs/kernel.log`
+*   **Windows:** `%APPDATA%\loop\var\logs\kernel.log`
+*   **Mac/Linux:** `~/.loop/var/logs/kernel.log`

@@ -1,8 +1,8 @@
 import pytest
 from unittest.mock import MagicMock
-from fyodoros.kernel.agent import ReActAgent
-from fyodoros.kernel.syscalls import SyscallHandler
-from fyodoros.kernel.sandbox import AgentSandbox
+from loop.kernel.agent import ReActAgent
+from loop.kernel.syscalls import SyscallHandler
+from loop.kernel.sandbox import AgentSandbox
 
 def test_agent_e2e_flow(tmp_path):
     sys_handler = SyscallHandler()

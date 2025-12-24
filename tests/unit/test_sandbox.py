@@ -1,6 +1,6 @@
 import pytest
 from unittest.mock import MagicMock
-from fyodoros.kernel.sandbox import AgentSandbox
+from loop.kernel.sandbox import AgentSandbox
 import os
 
 @pytest.fixture

@@ -12,15 +12,15 @@ sys.path.insert(0, os.path.abspath("src"))
 # Set LLM Provider for the session
 os.environ["LLM_PROVIDER"] = "openai"
 
-from fyodoros.kernel.kernel import Kernel
-from fyodoros.kernel.agent import ReActAgent
-from fyodoros.kernel.syscalls import SyscallHandler
-from fyodoros.kernel.scheduler import Scheduler
-from fyodoros.kernel.users import UserManager
-from fyodoros.kernel.network import NetworkManager, NetworkGuard
-from fyodoros.kernel.sandbox import AgentSandbox
-from fyodoros.servicemanager.servicemanager import ServiceManager
-from fyodoros.plugins.registry import PluginRegistry
+from loop.kernel.kernel import Kernel
+from loop.kernel.agent import ReActAgent
+from loop.kernel.syscalls import SyscallHandler
+from loop.kernel.scheduler import Scheduler
+from loop.kernel.users import UserManager
+from loop.kernel.network import NetworkManager, NetworkGuard
+from loop.kernel.sandbox import AgentSandbox
+from loop.servicemanager.servicemanager import ServiceManager
+from loop.plugins.registry import PluginRegistry
 
 # Report dictionary
 report = {
@@ -240,7 +240,7 @@ def test_plugin_lifecycle():
 
     # 4. Discovery (Listing files)
     try:
-        if os.path.exists("src/fyodoros/plugins/usage_dashboard"):
+        if os.path.exists("src/loop/plugins/usage_dashboard"):
             report["plugin_findings"].append("usage_dashboard source found on disk.")
         else:
             report["plugin_findings"].append("usage_dashboard source NOT found on disk.")

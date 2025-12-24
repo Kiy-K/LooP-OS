@@ -35,7 +35,7 @@ def get_target_triple():
 
 def build():
     # Configuration
-    binary_name = "fyodor-kernel"
+    binary_name = "loop-kernel"
     repo_root = Path(__file__).parent.parent
     src_dir = repo_root / "src"
     output_dir = repo_root / "gui" / "src-tauri" / "bin"
@@ -61,12 +61,12 @@ def build():
         "--standalone",
         "--onefile",
         "--assume-yes-for-downloads",
-        "--include-package=fyodoros",
-        "--include-package-data=fyodoros",
+        "--include-package=loop",
+        "--include-package-data=loop",
         "--output-dir=" + str(output_dir),
         "--output-filename=" + generic_binary_name,
         "--enable-plugin=pylint-warnings",
-        str(src_dir / "fyodoros" / "cli.py") # Entry point
+        str(src_dir / "loop" / "cli.py") # Entry point
     ]
 
     print(f"[Build] Running: {' '.join(cmd)}")

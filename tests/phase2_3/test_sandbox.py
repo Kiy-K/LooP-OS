@@ -1,6 +1,6 @@
 import pytest
 from unittest.mock import MagicMock, patch
-from fyodoros.kernel.sandbox import AgentSandbox
+from loop.kernel.sandbox import AgentSandbox
 from pathlib import Path
 import os
 

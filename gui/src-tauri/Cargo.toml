@@ -1,8 +1,8 @@
 [package]
-name = "fyodor-gui"
+name = "loop-gui"
 version = "0.1.0"
-description = "FyodorOS GUI Dashboard"
-authors = ["FyodorOS Team"]
+description = "LooP GUI Dashboard"
+authors = ["LooP Team"]
 edition = "2021"
 
 [build-dependencies]

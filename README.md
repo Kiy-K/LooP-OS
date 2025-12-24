@@ -1,6 +1,6 @@
-# FyodorOS
+# LooP
 
-[![Version](https://img.shields.io/badge/version-v0.8.0-blue.svg)](https://github.com/Kiy-K/FyodorOS/releases)
+[![Version](https://img.shields.io/badge/version-v0.8.0-blue.svg)](https://github.com/Kiy-K/LooP/releases)
 [![Python 3.8+](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
@@ -16,7 +16,7 @@ The Operating System for Autonomous AI Agents.
 
 ## 🚀 Vision
 
-We believe that for AI Agents to be truly useful and safe, they need an environment built for them. FyodorOS provides:
+We believe that for AI Agents to be truly useful and safe, they need an environment built for them. LooP provides:
 
 * **Structured Observation:** The OS state (Filesystem, Processes, Users) is a queryable DOM tree.
 * **Cognitive Loop:** Built-in ReAct (Reasoning + Acting) loop at the kernel level.
@@ -30,14 +30,14 @@ We believe that for AI Agents to be truly useful and safe, they need an environm
 
 ### Option A: User (Recommended)
 
-Download the installer for Windows, Mac, or Linux from the [Releases](https://github.com/Kiy-K/FyodorOS/releases) page.
+Download the installer for Windows, Mac, or Linux from the [Releases](https://github.com/Kiy-K/LooP/releases) page.
 
 ### Option B: Developer (Legacy/Headless)
 
-You can install FyodorOS as a Python package for headless or CLI-only usage.
+You can install LooP as a Python package for headless or CLI-only usage.
 
 ```bash
-pip install fyodoros
+pip install loop
 playwright install chromium
 ```
 
@@ -48,8 +48,8 @@ To build the full Desktop experience from source, you need Node.js, Rust, and Py
 1. **Clone the Repository**
 
 ```bash
-git clone https://github.com/Kiy-K/FyodorOS.git
-cd fyodoros
+git clone https://github.com/Kiy-K/LooP.git
+cd loop
 ```
 
 2. **Install Frontend Dependencies**
@@ -71,7 +71,7 @@ See our detailed trajectory in [ROADMAP.md](./ROADMAP.md).
 
 ## 🏗️ Architecture
 
-FyodorOS v0.8.0 adopts a hybrid architecture to combine the flexibility of Python AI libraries with the performance and native capabilities of Rust.
+LooP v0.8.0 adopts a hybrid architecture to combine the flexibility of Python AI libraries with the performance and native capabilities of Rust.
 
 ```mermaid
 graph LR
@@ -87,7 +87,7 @@ graph LR
 
 ## 🤝 Contributing
 
-FyodorOS is an experimental sandbox. We welcome contributions to:
+LooP is an experimental sandbox. We welcome contributions to:
 
 * Expand the standard library of Agent Apps.
 * Improve the DOM representation of system state.

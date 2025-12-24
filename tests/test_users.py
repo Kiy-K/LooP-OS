@@ -1,6 +1,6 @@
 import pytest
 from unittest.mock import Mock, patch
-from fyodoros.kernel.users import UserManager
+from loop.kernel.users import UserManager
 
 @pytest.fixture
 def user_manager():

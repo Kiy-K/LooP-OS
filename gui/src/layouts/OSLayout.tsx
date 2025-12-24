@@ -13,7 +13,7 @@ import React, { useState, useEffect, useRef } from "react";
 const OSLayout = () => {
   const [sidebarWidth, setSidebarWidth] = useState(250);
   const [output, setOutput] = useState([
-      { type: 'system', content: 'FyodorOS Kernel v0.8.0 Initialized...' },
+      { type: 'system', content: 'LooP Kernel v0.8.0 Initialized...' },
       { type: 'system', content: 'Waiting for connection...' }
   ]);
   const [input, setInput] = useState("");
@@ -48,7 +48,7 @@ const OSLayout = () => {
             className="border-r border-zinc-800 flex flex-col bg-zinc-900"
         >
           <div className="p-4 border-b border-zinc-800 font-bold tracking-wider text-sm">
-            FYODOR<span className="text-emerald-500">OS</span>
+            LOOP<span className="text-emerald-500">OS</span>
           </div>
           <div className="p-2 space-y-1">
              <div className="px-2 py-1.5 text-xs text-zinc-500 font-semibold uppercase">Explorer</div>
@@ -69,7 +69,7 @@ const OSLayout = () => {
 
            {/* Header */}
            <div className="h-12 border-b border-zinc-800 flex items-center px-4 justify-between bg-zinc-900/50">
-              <span className="text-sm text-zinc-400">root@fyodor:~</span>
+              <span className="text-sm text-zinc-400">root@loop:~</span>
               <div className="flex gap-2">
                  <div className="w-3 h-3 rounded-full bg-red-500/20 border border-red-500/50"></div>
                  <div className="w-3 h-3 rounded-full bg-yellow-500/20 border border-yellow-500/50"></div>

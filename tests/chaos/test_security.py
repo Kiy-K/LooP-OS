@@ -1,6 +1,6 @@
 import pytest
 import os
-from fyodoros.kernel.process import Process
+from loop.kernel.process import Process
 
 def dummy_process():
     while True:

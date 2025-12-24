@@ -2,13 +2,13 @@
 
 ## Overview
 
-The Boot Subsystem in FyodorOS v0.6.0 introduces a centralized, deterministic initialization sequence. This ensures that all core components (security, filesystem, network) are brought up in a correct and auditable order before the user shell or agent is launched.
+The Boot Subsystem in LooP v0.6.0 introduces a centralized, deterministic initialization sequence. This ensures that all core components (security, filesystem, network) are brought up in a correct and auditable order before the user shell or agent is launched.
 
 ## Boot Sequence
 
-The boot process is orchestrated by `src/fyodoros/kernel/init.py` via the `boot()` function. The sequence is as follows:
+The boot process is orchestrated by `src/loop/kernel/init.py` via the `boot()` function. The sequence is as follows:
 
-1.  **Configuration Loading**: `fyodor.conf` is parsed using `ConfigLoader`. Defaults are applied if the file is missing.
+1.  **Configuration Loading**: `loop.conf` is parsed using `ConfigLoader`. Defaults are applied if the file is missing.
 2.  **Filesystem Mounts**: Virtual filesystem mount points are prepared based on configuration.
 3.  **Security Initialization**: `UserManager` is initialized to handle RBAC and authentication.
 4.  **Core Services**: `Scheduler` and `NetworkManager` are initialized.
@@ -21,7 +21,7 @@ The boot process is orchestrated by `src/fyodoros/kernel/init.py` via the `boot(
 
 ## Configuration
 
-The `fyodor.conf` file controls the boot parameters:
+The `loop.conf` file controls the boot parameters:
 
 ```ini
 [kernel]
@@ -38,9 +38,9 @@ rbac_enabled=true
 
 ## Architecture
 
-*   **Entry Point**: `src/fyodoros/kernel/init.py`
-*   **Config Loader**: `src/fyodoros/kernel/config.py`
-*   **Kernel Injection**: `src/fyodoros/kernel/kernel.py` now accepts components in `__init__`.
+*   **Entry Point**: `src/loop/kernel/init.py`
+*   **Config Loader**: `src/loop/kernel/config.py`
+*   **Kernel Injection**: `src/loop/kernel/kernel.py` now accepts components in `__init__`.
 
 ## Testing
 

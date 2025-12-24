@@ -4,11 +4,11 @@ import shutil
 import tempfile
 import time
 from unittest.mock import Mock, patch
-from fyodoros.kernel.memory import MemoryManager
-from fyodoros.kernel.resource_monitor import ResourceMonitor
-from fyodoros.utils.error_recovery import ErrorRecovery
-from fyodoros.kernel.confirmation import ConfirmationManager
-from fyodoros.kernel.action_logger import ActionLogger
+from loop.kernel.memory import MemoryManager
+from loop.kernel.resource_monitor import ResourceMonitor
+from loop.utils.error_recovery import ErrorRecovery
+from loop.kernel.confirmation import ConfirmationManager
+from loop.kernel.action_logger import ActionLogger
 from pathlib import Path
 
 # --- Memory Tests ---

@@ -1,6 +1,6 @@
 import pytest
 import json
-from fyodoros.kernel.agent import ReActAgent
+from loop.kernel.agent import ReActAgent
 
 class MockSyscallHandler:
     def __init__(self):

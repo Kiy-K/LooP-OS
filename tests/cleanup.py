@@ -16,8 +16,8 @@ from contextlib import contextmanager
 # Adjust path to allow imports from src
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../src')))
 
-from fyodoros.kernel.users import UserManager
-from fyodoros.kernel.network import NetworkManager
+from loop.kernel.users import UserManager
+from loop.kernel.network import NetworkManager
 
 # Global cleanup manager
 class TestCleanupManager:
@@ -196,10 +196,10 @@ def cleanup_all_test_processes():
 def cleanup_test_directories():
     """Remove all test directories"""
     test_roots = [
-        "/tmp/fyodoros_test_*",
+        "/tmp/loop_test_*",
         "/var/tmp/test_*",
-        "~/.fyodor/sandbox/test_*",
-        "~/.fyodor/tmp/*",
+        "~/.loop/sandbox/test_*",
+        "~/.loop/tmp/*",
         "/tmp/pytest-*",
     ]
 
@@ -227,8 +227,8 @@ def cleanup_test_files():
 
     search_dirs = [
         "/tmp",
-        "~/.fyodor/home/guest",
-        "~/.fyodor/sandbox",
+        "~/.loop/home/guest",
+        "~/.loop/sandbox",
         "/var/log/journal"
     ]
 
@@ -291,7 +291,7 @@ def cleanup_test_data():
     except Exception as e:
         print(f"Failed to clean users: {e}")
 
-    plugin_dir = os.path.expanduser("~/.fyodor/plugins/installed")
+    plugin_dir = os.path.expanduser("~/.loop/plugins/installed")
     if os.path.exists(plugin_dir):
          for d in os.listdir(plugin_dir):
              if d.startswith("test_") or d.startswith("mock_"):
@@ -310,7 +310,7 @@ def cleanup_test_services(service_manager=None):
                 except Exception as e:
                     print(f"Failed to stop {service_name}: {e}")
 
-    for config_file in glob.glob("/etc/fyodoros/test_*.conf"):
+    for config_file in glob.glob("/etc/loop/test_*.conf"):
         try:
             os.unlink(config_file)
         except Exception as e:

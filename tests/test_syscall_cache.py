@@ -9,8 +9,8 @@ sys.modules["pyautogui"] = MagicMock()
 sys.modules["pynput"] = MagicMock()
 sys.modules["pynput.keyboard"] = MagicMock()
 
-from fyodoros.kernel.syscall import SyscallHandler
-from fyodoros.kernel.senses.ui_driver import UIDriver
+from loop.kernel.syscall import SyscallHandler
+from loop.kernel.senses.ui_driver import UIDriver
 
 class TestSyscallScanCache:
     def setup_method(self):

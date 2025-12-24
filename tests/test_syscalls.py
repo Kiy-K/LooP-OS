@@ -1,8 +1,8 @@
 import pytest
 import os
 from unittest.mock import Mock, patch, mock_open
-from fyodoros.kernel.syscall import SyscallHandler
-from fyodoros.kernel.users import UserManager
+from loop.kernel.syscall import SyscallHandler
+from loop.kernel.users import UserManager
 
 
 @pytest.fixture
@@ -30,7 +30,7 @@ def syscall_handler():
 
 def test_sys_ls(syscall_handler):
     # Mock rootfs resolution and os.listdir
-    with patch("fyodoros.kernel.rootfs.resolve") as mock_resolve, \
+    with patch("loop.kernel.rootfs.resolve") as mock_resolve, \
          patch("os.listdir") as mock_listdir:
 
         mock_path = Mock()
@@ -62,7 +62,7 @@ def test_sys_ls(syscall_handler):
 
 def test_sys_write_read(syscall_handler):
     # Mock rootfs resolution and open
-    with patch("fyodoros.kernel.rootfs.resolve") as mock_resolve, \
+    with patch("loop.kernel.rootfs.resolve") as mock_resolve, \
          patch("builtins.open", mock_open(read_data="data")) as mock_file:
 
         mock_path = Mock()

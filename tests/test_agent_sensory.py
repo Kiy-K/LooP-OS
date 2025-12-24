@@ -9,9 +9,9 @@ sys.modules["pyautogui"] = MagicMock()
 sys.modules["pynput"] = MagicMock()
 sys.modules["pynput.keyboard"] = MagicMock()
 
-from fyodoros.kernel.agent import ReActAgent
-from fyodoros.kernel.sandbox import AgentSandbox
-from fyodoros.kernel.syscall import SyscallHandler
+from loop.kernel.agent import ReActAgent
+from loop.kernel.sandbox import AgentSandbox
+from loop.kernel.syscall import SyscallHandler
 
 class TestAgentSensory:
     def setup_method(self):

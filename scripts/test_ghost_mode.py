@@ -2,7 +2,7 @@
 """
 Test Ghost Mode.
 
-This interactive script verifies the "Ears" of FyodorOS.
+This interactive script verifies the "Ears" of LooP.
 It boots the kernel, listens for the global hotkey (Alt+Space), and confirms that:
 1. The Wake Signal is generated.
 2. The UI Context is captured (buffered).
@@ -11,8 +11,8 @@ It boots the kernel, listens for the global hotkey (Alt+Space), and confirms tha
 import sys
 import time
 import os
-from fyodoros.kernel.kernel import Kernel
-from fyodoros.kernel.io import APIAdapter
+from loop.kernel.kernel import Kernel
+from loop.kernel.io import APIAdapter
 from rich.console import Console
 from rich.panel import Panel
 from rich.text import Text
@@ -20,7 +20,7 @@ from rich.text import Text
 console = Console()
 
 def main():
-    console.print(Panel.fit("[bold blue]👻 FyodorOS Ghost Mode Test[/bold blue]", border_style="blue"))
+    console.print(Panel.fit("[bold blue]👻 LooP Ghost Mode Test[/bold blue]", border_style="blue"))
 
     # 1. Boot Kernel
     console.print("[yellow]1. Booting Kernel (Simplified Mode)...[/yellow]")

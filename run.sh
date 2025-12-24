@@ -1,2 +1,2 @@
 #!/bin/bash
-python3 -m fyodoros.cli start
+python3 -m loop.cli start

@@ -47,23 +47,23 @@ RUN python -u scripts/build_kernel.py
 FROM python:3.10-slim AS runtime
 
 # Create a non-root user
-RUN useradd -m -s /bin/bash fyodor
+RUN useradd -m -s /bin/bash loop
 
 WORKDIR /app
 
-# Create the .fyodor directory structure with correct permissions
-RUN mkdir -p /home/fyodor/.fyodor && \
-    chown -R fyodor:fyodor /home/fyodor
+# Create the .loop directory structure with correct permissions
+RUN mkdir -p /home/loop/.loop && \
+    chown -R loop:loop /home/loop
 
 # Copy the compiled binary
 # We use the 'gui/' path here because Nuitka puts it there
-COPY --from=builder --chown=fyodor:fyodor /app/gui/src-tauri/bin/fyodor-kernel /app/fyodor-kernel
+COPY --from=builder --chown=loop:loop /app/gui/src-tauri/bin/loop-kernel /app/loop-kernel
 
 # Switch to non-root user
-USER fyodor
+USER loop
 
 # Expose the default port
 EXPOSE 8000
 
 # Entrypoint configuration
-ENTRYPOINT ["/app/fyodor-kernel", "serve", "--host", "0.0.0.0", "--port", "8000"]
+ENTRYPOINT ["/app/loop-kernel", "serve", "--host", "0.0.0.0", "--port", "8000"]

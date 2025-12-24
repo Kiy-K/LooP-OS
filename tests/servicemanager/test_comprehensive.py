@@ -2,10 +2,10 @@
 import pytest
 import time
 from unittest.mock import MagicMock
-from fyodoros.servicemanager.servicemanager import ServiceManager, ServiceMetadata
-from fyodoros.servicemanager.types import ServiceType, ShutdownState
-from fyodoros.kernel.scheduler import Scheduler
-from fyodoros.kernel.process import Process
+from loop.servicemanager.servicemanager import ServiceManager, ServiceMetadata
+from loop.servicemanager.types import ServiceType, ShutdownState
+from loop.kernel.scheduler import Scheduler
+from loop.kernel.process import Process
 
 def mock_gen():
     yield

@@ -1,8 +1,8 @@
 import pytest
 from unittest.mock import MagicMock, Mock, patch
-from fyodoros.servicemanager.servicemanager import ServiceManager as Supervisor
-from fyodoros.kernel.scheduler import Scheduler
-from fyodoros.kernel.process import Process, ProcessState
+from loop.servicemanager.servicemanager import ServiceManager as Supervisor
+from loop.kernel.scheduler import Scheduler
+from loop.kernel.process import Process, ProcessState
 
 class MockService:
     def __init__(self, name="mock_service"):
@@ -54,7 +54,7 @@ def test_autostart_services_boot(supervisor, mock_syscall):
     mock_daemon_module = MagicMock()
     mock_daemon_module.journal_daemon.return_value = (x for x in []) # dummy generator
 
-    with patch.dict("sys.modules", {"fyodoros.servicemanager.journal_daemon": mock_daemon_module}):
+    with patch.dict("sys.modules", {"loop.servicemanager.journal_daemon": mock_daemon_module}):
         supervisor.start_autostart_services()
 
     assert "journal" in supervisor.services
@@ -81,7 +81,7 @@ def test_reverse_teardown(supervisor, mock_scheduler):
     # (Bypassing start_service to control the Process object if needed, but start_service creates Process)
 
     # Let's try to mock the Process class used by Supervisor
-    with patch("fyodoros.servicemanager.servicemanager.Process") as MockProcessClass:
+    with patch("loop.servicemanager.servicemanager.Process") as MockProcessClass:
         p1 = MagicMock()
         p1.name = "svc1"
         p2 = MagicMock()
@@ -125,7 +125,7 @@ def test_cleanup_invariance_failure(supervisor):
         pytest.skip("Supervisor lacks shutdown method")
 
     # Setup
-    with patch("fyodoros.servicemanager.servicemanager.Process") as MockProcessClass:
+    with patch("loop.servicemanager.servicemanager.Process") as MockProcessClass:
         p1 = MagicMock()
         p1.name = "bad_svc"
         p1.terminate.side_effect = Exception("I refuse to die!")

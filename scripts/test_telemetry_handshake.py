@@ -15,7 +15,7 @@ def test_telemetry_handshake():
     print("Starting test_telemetry_handshake...")
 
     # 1. Launch Server with port 0
-    cmd = [sys.executable, "-u", "-m", "fyodoros.cli", "serve", "--port", "0"]
+    cmd = [sys.executable, "-u", "-m", "loop.cli", "serve", "--port", "0"]
 
     # We need to capture stdout to find the port
     process = subprocess.Popen(

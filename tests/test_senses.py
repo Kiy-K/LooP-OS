@@ -9,9 +9,9 @@ from unittest.mock import MagicMock, patch
 # Mock pyautogui BEFORE importing motor so it can be imported
 sys.modules["pyautogui"] = MagicMock()
 
-from fyodoros.kernel.senses.ui_driver import UIDriver, ElementRegistry
-from fyodoros.kernel.senses.motor import Motor, StaleElementException, SafetyInterruption
-from fyodoros.kernel.syscall import SyscallHandler
+from loop.kernel.senses.ui_driver import UIDriver, ElementRegistry
+from loop.kernel.senses.motor import Motor, StaleElementException, SafetyInterruption
+from loop.kernel.syscall import SyscallHandler
 
 class TestSenses:
     def setup_method(self):
