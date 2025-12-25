@@ -75,15 +75,16 @@ cd "$COMPILE_DIR/gui"
 echo "Building React Frontend..."
 npm run build
 
-# Build Tauri App
-echo "Building Tauri Application..."
-# We need to ensure the binary name matches. Assuming "loop-desktop" from instructions.
-# If tauri.conf.json identifier is different, this might output elsewhere.
-npm run tauri build -- --no-bundle
+# Build Backend (Cargo)
+echo "Building Tauri Backend (Cargo)..."
+# We bypass 'tauri build' to avoid bundling issues (deb/appimage failures in Docker).
+cd src-tauri
+cargo build --release
+cd ..
 
 # Verify artifact
-# Find the binary (handle variable naming)
-BINARY_PATH=$(find "$COMPILE_DIR/gui/src-tauri/target/release" -maxdepth 1 -type f -executable -not -name "*.so" | head -n 1)
+# Find the binary (handle variable naming), excluding shared objects and dependency files
+BINARY_PATH=$(find "$COMPILE_DIR/gui/src-tauri/target/release" -maxdepth 1 -type f -executable -not -name "*.so" -not -name "*.d" | head -n 1)
 
 if [ -n "$BINARY_PATH" ] && [ -f "$BINARY_PATH" ]; then
     echo "Tauri binary built successfully: $BINARY_PATH"
