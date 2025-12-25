@@ -79,17 +79,14 @@ npm run build
 echo "Building Tauri Application..."
 # We need to ensure the binary name matches. Assuming "loop-desktop" from instructions.
 # If tauri.conf.json identifier is different, this might output elsewhere.
-npm run tauri build
+npm run tauri build -- --no-bundle
 
 # Verify artifact
-TAURI_BIN="$COMPILE_DIR/gui/src-tauri/target/release/loop-desktop"
-if [ ! -f "$TAURI_BIN" ]; then
-    # Fallback check for default 'app' or other name if instruction was slightly off config
-    TAURI_BIN=$(find "$COMPILE_DIR/gui/src-tauri/target/release" -maxdepth 1 -type f -executable | head -n 1)
-fi
+# Find the binary (handle variable naming)
+BINARY_PATH=$(find "$COMPILE_DIR/gui/src-tauri/target/release" -maxdepth 1 -type f -executable -not -name "*.so" | head -n 1)
 
-if [ -f "$TAURI_BIN" ]; then
-    echo "Tauri binary built successfully: $TAURI_BIN"
+if [ -n "$BINARY_PATH" ] && [ -f "$BINARY_PATH" ]; then
+    echo "Tauri binary built successfully: $BINARY_PATH"
 else
     echo "Error: Tauri compilation failed. Binary not found."
     ls -R src-tauri/target/release
@@ -164,7 +161,7 @@ mkdir -p config/includes.chroot/usr/local/bin
 
 # Copy compiled GUI binary
 echo "Injecting Loop Desktop Binary..."
-cp "$TAURI_BIN" config/includes.chroot/usr/local/bin/loop-desktop
+cp "$BINARY_PATH" config/includes.chroot/usr/local/bin/loop-desktop
 chmod +x config/includes.chroot/usr/local/bin/loop-desktop
 
 # Copy source code to the build environment (for kernel/scripts)
