@@ -126,7 +126,7 @@ else
 fi
 
 echo "Unsquashing filesystem ($SQUASH_FILE)..."
-unsquashfs -d "$CHROOT_DIR" "$SQUASH_FILE"
+unsquashfs -f -d "$CHROOT_DIR" "$SQUASH_FILE"
 
 
 # ==============================================================================
