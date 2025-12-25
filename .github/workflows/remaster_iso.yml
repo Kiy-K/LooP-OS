@@ -1,23 +1,23 @@
-name: Build LooP ISO
+name: Build LooP ISO (Remaster)
 
 on:
   release:
-    types: [published]
-  workflow_dispatch: # Adds a "Run Workflow" button for manual testing
+    types: [created]
+  workflow_dispatch:
 
 jobs:
-  build_iso:
-    name: Build Live ISO
+  remaster_iso:
+    name: Remaster ISO
     runs-on: ubuntu-latest
     permissions:
-      contents: write # Critical for uploading the ISO back to the release
+      contents: write
 
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      # CRITICAL: Free up disk space. Live-build needs ~15GB+. 
-      # Standard runners only have ~14GB free. This action clears ~30GB.
+      # Remastering requires uncompressing the ISO (3GB) + Chroot (4GB) + Build Artifacts.
+      # Standard runners are tight. Freeing space is mandatory.
       - name: Free Disk Space
         uses: jlumbroso/free-disk-space@main
         with:
@@ -26,22 +26,25 @@ jobs:
           dotnet: true
           haskell: true
           large-packages: true
-          docker-images: false # Keep Docker, we need it!
+          docker-images: false
           swap-storage: true
 
-      - name: Build Builder Container
+      - name: Build Remaster Builder
         run: |
-          docker build -t loop-builder tools/iso/
+          docker build -t loop-remaster-builder tools/remaster/
 
-      - name: Run Build (Privileged)
+      - name: Run Remastering Process (Privileged)
         run: |
           mkdir -p output
-          # We run --privileged so the container can mount loopback devices for ISO creation
+          # We execute the script directly from the mounted input volume
+          # The script is self-contained and sets up its own internal workspace
           docker run --privileged \
             -v ${{ github.workspace }}:/input \
             -v ${{ github.workspace }}/output:/output \
-            loop-builder \
-            /input /output/loop-os-${{ github.ref_name }}.iso
+            loop-remaster-builder \
+            /input/tools/remaster/build_distro.sh \
+            /input \
+            /output/loop-os-${{ github.ref_name }}.iso
 
       - name: Upload ISO to Release
         uses: softprops/action-gh-release@v1
