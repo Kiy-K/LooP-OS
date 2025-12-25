@@ -74,10 +74,10 @@ cp gui/src-tauri/icons/icon.png gui/src-tauri/icons/icon.icns
 # 4. Build Tauri App
 cd "$COMPILE_DIR/gui"
 echo "   Installing Node dependencies..."
-npm install
+pnpm install
 
 echo "   Building Frontend (Vite)..."
-npm run build
+pnpm run build
 
 echo "   Building Backend (Cargo)..."
 cd src-tauri
@@ -126,7 +126,7 @@ else
 fi
 
 echo "Unsquashing filesystem ($SQUASH_FILE)..."
-unsquashfs -d "$CHROOT_DIR" "$SQUASH_FILE"
+unsquashfs -f -d "$CHROOT_DIR" "$SQUASH_FILE"
 
 
 # ==============================================================================
