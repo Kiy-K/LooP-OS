@@ -155,6 +155,7 @@ openbox
 lightdm
 policykit-1
 dbus-user-session
+plymouth-theme-ubuntu-text
 EOF
 
 # Prepare directory structure for chroot inclusions
@@ -236,26 +237,119 @@ chmod +x "$HOOK_FILE"
 echo "Configuring Kiosk Autostart..."
 mkdir -p config/includes.chroot/etc/xdg/openbox
 
-# Inject Custom rc.xml
-if [ -f "$INPUT_DIR/install/resources/etc/xdg/openbox/rc.xml" ]; then
-    echo "Injecting custom rc.xml..."
-    cp "$INPUT_DIR/install/resources/etc/xdg/openbox/rc.xml" config/includes.chroot/etc/xdg/openbox/rc.xml
-else
-    echo "Warning: Custom rc.xml not found!"
-fi
+# Generate Kiosk rc.xml (Remove Decorations, Maximize, Single Desktop)
+echo "Generating Kiosk rc.xml..."
+cat <<EOF > config/includes.chroot/etc/xdg/openbox/rc.xml
+<?xml version="1.0" encoding="UTF-8"?>
+<openbox_config xmlns="http://openbox.org/3.4/rc" xmlns:xi="http://www.w3.org/2001/XInclude">
+  <resistance>
+    <strength>10</strength>
+    <screen_edge_strength>20</screen_edge_strength>
+  </resistance>
+  <focus>
+    <focusNew>yes</focusNew>
+    <followMouse>no</followMouse>
+    <focusLast>yes</focusLast>
+    <underMouse>no</underMouse>
+    <focusDelay>200</focusDelay>
+    <raiseOnFocus>no</raiseOnFocus>
+  </focus>
+  <placement>
+    <policy>Smart</policy>
+    <center>yes</center>
+    <monitor>Primary</monitor>
+    <primaryMonitor>1</primaryMonitor>
+  </placement>
+  <theme>
+    <name>Clearlooks</name>
+    <titleLayout>NLIMC</titleLayout>
+    <keepBorder>yes</keepBorder>
+    <animateIconify>yes</animateIconify>
+    <font place="ActiveWindow">
+      <name>sans</name>
+      <size>8</size>
+      <weight>bold</weight>
+      <slant>normal</slant>
+    </font>
+    <font place="InactiveWindow">
+      <name>sans</name>
+      <size>8</size>
+      <weight>bold</weight>
+      <slant>normal</slant>
+    </font>
+    <font place="MenuHeader">
+      <name>sans</name>
+      <size>9</size>
+      <weight>normal</weight>
+      <slant>normal</slant>
+    </font>
+    <font place="MenuItem">
+      <name>sans</name>
+      <size>9</size>
+      <weight>normal</weight>
+      <slant>normal</slant>
+    </font>
+    <font place="ActiveOnScreenDisplay">
+      <name>sans</name>
+      <size>9</size>
+      <weight>bold</weight>
+      <slant>normal</slant>
+    </font>
+    <font place="InactiveOnScreenDisplay">
+      <name>sans</name>
+      <size>9</size>
+      <weight>bold</weight>
+      <slant>normal</slant>
+    </font>
+  </theme>
+  <desktops>
+    <number>1</number>
+    <firstdesk>1</firstdesk>
+    <names>
+      <name>LooP</name>
+    </names>
+    <popupTime>875</popupTime>
+  </desktops>
+  <resize>
+    <drawContents>yes</drawContents>
+    <popupShow>Nonpixel</popupShow>
+    <popupPosition>Center</popupPosition>
+    <popupFixedPosition>
+      <x>10</x>
+      <y>10</y>
+    </popupFixedPosition>
+  </resize>
+  <applications>
+    <application class="*">
+      <decor>no</decor>
+      <maximized>yes</maximized>
+    </application>
+  </applications>
+</openbox_config>
+EOF
 
+# Generate Immersive Autostart
+echo "Generating Kiosk Autostart..."
 cat <<EOF > config/includes.chroot/etc/xdg/openbox/autostart
-# Disable power management
-xset -dpms
-xset s off
-xset s noblank
+# 1. Screen Setup
+xset -dpms      # Disable Energy Star
+xset s off      # Disable Screensaver
+xset s noblank  # Don't blank the video device
 
-# Set background to black
-xsetroot -solid "#000000"
+# 2. The Canvas
+xsetroot -solid "#000000"  # Paint background Pure Black
 
-# Launch LooP UI Wrapper
-# This script handles the delay and launches loop-desktop
-/usr/local/bin/loop-ui &
+# 3. The Brain (Service)
+# Check if systemd user service is running, start if not
+systemctl --user start loop-brain.service &
+
+# 4. The Face (GUI)
+# Launch the compiled binary directly (No terminal wrapper)
+# We loop it so if the user "quits" the app, it reopens instantly (Kiosk Mode)
+while true; do
+    /usr/local/bin/loop-desktop
+    sleep 1
+done &
 EOF
 
 chmod +x config/includes.chroot/etc/xdg/openbox/autostart
