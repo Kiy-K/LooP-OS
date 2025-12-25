@@ -4,7 +4,8 @@ set -e
 echo "=== FORCING RUNTIME DEPENDENCIES ==="
 # GitHub Actions cache might be stale. We force install critical tools here.
 apt-get update
-apt-get install -y syslinux-utils xorriso grub-pc-bin grub-efi-amd64-bin mtools dosfstools python3-pip python3-venv patchelf
+# 'fdisk' is required for hybrid ISO generation (silences /sbin/fdisk errors)
+apt-get install -y syslinux-utils xorriso grub-pc-bin grub-efi-amd64-bin mtools dosfstools python3-pip python3-venv patchelf fdisk
 pip install nuitka
 echo "===================================="
 
@@ -265,7 +266,13 @@ lb build
 
 # Post-process verification
 echo "Post-processing ISO..."
-ISO_NAME=$(ls live-image-*.iso 2>/dev/null | head -n 1)
+# Check for 'binary.iso' (default) or 'live-image-*.iso' (renamed by hooks)
+ISO_NAME=""
+if [ -f "binary.iso" ]; then
+    ISO_NAME="binary.iso"
+else
+    ISO_NAME=$(ls live-image-*.iso 2>/dev/null | head -n 1)
+fi
 
 if [ -n "$ISO_NAME" ] && [ -f "$ISO_NAME" ]; then
     echo "Build successful. Moving artifact $ISO_NAME to $OUTPUT_FILE..."
