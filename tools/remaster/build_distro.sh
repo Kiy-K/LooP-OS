@@ -114,6 +114,9 @@ echo "Extracting ISO contents..."
 # Use xorriso to extract everything including hidden boot images
 xorriso -osirrox on -indev "$ISO_NAME" -extract / "$EXTRACT_DIR"
 
+# Fix permissions to ensure xorriso can read everything later
+chmod -R +rw "$EXTRACT_DIR"
+
 echo "Locating Root Filesystem..."
 # Server ISO usually has ubuntu-server-minimal.squashfs, checking locations
 if [ -f "$EXTRACT_DIR/casper/ubuntu-server-minimal.squashfs" ]; then
@@ -309,6 +312,12 @@ else
     EFI_IMG_REL=${EFI_IMG_REL#/}
 fi
 
+# Ensure EFI image is a file, not a symlink (xorriso requirement for -e sometimes)
+if [ -L "$EXTRACT_DIR/$EFI_IMG_REL" ]; then
+    echo "Resolving symlink for EFI Image..."
+    cp --remove-destination "$(realpath "$EXTRACT_DIR/$EFI_IMG_REL")" "$EXTRACT_DIR/$EFI_IMG_REL"
+fi
+
 if [ -z "$ELTORITO_IMG_PATH" ]; then
     echo "Warning: eltorito.img not found via find. Checking standard path..."
     if [ -f "$EXTRACT_DIR/boot/grub/i386-pc/eltorito.img" ]; then
@@ -323,8 +332,19 @@ else
     ELTORITO_IMG_REL=${ELTORITO_IMG_REL#/}
 fi
 
+# Ensure El Torito image is a file
+if [ -L "$EXTRACT_DIR/$ELTORITO_IMG_REL" ]; then
+    echo "Resolving symlink for El Torito Image..."
+    cp --remove-destination "$(realpath "$EXTRACT_DIR/$ELTORITO_IMG_REL")" "$EXTRACT_DIR/$ELTORITO_IMG_REL"
+fi
+
 echo "Using EFI Image: $EFI_IMG_REL"
+ls -l "$EXTRACT_DIR/$EFI_IMG_REL"
+file "$EXTRACT_DIR/$EFI_IMG_REL"
+
 echo "Using El Torito Image: $ELTORITO_IMG_REL"
+ls -l "$EXTRACT_DIR/$ELTORITO_IMG_REL"
+file "$EXTRACT_DIR/$ELTORITO_IMG_REL"
 
 xorriso -as mkisofs \
   -r -V "LooP_OS_22.04" \
