@@ -1,0 +1,49 @@
+name: Arch Linux ISO Build
+
+on:
+  push:
+    branches: [ main ]
+    tags: [ 'v*' ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Free Disk Space
+        uses: jlumbroso/free-disk-space@main
+        with:
+          tool-cache: true
+          android: true
+          dotnet: true
+          haskell: true
+          large-packages: true
+          docker-images: true
+          swap-storage: true
+
+      - name: Build Builder Image
+        run: |
+          docker build -t loop-arch-builder tools/archiso/
+
+      - name: Build ISO
+        run: |
+          mkdir -p output
+          docker run --privileged --rm \
+            -v $(pwd):/repo \
+            -v $(pwd)/output:/output \
+            loop-arch-builder \
+            /bin/bash /repo/tools/archiso/build_distro.sh /repo /output
+
+      - name: Upload ISO
+        uses: actions/upload-artifact@v4
+        with:
+          name: loop-arch-iso
+          path: output/*.iso
+          if-no-files-found: error
