@@ -38,7 +38,8 @@ cd "$COMPILE_DIR"
 # 1. Compile Kernel (Nuitka)
 echo "--> Compiling Kernel..."
 # Install deps if needed (assuming image has them or we install minimal)
-pip install nuitka ordered-set --break-system-packages
+# We install '.' to get dependencies and ensure 'loop' is in path
+pip install . --break-system-packages
 
 python -m nuitka --standalone --onefile \
     --output-filename=loop-kernel \
