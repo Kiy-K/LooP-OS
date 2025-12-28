@@ -27,7 +27,9 @@ RUN pacman -Syu --noconfirm && \
     openssl \
     squashfs-tools \
     patchelf \
-    python-greenlet
+    python-greenlet \
+    python-setuptools \
+    python-wheel
 
 # Install pnpm via npm to ensure availability
 RUN npm install -g pnpm
