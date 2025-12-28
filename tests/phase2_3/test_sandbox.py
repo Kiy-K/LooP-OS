@@ -5,52 +5,47 @@ from pathlib import Path
 import os
 
 @pytest.fixture
-def sandbox():
+def sandbox(tmp_path):
     sys_mock = MagicMock()
-    # We mock 'sys_read' etc on syscall handler, but Sandbox calls them.
-    # We also mock the C++ core if present, or fallback.
-    # The actual implementation tries to import sandbox_core.
-    # We should test the Python fallback logic OR mock the C++ core.
-    # Let's mock the internal _resolve mechanism or force fallback.
+    # Create a real temporary directory for the sandbox root to support strict resolution
+    sandbox_root = tmp_path / "sandbox"
+    sandbox_root.mkdir()
 
     sb = AgentSandbox(sys_mock)
+    sb.root_path = str(sandbox_root)
     return sb
 
 # 4.1 File Resolution Integrity
 def test_file_resolution_integrity(sandbox):
     """Test path resolution prevents escape."""
-
-    # We force the use of the Python _resolve logic if C++ is missing,
-    # or mock the C++ core to behave correctly.
-    # Since we can't easily rely on C++ extension in test env without compiling,
-    # and we want to test invariants:
-
-    # If C++ core is present (self.core is not None), we assume it works or we mock it.
-    # If we are in an env without it, we test the fallback or lack thereof.
-
-    # Let's Mock the 'core' attribute to simulate behavior we expect from the verified C++ module,
-    # OR if the goal is to test the integration.
-
-    # The requirement is "File resolution integrity".
-    # If the Python code relies on C++ for security, and C++ is missing, it falls back to unsafe `return path`.
-    # This is a SECURITY RISK if fallback is unsafe.
-
-    # Let's check the code:
-    # if self.core: ... return core.resolve_path(path)
-    # return path # Fallback (unsafe) <-- This looks like a vulnerability we should find!
-
-    # We will simulate "C++ missing" and assert that it FAILS SECURELY or we fix it.
-    # Actually, the test should FAIL if it allows escape.
+    # Ensure C++ fallback to Secure Python Implementation is robust.
+    # The secure fallback uses pathlib and commonpath to enforce boundaries.
 
     sandbox.core = None # Force fallback
 
     unsafe_path = "../../etc/passwd"
 
-    # Expect PermissionError now that we secured it
+    # Expect PermissionError
     with pytest.raises(PermissionError) as excinfo:
         sandbox._resolve(unsafe_path)
 
     assert "Sandbox Violation" in str(excinfo.value)
+
+def test_resolve_and_execute_handshake(sandbox):
+    """Test that Sandbox passes absolute paths via the trusted handshake."""
+    sandbox.core = None
+
+    # We must mock _resolve to return a safe absolute path that actually exists
+    # (since we use strict=True), or mock Path.resolve.
+    # Easier to just mock _resolve for this test to verify EXECUTE logic.
+
+    safe_abs_path = "/home/user/.loop/sandbox/file.txt"
+
+    with patch.object(sandbox, "_resolve", return_value=safe_abs_path):
+        sandbox.execute("read_file", ["file.txt"])
+
+        # Verify sys.sys_read was called with resolve=False
+        sandbox.sys.sys_read.assert_called_with(safe_abs_path, resolve=False)
 
 # 4.2 IOError Containment
 def test_io_error_containment(sandbox):

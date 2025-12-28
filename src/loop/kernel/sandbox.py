@@ -74,8 +74,35 @@ class AgentSandbox:
         # 2. Resolve symlinks and '..'
         # 3. Ensure it starts with sandbox root
 
-        base = Path(self.root_path).resolve()
-        target = (base / path).resolve()
+        base = Path(self.root_path).resolve(strict=True)
+        # Use strict=True (or handle FileNotFound) to prevent resolving through non-existent symlinks
+        # For 'write', we might need parent resolution.
+
+        target = base / path
+
+        # We try to resolve strictly first. If it fails (file not found), we resolve parent.
+        try:
+            target = target.resolve(strict=True)
+        except FileNotFoundError:
+            # Maybe creation? Resolve parent and check
+            # But if intermediate path is bad?
+            # resolve() usually raises if intermediate is missing with strict=True on some py versions?
+            # Actually, we should check if we are allowed to write/create?
+            # For strict security, we resolve as much as exists.
+
+            # Re-attempt with strict=False but check existence later?
+            # Or resolve parent.
+            if not target.parent.exists():
+                 # We can't resolve target if parent doesn't exist to verify symlinks
+                 # But we can try to resolve parent.
+                 try:
+                     parent = target.parent.resolve(strict=True)
+                     target = parent / target.name
+                 except FileNotFoundError:
+                      raise PermissionError("Sandbox Violation: Path parent does not exist or invalid.")
+            else:
+                 # Parent exists, file doesn't.
+                 target = target.resolve(strict=False)
 
         # Use commonpath to strictly verify containment (prevents sibling attacks like /var/sandbox_conf)
         try:
@@ -106,13 +133,8 @@ class AgentSandbox:
             path = args[0]
             try:
                 real_path = self._resolve(path)
-                # We need to bypass syscall handler's internal path logic if possible,
-                # or pass the resolved path. Syscall handler might not expect absolute host paths
-                # if it thinks it's simulating an OS.
-                # However, syscall_handler in this project seems to operate on real OS files directly?
-                # Let's check syscall_handler implementation.
-                # Assuming sys_read takes a path and opens it.
-                return self.sys.sys_read(real_path)
+                # Pass resolved=False to trust the sandbox-validated absolute path
+                return self.sys.sys_read(real_path, resolve=False)
             except Exception as e:
                 return f"Error: {e}"
 
@@ -121,7 +143,7 @@ class AgentSandbox:
             content = args[1]
             try:
                 real_path = self._resolve(path)
-                self.sys.sys_write(real_path, content)
+                self.sys.sys_write(real_path, content, resolve=False)
                 return f"Successfully wrote to {path}"
             except Exception as e:
                 return f"Error: {e}"
@@ -131,7 +153,7 @@ class AgentSandbox:
             content = args[1]
             try:
                 real_path = self._resolve(path)
-                self.sys.sys_append(real_path, content)
+                self.sys.sys_append(real_path, content, resolve=False)
                 return f"Successfully appended to {path}"
             except Exception as e:
                 return f"Error: {e}"
@@ -140,7 +162,7 @@ class AgentSandbox:
             path = args[0] if args else "/"
             try:
                 real_path = self._resolve(path)
-                files = self.sys.sys_ls(real_path)
+                files = self.sys.sys_ls(real_path, resolve=False)
                 return "\n".join(files)
             except Exception as e:
                 return f"Error: {e}"

@@ -161,18 +161,26 @@ class SyscallHandler:
         return self.user_manager.get_roles(uid)
 
     # Filesystem
-    def sys_ls(self, path="/"):
+    def sys_ls(self, path="/", resolve=True):
         """
         List directory contents.
 
         Args:
             path (str): The path to list.
+            resolve (bool, optional): Whether to resolve the path via rootfs.
+                                    If False, path is assumed to be absolute/verified.
 
         Returns:
             list[str]: List of filenames.
         """
         try:
-            real_path = rootfs.resolve(path)
+            if resolve:
+                real_path = rootfs.resolve(path)
+            else:
+                # Trust the path (e.g., from Sandbox)
+                from pathlib import Path
+                real_path = Path(path)
+
             if not real_path.exists():
                 raise FileNotFoundError(f"Path not found: {path}")
 
@@ -186,32 +194,44 @@ class SyscallHandler:
                 raise e
             raise FileNotFoundError(f"Path not found or error accessing: {path} ({e})")
 
-    def sys_read(self, path):
+    def sys_read(self, path, resolve=True):
         """
         Read a file.
 
         Args:
             path (str): File path.
+            resolve (bool, optional): Whether to resolve path via rootfs.
 
         Returns:
             str: File content.
         """
-        real_path = rootfs.resolve(path)
+        if resolve:
+            real_path = rootfs.resolve(path)
+        else:
+            from pathlib import Path
+            real_path = Path(path)
+
         with open(real_path, "r") as f:
             return f.read()
 
-    def sys_write(self, path, data):
+    def sys_write(self, path, data, resolve=True):
         """
         Write to a file.
 
         Args:
             path (str): File path.
             data (str): Content to write.
+            resolve (bool, optional): Whether to resolve path via rootfs.
 
         Returns:
             bool: True.
         """
-        real_path = rootfs.resolve(path)
+        if resolve:
+            real_path = rootfs.resolve(path)
+        else:
+            from pathlib import Path
+            real_path = Path(path)
+
         # Ensure parent exists
         real_path.parent.mkdir(parents=True, exist_ok=True)
 
@@ -221,18 +241,24 @@ class SyscallHandler:
         self.sys_log(f"[fs] write {path} by {self._get_current_uid()}")
         return True
 
-    def sys_append(self, path, text):
+    def sys_append(self, path, text, resolve=True):
         """
         Append text to a file.
 
         Args:
             path (str): File path.
             text (str): Content to append.
+            resolve (bool, optional): Whether to resolve path via rootfs.
 
         Returns:
             bool: True.
         """
-        real_path = rootfs.resolve(path)
+        if resolve:
+            real_path = rootfs.resolve(path)
+        else:
+            from pathlib import Path
+            real_path = Path(path)
+
         # Ensure parent exists
         real_path.parent.mkdir(parents=True, exist_ok=True)
 
@@ -240,18 +266,24 @@ class SyscallHandler:
             f.write(text + "\n")
         return True
 
-    def sys_delete(self, path):
+    def sys_delete(self, path, resolve=True):
         """
         Delete a file.
 
         Args:
             path (str): File path.
+            resolve (bool, optional): Whether to resolve path via rootfs.
 
         Returns:
             bool: True if successful, False otherwise.
         """
         try:
-            real_path = rootfs.resolve(path)
+            if resolve:
+                real_path = rootfs.resolve(path)
+            else:
+                from pathlib import Path
+                real_path = Path(path)
+
             if real_path.is_dir():
                 os.rmdir(real_path)  # Only empty
             else:
