@@ -26,7 +26,8 @@ RUN pacman -Syu --noconfirm && \
     webkit2gtk \
     openssl \
     squashfs-tools \
-    patchelf
+    patchelf \
+    python-greenlet
 
 # Install pnpm via npm to ensure availability
 RUN npm install -g pnpm
