@@ -1,0 +1,18 @@
+name: Test Dell Runner
+on: [push] # Chạy ngay khi có code mới đẩy lên
+
+jobs:
+  test-build:
+    runs-on: self-hosted # <--- Quan trọng: Gọi đúng tên Runner nhà mình
+    steps:
+      - name: Check in
+        run: echo "Hello General! This runs on Dell Server dell-u1"
+
+      - name: Check Docker Access
+        run: docker ps # <--- Kiểm tra xem có quyền điều khiển Docker không
+        
+      - name: Check System Info
+        run: |
+          echo "Hostname: $(hostname)"
+          echo "OS Info:"
+          cat /etc/os-release
