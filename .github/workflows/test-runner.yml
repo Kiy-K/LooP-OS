@@ -1,4 +1,6 @@
 name: Test Dell Runner
+permissions:
+  contents: read
 on: [push] # Chạy ngay khi có code mới đẩy lên
 
 jobs:
